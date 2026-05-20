@@ -36,4 +36,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Posts feitos por ESTE usuário
+    public function authoredComments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function profileComments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
 }

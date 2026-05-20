@@ -18,6 +18,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('profile_icon_id');
+            $table->string('riot_puuid')->nullable()->unique(); // ID do jogador na Riot Games, pode ser nulo e deve ser único
+            $table->string('summoner_name')->nullable(); // Nome do invocador, pode ser nulo
+            $table->string('tagLine')->nullable(); // Tagline do jogador, pode ser nulo
             $table->rememberToken();
             $table->timestamps();
         });

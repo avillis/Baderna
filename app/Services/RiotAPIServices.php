@@ -49,35 +49,45 @@ class RiotAPIServices
         ];
     }
 
-    public function registrarContaBaderneiro(string $gameName, string $tagLine)
+    public function getPlayerMatchesByPUUID(string $puuid)
     {
-        $playerPuuid = $this->getPlayerPUUIDByRiotId($gameName, $tagLine);
+        $response = Http::withHeader('X-Riot-Token', $this->apiKey)
+            ->get("{$this->americasBaseUrl}/lol/match/v5/matches/by-puuid/{$puuid}/ids");
 
-        $accountData = $this->getPlayerDataByPUUID($playerPuuid['puuid'] ?? '');
-
-        $contaLoL = ContasLoL::create(
-            [
-                'summoner_name' => $gameName,
-                'tagLine' => $tagLine,
-                'puuid' => $playerPuuid['puuid'] ?? null,
-                'elo' => $accountData['tier'] . ' ' . $accountData['rank'] ?? 'Unranked',
-                'league_points' => $accountData['leaguePoints'] ?? 0,
-                'wins' => $accountData['wins'] ?? 0,
-                'losses' => $accountData['losses'] ?? 0,
-                'user_id' => null,
-            ]
-        );
-    }
-
-    public function obterDadosContaLoL(string $userId)
-    {
-        $contaLoL = ContasLoL::where('user_id', $userId)->first();
-
-        if (!$contaLoL) {
-            throw new Exception('Conta LoL não encontrada para o usuário ID: ' . $userId);
+        if ($response->failed()) {
+            throw new Exception('Erro ao buscar dados na Riot: ' . $response->status());
         }
 
-        return $contaLoL;
+        return $response->json();
+    }
+
+    // public function registrarContaBaderneiro(string $gameName, string $tagLine)
+    // {
+    //     $playerPuuid = $this->getPlayerPUUIDByRiotId($gameName, $tagLine);
+
+    //     $accountData = $this->getPlayerDataByPUUID($playerPuuid['puuid'] ?? '');
+
+    //     $matchesData = $this->getPlayerMatchesByPUUID($playerPuuid['puuid'] ?? '');
+
+    //     dd($accountData, $matchesData);
+
+    //     $contaLoL = ContasLoL::create(
+    //         [
+    //             'summoner_name' => $gameName,
+    //             'tagLine' => $tagLine,
+    //             'puuid' => $playerPuuid['puuid'] ?? null,
+    //             'elo' => $accountData['tier'] . ' ' . $accountData['rank'] ?? 'Unranked',
+    //             'league_points' => $accountData['leaguePoints'] ?? 0,
+    //             'wins' => $accountData['wins'] ?? 0,
+    //             'losses' => $accountData['losses'] ?? 0,
+    //             'user_id' => null,
+    //         ]
+    //     );
+    // }
+
+    public function getSummonerDataByPuuid(string $puuid)
+    {
+
     }
 }
 

@@ -2,15 +2,17 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BaderneirosController;
-use App\Http\Controllers\ContasLoLController;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Api\ProfileController;
+use App\Http\Api\PostController;
+use App\Http\Api\CommentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+// @TODO ROTA PARA TESTES, APAGAR DEPOIS!!!
 Route::post('/login', function (Request $request) {
     $credentials = $request->validate([
         'email' => 'required|email',
@@ -32,11 +34,17 @@ Route::post('/login', function (Request $request) {
     ]);
 });
 
-// Route::get('/baderneiros', [BaderneirosController::class, 'index']);
-
-Route::apiResource('baderneiros', BaderneirosController::class);
-
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/contas-lol/{gameName}/{tagLine}', [ContasLoLController::class, 'testePuxarPuuId']);
+
+    // Feed (Posts)
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+
+    // Perfil (Profile)
+    Route::get('/users/{user}', [ProfileController::class, 'show']);
+
+    // Comentários (Polimórficos)
+    Route::post('/{type}/{id}/comments', [CommentController::class, 'store'])
+        ->whereIn('type', ['posts', 'users']);
 });
 
