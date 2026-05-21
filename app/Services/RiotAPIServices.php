@@ -89,6 +89,11 @@ class RiotAPIServices
     {
 
     }
+
+    public function getRecentMatches(string $puuid)
+    {
+        return $this->getPlayerMatchesByPUUID($puuid);
+    }
 }
 
 ?>
