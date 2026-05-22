@@ -90,7 +90,10 @@ export function PanelProfileSummary({
   const accountNick = account.gameNick.split("#")[0] || "";
   const liveDisplayName =
     isOwnProfile && accountNick ? accountNick : displayName;
-  const liveFullName = isOwnProfile && user?.name ? user.name : fullName;
+  // Usa account.name (display_name editável) ao invés de user.name (original
+  // do Sanctum) — esse último não atualiza quando a pessoa muda o Nome em
+  // "Minha conta".
+  const liveFullName = isOwnProfile && account.name ? account.name : fullName;
   const liveBio = isOwnProfile && account.bio ? account.bio : bio;
   const liveAvatarSrc =
     isOwnProfile && account.avatarSrc ? account.avatarSrc : avatarSrc;
