@@ -66,6 +66,7 @@ type ApiMember = {
   summonerName: string | null;
   tagLine: string | null;
   avatarSrc: string | null;
+  bannerFileName: string | null;
   isAdmin: boolean;
   bio: string | null;
   teamName: string | null;
