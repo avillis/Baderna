@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Feed (Posts)
     Route::get('/posts', [PostController::class, 'index']);
     Route::post('/posts', [PostController::class, 'store']);
+    Route::post('/posts/image', [PostController::class, 'uploadImage']);
 
     // Perfil (Profile)
     Route::get('/users/{user}', [ProfileController::class, 'show']);
@@ -92,5 +93,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/members', [MembersController::class, 'adminStore']);
         Route::delete('/members/{user}', [MembersController::class, 'softDelete']);
         Route::post('/members/{user}/restore', [MembersController::class, 'restore']);
+        Route::put('/members/{user}/role', [MembersController::class, 'setRole']);
     });
 });

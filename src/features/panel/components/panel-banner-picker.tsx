@@ -13,6 +13,7 @@ import {
   PANEL_BANNER_STORAGE_KEY,
 } from "@/features/panel/banner-selection";
 import type { SplashGroup } from "@/features/panel/splash-catalog";
+import { useAccount } from "@/features/panel/use-account";
 import { useUnlockedBanners } from "@/features/panel/use-unlocked-banners";
 import { useAuth } from "@/features/panel/use-auth";
 
@@ -45,6 +46,7 @@ export function PanelBannerPicker({
 }: PanelBannerPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
+  const { updateField } = useAccount();
   const LOGGED_USER_ID = user ? String(user.id) : "__guest__";
   const { isUnlocked, unlocked } = useUnlockedBanners(LOGGED_USER_ID);
   const [selectedFileName, setSelectedFileName] = useState(defaultBannerFileName);
@@ -161,6 +163,8 @@ export function PanelBannerPicker({
         detail: { fileName, focusY: nextFocusY },
       }),
     );
+    // Persiste no backend pra capa sobreviver a logout/outro device.
+    updateField("bannerFileName", fileName);
   };
 
   const updateSelectedFocusY = (nextFocusY: number) => {

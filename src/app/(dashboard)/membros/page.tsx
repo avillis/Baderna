@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PanelShell } from "@/features/panel/components/panel-shell";
+import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
@@ -67,7 +68,9 @@ export default function MembrosPage() {
               {/* Name + rank */}
               <div className="mt-4 text-center">
                 <h2 className="text-[17px] font-bold leading-none tracking-[-0.03em] text-[#0f0f0f]">
-                  {member.nickname}
+                  <StyledName styleId={member.activeNameId}>
+                    {member.nickname}
+                  </StyledName>
                   <span className="ml-[5px] text-[12px] font-semibold tracking-normal text-[#aaaaaa]">
                     #{badernaRank}
                   </span>

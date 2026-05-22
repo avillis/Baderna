@@ -57,6 +57,7 @@ class MembersController extends Controller
                 'teamName'        => $u->team_name,
                 'primaryLane'     => $u->primary_lane,
                 'secondaryLane'   => $u->secondary_lane,
+                'activeNameId'    => $u->active_name_id,
             ];
         }));
     }
@@ -115,6 +116,30 @@ class MembersController extends Controller
     {
         $user->update(['is_deleted' => true]);
         return response()->json(null, 204);
+    }
+
+    /**
+     * Admin promove/rebaixa cargo de outro user. Bloqueia tentar mexer no
+     * próprio cargo (segurança — evita admin único se demitir por engano).
+     */
+    public function setRole(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'is_admin' => 'required|boolean',
+        ]);
+
+        if ($request->user()->id === $user->id) {
+            return response()->json(
+                ['message' => 'Você não pode alterar seu próprio cargo.'],
+                422,
+            );
+        }
+
+        $user->update(['is_admin' => $data['is_admin']]);
+        return response()->json([
+            'id' => $user->id,
+            'isAdmin' => (bool)$user->is_admin,
+        ]);
     }
 
     /**

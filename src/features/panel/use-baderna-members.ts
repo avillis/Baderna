@@ -72,6 +72,7 @@ type ApiMember = {
   teamName: string | null;
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   secondaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
+  activeNameId: string | null;
 };
 
 function readCache(): ApiMember[] {
@@ -140,10 +141,11 @@ export function useBadernaMembers(): BadernaMember[] {
             avatarSrc: account.avatarSrc || m.avatarSrc,
             bio: account.bio || m.bio,
             teamName: account.teamName || m.teamName,
+            activeNameId: account.activeNameId ?? m.activeNameId,
           }
         : m,
     );
-  }, [apiMembers, user, account.primaryLane, account.secondaryLane, account.avatarSrc, account.bio, account.teamName]);
+  }, [apiMembers, user, account.primaryLane, account.secondaryLane, account.avatarSrc, account.bio, account.teamName, account.activeNameId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -238,6 +240,7 @@ export function useBadernaMembers(): BadernaMember[] {
         summonerName: m.summonerName ?? undefined,
         tagLine: m.tagLine ?? undefined,
         teamName: m.teamName ?? null,
+        activeNameId: m.activeNameId ?? undefined,
       };
     });
 

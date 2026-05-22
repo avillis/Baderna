@@ -19,6 +19,8 @@ export type BadernaMember = {
   tagLine?: string;
   /** Nome customizado do time (definido em "Minha conta"). */
   teamName?: string | null;
+  /** Estilo de nome ativo (loja → ex. "preto", "neon", etc). */
+  activeNameId?: string;
 };
 
 // Membros virão da API. Lista vazia enquanto a migração pro Laravel rola.

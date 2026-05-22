@@ -13,6 +13,7 @@ import {
   panelProfile,
   panelSidebarAccount,
 } from "@/features/panel/panel-data";
+import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { useAuth } from "@/features/panel/use-auth";
 import { useAccount } from "@/features/panel/use-account";
@@ -327,7 +328,9 @@ export function PanelSidebar() {
                         >
                           {nick ? (
                             <>
-                              {nick}
+                              <StyledName styleId={account.activeNameId}>
+                                {nick}
+                              </StyledName>
                               {tag && (
                                 <span className="ml-[4px] text-[#8d8d8d]">#{tag}</span>
                               )}

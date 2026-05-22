@@ -8,7 +8,9 @@ use App\Models\Comment;
 class Post extends Model
 {
     protected $fillable = [
-        'content'
+        'content',
+        'image_url',
+        'gif_url',
     ];
 
     public function comments()

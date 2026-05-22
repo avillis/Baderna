@@ -2,6 +2,7 @@
 
 import { useGameMode } from "@/features/panel/game-mode-context";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
+import { StyledName } from "@/features/panel/components/styled-name";
 import { panelMemberWinrates } from "@/features/panel/panel-data";
 
 function getWinRateColor(winRate: number) {
@@ -54,7 +55,9 @@ export function PanelMemberWinratesCard() {
               {/* Info */}
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                  {member.nickname}
+                  <StyledName styleId={member.activeNameId}>
+                    {member.nickname}
+                  </StyledName>
                 </h3>
                 <p className="mt-[2px] text-[13px] font-semibold tracking-[-0.02em] text-[#b0a09a]">
                   {stats.wins}v {stats.losses}d

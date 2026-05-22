@@ -9,8 +9,27 @@ import { AddMemberModal } from "@/features/panel/components/add-member-modal";
 import { EditMemberTitlesModal } from "@/features/panel/components/edit-member-titles-modal";
 import { ConfirmDeleteMemberModal } from "@/features/panel/components/confirm-delete-member-modal";
 import { useAccount } from "@/features/panel/use-account";
+import { authToken } from "@/features/panel/use-auth";
 import { useDeletedMembers } from "@/features/panel/use-deleted-members";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+
+async function apiSetRole(userId: number, isAdmin: boolean): Promise<boolean> {
+  const token = authToken();
+  if (!token) return false;
+  const res = await fetch(`${API_BASE}/admin/members/${userId}/role`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ is_admin: isAdmin }),
+  });
+  return res.ok;
+}
 
 type RoleMap = Record<string, "Admin" | "Membro">;
 
@@ -32,11 +51,17 @@ export function MembersTable() {
 
   const visibleMembers = allMembers;
 
-  function toggleRole(id: string) {
-    setRoles((prev) => ({
-      ...prev,
-      [id]: prev[id] === "Admin" ? "Membro" : "Admin",
-    }));
+  async function toggleRole(id: string, userId?: number) {
+    if (!userId) return;
+    const current = roles[id] ?? defaultRoleFor(allMembers.find((m) => m.id === id) ?? { isAdmin: false });
+    const nextIsAdmin = current === "Membro";
+    // Update otimista
+    setRoles((prev) => ({ ...prev, [id]: nextIsAdmin ? "Admin" : "Membro" }));
+    const ok = await apiSetRole(userId, nextIsAdmin);
+    if (!ok) {
+      // Reverte em caso de falha
+      setRoles((prev) => ({ ...prev, [id]: current }));
+    }
   }
 
   function defaultRoleFor(member: { isAdmin?: boolean }) {
@@ -114,7 +139,7 @@ export function MembersTable() {
                       type="button"
                       onClick={() => {
                         if (isSelf) return;
-                        toggleRole(member.id);
+                        void toggleRole(member.id, member.userId);
                       }}
                       disabled={isSelf}
                       title={
