@@ -1,0 +1,224 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
+
+import { useAuth } from "@/features/panel/use-auth";
+
+export default function EntrarPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/";
+  const { login, register, token, hydrated } = useAuth();
+
+  // Já está logado? Manda direto pra rota de destino.
+  useEffect(() => {
+    if (hydrated && token) router.replace(next);
+  }, [hydrated, token, next, router]);
+
+  const [isLogin, setIsLogin] = useState(false);
+  const [name, setName] = useState("");
+  const [summonerName, setSummonerName] = useState("");
+  const [tagLine, setTagLine] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      if (isLogin) {
+        await login(email.trim(), password);
+      } else {
+        await register({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          summoner_name: summonerName.trim(),
+          tag_line: tagLine.trim(),
+        });
+      }
+      router.push(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro inesperado.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen w-full bg-white">
+      {/* Left side */}
+      <div className="relative flex w-full flex-col bg-[#f7f7f7] md:w-1/2">
+        <style>{`
+          input:-webkit-autofill,
+          input:-webkit-autofill:hover,
+          input:-webkit-autofill:focus,
+          input:-webkit-autofill:active {
+              -webkit-box-shadow: 0 0 0 100px #ededed inset !important;
+              -webkit-text-fill-color: black !important;
+              border-radius: 9999px !important;
+              background-clip: padding-box !important;
+          }
+        `}</style>
+        {/* Header */}
+        <div className="flex items-start justify-between p-8">
+          <Image
+            src="/logo.svg"
+            alt="Baderna Logo"
+            width={120}
+            height={40}
+            className="h-10 w-auto"
+            priority
+          />
+        </div>
+
+        {/* Form Container */}
+        <div className="flex flex-1 flex-col items-center justify-center px-8 sm:px-16 md:px-24">
+          <div className="flex w-full max-w-[320px] flex-col items-center gap-6">
+            <form className="w-full space-y-4" onSubmit={handleSubmit}>
+              {!isLogin && (
+                <>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Seu nome"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-full border-none bg-[#ededed] px-6 py-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Nome do jogo"
+                      value={summonerName}
+                      onChange={(e) => setSummonerName(e.target.value)}
+                      className="min-w-0 flex-1 rounded-full border-none bg-[#ededed] px-6 py-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+                      required
+                    />
+                    <div className="relative w-[110px] shrink-0">
+                      <span className="pointer-events-none absolute left-[18px] top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                        #
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="BR1"
+                        value={tagLine}
+                        onChange={(e) => setTagLine(e.target.value)}
+                        maxLength={5}
+                        className="w-full rounded-full border-none bg-[#ededed] py-4 pl-[34px] pr-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+              <div>
+                <input
+                  type="email"
+                  placeholder="Seu email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-full border-none bg-[#ededed] px-6 py-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+                  required
+                />
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Sua senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={isLogin ? undefined : 8}
+                  className="w-full rounded-full border-none bg-[#ededed] py-4 pl-6 pr-12 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-[#0f0f0f]"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  ) : (
+                    <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  )}
+                </button>
+              </div>
+              {error && (
+                <p className="text-center text-[13px] font-semibold text-[#c53030]">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex w-full items-center justify-center rounded-full bg-[#ff4100] px-6 py-4 text-sm font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? (
+                  <svg
+                    className="capas-spinner h-[22px] w-[22px] [&_circle]:stroke-white"
+                    viewBox="25 25 50 50"
+                  >
+                    <circle r="20" cy="50" cx="50" />
+                  </svg>
+                ) : isLogin ? (
+                  "Entrar"
+                ) : (
+                  "Criar conta"
+                )}
+              </button>
+            </form>
+            <div className="text-sm text-gray-600">
+              {isLogin ? (
+                <>
+                  Ainda não tem conta?{" "}
+                  <button
+                    onClick={() => {
+                      setIsLogin(false);
+                      setError(null);
+                    }}
+                    className="ml-1 font-medium text-[#ff4100] hover:underline"
+                  >
+                    Criar conta
+                  </button>
+                </>
+              ) : (
+                <>
+                  Já possui uma conta?{" "}
+                  <button
+                    onClick={() => {
+                      setIsLogin(true);
+                      setError(null);
+                    }}
+                    className="ml-1 font-medium text-[#ff4100] hover:underline"
+                  >
+                    Entrar
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - iframe for Batata Letters */}
+      <div className="hidden flex-1 md:flex">
+        <iframe
+          src="/batata-letters.html"
+          className="h-full w-full border-none"
+          title="Batata Letters Animation"
+        />
+      </div>
+    </div>
+  );
+}

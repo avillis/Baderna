@@ -1,0 +1,764 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-sans);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-card-bg: var(--sidebar-card-bg);
+  --color-sidebar-card-border: var(--sidebar-card-border);
+  --color-sidebar-text-active: var(--sidebar-text-active);
+  --color-sidebar-text-inactive: var(--sidebar-text-inactive);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-heading: var(--font-inter), system-ui, sans-serif;
+  --panel-radius-shell: clamp(24px, 1.7vw, 30px);
+  --panel-radius-card: clamp(20px, 1.45vw, 25px);
+  --panel-radius-card-sm: clamp(18px, 1.2vw, 22px);
+  --panel-radius-block: clamp(14px, 1vw, 18px);
+  --panel-radius-tile: clamp(12px, 0.9vw, 16px);
+  --panel-radius-chip: clamp(8px, 0.7vw, 10px);
+
+  /* Inverted Theme: Light Mode Default */
+  --background: #f7f7f7;
+  --foreground: #0f0f0f;
+  
+  /* Primary Accent: Orange */
+  --primary: #ff4100;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #0f0f0f;
+  --secondary-foreground: #f1f1f1;
+  
+  /* Use premium #fefefe off-white instead of pure #ffffff */
+  --card: #ffffff;
+  --card-foreground: #0f0f0f;
+  
+  --popover: #ffffff;
+  --popover-foreground: #0f0f0f;
+  
+  --muted: #efefef;
+  --muted-foreground: #666666;
+  
+  --accent: #fff4f4;
+  --accent-foreground: #ff4100;
+  
+  --destructive: #ff3333;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders and Inputs */
+  --border: #ececec;
+  --input: #ffffff;
+  --ring: #ff4100;
+  
+  --radius: 16px;
+
+  /* Dark Sidebar Theme Colors */
+  --sidebar-bg: #0f0f0f;
+  --sidebar-border: #1a1a1a;
+  --sidebar-hover: #1a1a1a;
+  --sidebar-card-bg: #050505;
+  --sidebar-card-border: #222222;
+  --sidebar-text-active: #ffffff;
+  --sidebar-text-inactive: #888888;
+}
+
+@layer base {
+  * {
+    @apply border-border/80 outline-ring/30;
+  }
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role="button"]:disabled {
+    cursor: default;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-[#ff4100] selection:text-white;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  
+  /* Custom thin scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f7f7f7;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d4d4d4;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a3a3a3;
+  }
+}
+
+/* Light Vercel Grid Pattern */
+.vercel-grid {
+  background-image: 
+    linear-gradient(to right, rgba(15, 15, 15, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 15, 15, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center;
+}
+
+/* Conic gradient tuned for Orange Highlight */
+.rainbow-glow {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    #ff4100 0deg,
+    #ff8000 90deg,
+    #ff0055 180deg,
+    #ffcc00 270deg,
+    #ff4100 360deg
+  );
+  filter: blur(100px);
+  opacity: 0.25;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes inhouse-smoke-drift-a {
+  0% {
+    transform: translate3d(-42px, 26px, 0) scale(0.88) rotate(-2deg);
+    opacity: 0.42;
+    filter: blur(30px);
+  }
+  50% {
+    transform: translate3d(34px, -30px, 0) scale(1.12) rotate(1deg);
+    opacity: 0.88;
+    filter: blur(42px);
+  }
+  100% {
+    transform: translate3d(-42px, 26px, 0) scale(0.88) rotate(-2deg);
+    opacity: 0.42;
+    filter: blur(30px);
+  }
+}
+
+@keyframes inhouse-smoke-drift-b {
+  0% {
+    transform: translate3d(36px, -24px, 0) scale(0.9) rotate(2deg);
+    opacity: 0.36;
+    filter: blur(28px);
+  }
+  50% {
+    transform: translate3d(-30px, 30px, 0) scale(1.16) rotate(-2deg);
+    opacity: 0.8;
+    filter: blur(44px);
+  }
+  100% {
+    transform: translate3d(36px, -24px, 0) scale(0.9) rotate(2deg);
+    opacity: 0.36;
+    filter: blur(28px);
+  }
+}
+
+@keyframes inhouse-smoke-drift-c {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.94);
+    opacity: 0.3;
+    filter: blur(24px);
+  }
+  50% {
+    transform: translate3d(0, -34px, 0) scale(1.14);
+    opacity: 0.68;
+    filter: blur(40px);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.94);
+    opacity: 0.3;
+    filter: blur(24px);
+  }
+}
+
+.inhouse-smoke {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(120, 126, 134, 0.7) 0%, rgba(164, 170, 178, 0.5) 28%, rgba(255, 255, 255, 0) 66%),
+    radial-gradient(circle at 68% 58%, rgba(98, 104, 112, 0.48) 0%, rgba(145, 152, 160, 0.32) 24%, rgba(255, 255, 255, 0) 60%);
+  filter: blur(38px);
+  opacity: 0.9;
+  will-change: transform, opacity;
+}
+
+.inhouse-smoke--a {
+  animation: inhouse-smoke-drift-a 3.8s ease-in-out infinite;
+}
+
+.inhouse-smoke--b {
+  animation: inhouse-smoke-drift-b 4.4s ease-in-out infinite;
+}
+
+.inhouse-smoke--c {
+  animation: inhouse-smoke-drift-c 3.2s ease-in-out infinite;
+}
+
+
+/* Global: every button uses -0.02em letter-spacing by default */
+button {
+  letter-spacing: -0.02em;
+}
+
+/* Capas page — dotted background applied to the body via JS class */
+.capas-body-bg {
+  background-image: radial-gradient(
+    circle,
+    rgba(15, 15, 15, 0.1) 1.2px,
+    transparent 1.5px
+  );
+  background-size: 24px 24px;
+}
+
+/* Capas — case-opening loader spinner */
+@keyframes capas-spinner-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes capas-spinner-dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dashoffset: -125px;
+  }
+}
+
+.capas-spinner {
+  width: 1.4em;
+  height: 1.4em;
+  transform-origin: center;
+  animation: capas-spinner-rotate 2s linear infinite;
+}
+
+.capas-spinner circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  animation: capas-spinner-dash 1.5s ease-in-out infinite;
+}
+
+/* Colored smoke that drifts inside the rank card — color via --smoke */
+@keyframes rank-smoke-drift-a {
+  0%, 100% {
+    transform: translate3d(-22px, 14px, 0) scale(0.85);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate3d(16px, -16px, 0) scale(1.1);
+    opacity: 0.85;
+  }
+}
+
+@keyframes rank-smoke-drift-b {
+  0%, 100% {
+    transform: translate3d(22px, -12px, 0) scale(0.9);
+    opacity: 0.32;
+  }
+  50% {
+    transform: translate3d(-20px, 18px, 0) scale(1.15);
+    opacity: 0.75;
+  }
+}
+
+.rank-smoke {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--smoke, rgba(160, 216, 255, 0.85)) 0%,
+    rgba(255, 255, 255, 0) 65%
+  );
+  filter: blur(26px);
+  will-change: transform, opacity;
+}
+
+.rank-smoke--a {
+  animation: rank-smoke-drift-a 4.6s ease-in-out infinite;
+}
+
+.rank-smoke--b {
+  animation: rank-smoke-drift-b 5.8s ease-in-out infinite;
+  animation-delay: -1.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-smoke--a,
+  .rank-smoke--b {
+    animation: none;
+  }
+}
+
+/* Paper-confetti motion:
+   - Horizontal: ease-out, most of the spread happens in the first 40%
+     (initial burst momentum), then drifts gently.
+   - Vertical: rises quickly, reaches peak early (~35%), then floats down
+     softly under air resistance (the descent slope is much shallower than
+     the ascent). No sharp turn at the apex — vertical velocity tapers
+     smoothly into the drift.
+   - Rotation: continues linearly throughout so pieces keep flipping.
+   Uses linear timing so the sampled curve stays faithful. */
+@keyframes capas-confetti-physics {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 1;
+  }
+  10% {
+    /* hor: 0.30 of tx, ver: 0.55 of peak — initial burst upward */
+    transform: translate(
+        calc(-50% + 0.30 * var(--tx)),
+        calc(-50% - 0.55 * var(--peak))
+      )
+      rotate(calc(0.10 * var(--rot)));
+    opacity: 1;
+  }
+  22% {
+    transform: translate(
+        calc(-50% + 0.60 * var(--tx)),
+        calc(-50% - 0.92 * var(--peak))
+      )
+      rotate(calc(0.22 * var(--rot)));
+    opacity: 1;
+  }
+  35% {
+    /* apex */
+    transform: translate(
+        calc(-50% + 0.80 * var(--tx)),
+        calc(-50% - 1 * var(--peak))
+      )
+      rotate(calc(0.35 * var(--rot)));
+    opacity: 1;
+  }
+  50% {
+    /* still floating near apex — only 0.05 drop in 15% */
+    transform: translate(
+        calc(-50% + 0.91 * var(--tx)),
+        calc(-50% - 0.95 * var(--peak))
+      )
+      rotate(calc(0.50 * var(--rot)));
+    opacity: 1;
+  }
+  62% {
+    /* gentle slope begins — 0.25 drop in 12% */
+    transform: translate(
+        calc(-50% + 0.96 * var(--tx)),
+        calc(-50% - 0.70 * var(--peak))
+      )
+      rotate(calc(0.62 * var(--rot)));
+    opacity: 1;
+  }
+  75% {
+    /* acceleration kicks in — 0.38 drop in 13% */
+    transform: translate(
+        calc(-50% + 0.99 * var(--tx)),
+        calc(-50% - 0.40 * var(--peak))
+      )
+      rotate(calc(0.75 * var(--rot)));
+    opacity: 1;
+  }
+  88% {
+    /* below origin now, accelerating with gravity */
+    transform: translate(
+        calc(-50% + 1 * var(--tx)),
+        calc(-50% + 0.30 * var(--fall))
+      )
+      rotate(calc(0.88 * var(--rot)));
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--fall)))
+      rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+.capas-confetti-piece {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+  animation: capas-confetti-physics var(--dur, 1000ms) linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capas-confetti-piece {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Two-snake outline: both halves start at top-centre and travel in
+   opposite directions, meeting at the bottom-centre. Each path has
+   pathLength="100", so dasharray "100" + dashoffset 100→0 draws it. */
+@keyframes capas-snake-half {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 1;
+    filter: drop-shadow(0 0 6px #ff4100);
+  }
+  70% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    filter: drop-shadow(0 0 10px #ff4100) drop-shadow(0 0 16px #ff4100);
+  }
+  82% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #ff4100) drop-shadow(0 0 22px #ff4100);
+  }
+  100% {
+    opacity: 0;
+    filter: drop-shadow(0 0 4px #ff4100);
+  }
+}
+
+.capas-snake-half {
+  fill: none;
+  stroke: #ff4100;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: capas-snake-half var(--dur, 2200ms) cubic-bezier(0.4, 0, 0.2, 1)
+    forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capas-snake-half {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Name styles — applied to a member's displayName. Gradients use
+   background-clip: text; animated variants use keyframes. */
+
+.name-gradient-sunset {
+  background: linear-gradient(90deg, #ff4100 0%, #ff8000 40%, #ffcc00 70%, #ff0055 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.name-gradient-ocean {
+  background: linear-gradient(90deg, #1d49ff 0%, #00d4ff 50%, #5be7c4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.name-gradient-lava {
+  background: linear-gradient(90deg, #d40000 0%, #ff4100 50%, #ffea61 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.name-outline-white {
+  color: white;
+  -webkit-text-stroke: 1.5px #0f0f0f;
+}
+.name-outline-orange {
+  color: white;
+  -webkit-text-stroke: 1.5px #ff4100;
+}
+
+.name-fire {
+  background: linear-gradient(180deg, #ffea61 0%, #ff8000 50%, #d40000 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.name-neon-pink {
+  color: #ff10a0;
+  text-shadow: 0 0 6px #ff10a0, 0 0 14px rgba(255, 16, 160, 0.55);
+}
+.name-neon-cyan {
+  color: #00d4ff;
+  text-shadow: 0 0 6px #00d4ff, 0 0 14px rgba(0, 212, 255, 0.55);
+}
+
+@keyframes name-rainbow-shift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.name-rainbow {
+  background: linear-gradient(
+    90deg,
+    #ff4100, #ff8000, #ffcc00, #39e639,
+    #00d4ff, #1d49ff, #9d00ff, #ff10a0, #ff4100
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: name-rainbow-shift 3.5s linear infinite;
+}
+
+/* Seamless loop: the gradient is symmetric (dark→light→dark) and we shift
+   the bg by exactly one full pattern (200%) so end frame === start frame.
+   Direction inverted so the highlight sweeps left→right. */
+@keyframes name-shimmer-gold {
+  0%   { background-position: 200% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.name-shimmer-gold {
+  background: linear-gradient(
+    90deg,
+    #8a6a00 0%, #d4a500 35%, #fff6c8 50%, #d4a500 65%, #8a6a00 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: name-shimmer-gold 3s linear infinite;
+}
+
+@keyframes name-holographic-shift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+.name-holographic {
+  background: linear-gradient(
+    135deg,
+    #c0c0ff 0%, #ffffff 20%, #ffd9f0 40%,
+    #a0d8ff 60%, #ffffff 80%, #c0c0ff 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: name-holographic-shift 4s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Extra name styles (raro/épico/exclusivo/lendário) */
+
+/* Raro — gradients suaves de duas cores */
+.name-gradient-mint {
+  background: linear-gradient(90deg, #06b6d4 0%, #10b981 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-sakura {
+  background: linear-gradient(90deg, #ffb7c5 0%, #ec4899 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-lavanda {
+  background: linear-gradient(90deg, #a78bfa 0%, #7c3aed 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-tangerina {
+  background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-coral {
+  background: linear-gradient(90deg, #fb7185 0%, #f43f5e 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-esmeralda {
+  background: linear-gradient(90deg, #10b981 0%, #047857 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-cobalto {
+  background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* Épico — gradients vibrantes multi-cor */
+.name-gradient-galaxy {
+  background: linear-gradient(135deg, #c084fc 0%, #ec4899 50%, #3b82f6 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-twilight {
+  background: linear-gradient(90deg, #6366f1 0%, #ec4899 50%, #f59e0b 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-inferno {
+  background: linear-gradient(180deg, #fef08a 0%, #f97316 50%, #991b1b 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-tropical {
+  background: linear-gradient(90deg, #f97316 0%, #ec4899 50%, #06b6d4 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-royal {
+  background: linear-gradient(90deg, #7c3aed 0%, #fbbf24 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-cyberpunk {
+  background: linear-gradient(90deg, #ec4899 0%, #06b6d4 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-rose-gold {
+  background: linear-gradient(90deg, #fda4af 0%, #fbbf24 50%, #fda4af 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* Exclusivo — neons com glow */
+.name-neon-green {
+  color: #10ff7a;
+  text-shadow: 0 0 6px #10ff7a, 0 0 14px rgba(16, 255, 122, 0.55);
+}
+.name-neon-purple {
+  color: #c084fc;
+  text-shadow: 0 0 6px #c084fc, 0 0 14px rgba(192, 132, 252, 0.55);
+}
+.name-acid {
+  color: #84cc16;
+  text-shadow: 0 0 8px #84cc16, 0 0 18px rgba(132, 204, 22, 0.7);
+}
+.name-plasma {
+  color: #f472b6;
+  text-shadow: 0 0 6px #f472b6, 0 0 14px #c026d3,
+    0 0 24px rgba(192, 38, 211, 0.5);
+}
+
+/* Lendário — animados */
+/* Aurora — três cores deslizando devagar */
+@keyframes name-aurora-shift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.name-aurora {
+  background: linear-gradient(
+    90deg,
+    #10b981 0%, #06b6d4 25%, #8b5cf6 50%,
+    #06b6d4 75%, #10b981 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-aurora-shift 4.5s linear infinite;
+}
+
+/* Diamante — branco/prata com sweep brilhante (igual shimmer-gold mas frio) */
+@keyframes name-diamante-shift {
+  0%   { background-position: 200% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.name-diamante {
+  background: linear-gradient(
+    90deg,
+    #94a3b8 0%, #cbd5e1 35%, #ffffff 50%, #cbd5e1 65%, #94a3b8 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-diamante-shift 3s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .name-rainbow,
+  .name-shimmer-gold,
+  .name-holographic,
+  .name-aurora,
+  .name-diamante {
+    animation: none;
+  }
+}
+
+@keyframes inhouse-rift-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.inhouse-rift-float {
+  animation: inhouse-rift-float 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inhouse-smoke--a,
+  .inhouse-smoke--b,
+  .inhouse-smoke--c,
+  .inhouse-rift-float {
+    animation: none;
+  }
+}
