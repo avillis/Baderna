@@ -61,9 +61,9 @@ baderna-api/bootstrap/cache/*.php
 baderna-api/database/database.sqlite
 
 # ── Assets pesados / locais (não vão pro repo) ─────────────
-campeões/
-coin/
-cara_ou_coroa/
+/campeões/
+/coin/
+/cara_ou_coroa/
 *.psd
 Batata Letters.html
 Meta-wave.jsx
