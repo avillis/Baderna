@@ -156,6 +156,7 @@ export const panelMemberWinrates: Array<{
   id: string;
   nickname: string;
   name: string;
+  avatarSrc?: string;
   flex: { wins: number; losses: number };
   inhouse: { wins: number; losses: number };
 }> = [];
