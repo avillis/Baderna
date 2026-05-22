@@ -10,7 +10,7 @@ export function clampBannerFocusY(value: number) {
 
 export type SplashSize = "full" | "thumb";
 
-export const DEFAULT_BANNER_FILE = "Garen_Original.webp";
+export const DEFAULT_BANNER_FILE = "Garen_0.jpg";
 
 export function getSplashImageSrc(
   fileName: string,

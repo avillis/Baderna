@@ -1,20 +1,8 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+// Redireciona pra Data Dragon — CDN oficial da Riot, gratuito.
+// Antes liamos as imagens do filesystem (`campeões/img/champion/tiles/`),
+// mas isso explodiu o bundle em prod. DDragon serve as mesmas imagens.
 
-const TILE_DIRECTORY = path.join(
-  process.cwd(),
-  "campeões",
-  "img",
-  "champion",
-  "tiles",
-);
-
-const MIME_TYPES: Record<string, string> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".webp": "image/webp",
-};
+const DDRAGON_TILES = "https://ddragon.leagueoflegends.com/cdn/img/champion/tiles";
 
 export const dynamic = "force-dynamic";
 
@@ -28,25 +16,5 @@ export async function GET(
     return new Response("Arquivo invalido.", { status: 400 });
   }
 
-  const resolvedDirectory = path.resolve(TILE_DIRECTORY);
-  const resolvedFile = path.resolve(path.join(TILE_DIRECTORY, fileName));
-
-  if (!resolvedFile.startsWith(`${resolvedDirectory}${path.sep}`)) {
-    return new Response("Arquivo invalido.", { status: 400 });
-  }
-
-  try {
-    const buffer = await readFile(resolvedFile);
-    const extension = path.extname(fileName).toLowerCase();
-
-    return new Response(buffer, {
-      headers: {
-        "Content-Type": MIME_TYPES[extension] ?? "application/octet-stream",
-        "Cache-Control": "public, max-age=31536000, immutable",
-        "Content-Disposition": "inline",
-      },
-    });
-  } catch {
-    return new Response("Tile nao encontrado.", { status: 404 });
-  }
+  return Response.redirect(`${DDRAGON_TILES}/${fileName}`, 302);
 }

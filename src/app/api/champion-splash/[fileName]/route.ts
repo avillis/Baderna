@@ -1,45 +1,12 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+// Redireciona pra Data Dragon — CDN oficial da Riot, gratuito.
+// "full" → splash art completa, "thumb" → loading screen (menor).
 
-const PROCESSED_ROOT = path.join(
-  process.cwd(),
-  "campeões",
-  "splash_processed",
-);
-const LEGACY_DIRECTORY = path.join(
-  process.cwd(),
-  "campeões",
-  "img",
-  "champion",
-  "splash",
-);
-
-const MIME_TYPES: Record<string, string> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".webp": "image/webp",
-};
+const DDRAGON_SPLASH = "https://ddragon.leagueoflegends.com/cdn/img/champion/splash";
+const DDRAGON_LOADING = "https://ddragon.leagueoflegends.com/cdn/img/champion/loading";
 
 const ALLOWED_SIZES = new Set(["full", "thumb"]);
 
 export const dynamic = "force-dynamic";
-
-function resolveSafe(baseDir: string, fileName: string): string | null {
-  const resolvedDir = path.resolve(baseDir);
-  const resolvedFile = path.resolve(path.join(baseDir, fileName));
-  if (!resolvedFile.startsWith(`${resolvedDir}${path.sep}`)) return null;
-  return resolvedFile;
-}
-
-async function tryRead(filePath: string | null) {
-  if (!filePath) return null;
-  try {
-    return await readFile(filePath);
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(
   request: Request,
@@ -56,29 +23,15 @@ export async function GET(
     return new Response("Arquivo inválido.", { status: 400 });
   }
 
-  // 1) Look in the processed (new) folder for the requested size.
-  const processedPath = resolveSafe(path.join(PROCESSED_ROOT, size), fileName);
-  let buffer = await tryRead(processedPath);
+  // Data Dragon só tem .jpg pra splash/loading. Normaliza:
+  //   - "Garen_Original.webp" → "Garen_0.jpg" (Original = skin index 0)
+  //   - "Garen_BloodMoon.webp" → "Garen_0.jpg" (sem mapping de skin nome→id, cai no 0)
+  //   - "Garen_0.jpg" → "Garen_0.jpg" (passa direto)
+  const noExt = fileName.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+  const ddragonName = /^[A-Za-z0-9]+_\d+$/.test(noExt)
+    ? `${noExt}.jpg`
+    : `${noExt.split("_")[0]}_0.jpg`;
+  const base = size === "thumb" ? DDRAGON_LOADING : DDRAGON_SPLASH;
 
-  // 2) Fall back to the legacy /img/champion/splash/ folder.
-  //    Lets old "Champion_0.jpg" URLs keep working for things like the
-  //    featured-champion card while we still benefit from processed thumbs
-  //    elsewhere.
-  if (!buffer) {
-    const legacyPath = resolveSafe(LEGACY_DIRECTORY, fileName);
-    buffer = await tryRead(legacyPath);
-  }
-
-  if (!buffer) {
-    return new Response("Splash não encontrada.", { status: 404 });
-  }
-
-  const extension = path.extname(fileName).toLowerCase();
-  return new Response(buffer, {
-    headers: {
-      "Content-Type": MIME_TYPES[extension] ?? "application/octet-stream",
-      "Cache-Control": "public, max-age=31536000, immutable",
-      "Content-Disposition": "inline",
-    },
-  });
+  return Response.redirect(`${base}/${ddragonName}`, 302);
 }
