@@ -39,9 +39,20 @@ class User extends Authenticatable
         'secondary_lane',
     ];
 
+    // Campos NUNCA expostos em respostas JSON automáticas (`return $user`).
+    // Tem que ser explicitamente serializado se quiser mostrar (ex: o
+    // próprio user vê o email via AccountController::serialize).
     protected $hidden = [
         'password',
         'remember_token',
+        'email',
+        'email_verified_at',
+        'riot_puuid',
+        'is_admin',
+        'is_deleted',
+        'pending_registration',
+        'created_at',
+        'updated_at',
     ];
 
     /**

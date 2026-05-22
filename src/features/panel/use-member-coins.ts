@@ -169,11 +169,20 @@ export function useMemberCoins() {
       const sanitized = Math.max(0, Math.floor(coins));
       // Próprio usuário OU slug do próprio (compatibilidade)
       if (memberId === userId) {
+        const previous = balance;
         setBalance(sanitized);
         writeSelfCache(userId, sanitized);
-        // Sync via admin endpoint (definir absoluto)
-        const id = Number(userId);
-        if (!Number.isNaN(id)) void adminSetBalance(id, sanitized);
+        // Self: usa endpoint de adjust (atômico + autorizado pro próprio
+        // user). Admin endpoint dá 403 pra non-admins → loja não persistia.
+        const delta = sanitized - previous;
+        if (delta !== 0) {
+          void adjustSelfBalance(delta).then((fresh) => {
+            if (fresh !== null) {
+              setBalance(fresh);
+              writeSelfCache(userId, fresh);
+            }
+          });
+        }
         return;
       }
       // Outro membro — admin set
@@ -187,7 +196,7 @@ export function useMemberCoins() {
       writeAdminCache(cached);
       void adminSetBalance(id, sanitized);
     },
-    [userId, adminMap],
+    [userId, adminMap, balance],
   );
 
   const getCoinsFor = useCallback(
@@ -200,29 +209,36 @@ export function useMemberCoins() {
   );
 
   /**
-   * Operação atômica delta (usada pela loja). Não passe fora do próprio user.
+   * Atualiza o saldo LOCAL (sem bater na API) — pra UI otimista durante
+   * o spin. O backend é a fonte de verdade real: chamadas ao /account/unlocks
+   * debitam atomicamente, e o response é usado pra sincronizar via syncBalance.
    */
-  const adjustCoins = useCallback(
-    async (delta: number) => {
-      if (!userId) return;
-      // Update otimista
-      const optimistic = Math.max(0, balance + delta);
-      setBalance(optimistic);
-      writeSelfCache(userId, optimistic);
-      const fresh = await adjustSelfBalance(delta);
-      if (fresh !== null) {
-        setBalance(fresh);
-        writeSelfCache(userId, fresh);
-      }
+  const setLocalBalance = useCallback(
+    (next: number) => {
+      const sanitized = Math.max(0, Math.floor(next));
+      setBalance(sanitized);
+      writeSelfCache(userId, sanitized);
     },
-    [userId, balance],
+    [userId],
+  );
+
+  /**
+   * Sync com valor autoritativo vindo do backend (ex: response do /unlocks).
+   */
+  const syncBalance = useCallback(
+    (fresh: number) => {
+      setBalance(fresh);
+      writeSelfCache(userId, fresh);
+    },
+    [userId],
   );
 
   return {
     coinsByMember: { ...adminMap, ...(userId ? { [userId]: balance } : {}) },
     getCoinsFor,
     setCoinsFor,
-    adjustCoins,
+    setLocalBalance,
+    syncBalance,
     loadAdminList,
     mounted,
   };

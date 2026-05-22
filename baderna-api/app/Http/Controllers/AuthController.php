@@ -37,7 +37,8 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login realizado com sucesso.',
             'token' => $token,
-            'user' => $user,
+            // Pro próprio user, expõe email/is_admin que o User::$hidden esconde.
+            'user' => $user->makeVisible(['email', 'is_admin']),
         ]);
     }
 
@@ -169,7 +170,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Conta criada com sucesso!',
             'token' => $token,
-            'user' => $user,
+            'user' => $user->makeVisible(['email', 'is_admin']),
         ], 201);
     }
 
@@ -179,7 +180,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json([
-            'user' => $request->user(),
+            'user' => $request->user()->makeVisible(['email', 'is_admin']),
         ]);
     }
 

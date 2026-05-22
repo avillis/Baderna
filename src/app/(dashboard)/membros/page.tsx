@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
@@ -29,6 +31,33 @@ function getRankEffect(rank: number): RankEffect | null {
   return RANK_EFFECTS[rank] ?? null;
 }
 
+function MemberAvatar({
+  src,
+  alt,
+}: {
+  src: string;
+  alt: string;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative h-[124px] w-[124px] overflow-hidden rounded-full">
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse rounded-full bg-[#ededed]" />
+      )}
+      <Image
+        src={src}
+        alt={alt}
+        width={124}
+        height={124}
+        className={`h-full w-full object-cover transition-opacity duration-200 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
+
 export default function MembrosPage() {
   const visibleMembers = useBadernaMembers();
 
@@ -54,15 +83,10 @@ export default function MembrosPage() {
                     : undefined
                 }
               >
-                <div className="h-[124px] w-[124px] overflow-hidden rounded-full">
-                  <Image
-                    src={member.avatarSrc || getChampionAvatarSrc(member.id)}
-                    alt={member.nickname}
-                    width={124}
-                    height={124}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+                <MemberAvatar
+                  src={member.avatarSrc || getChampionAvatarSrc(member.id)}
+                  alt={member.nickname}
+                />
               </div>
 
               {/* Name + rank */}

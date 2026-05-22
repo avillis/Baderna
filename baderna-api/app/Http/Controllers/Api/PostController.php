@@ -67,7 +67,14 @@ class PostController extends Controller
 
         $owner = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($user->summoner_name ?? 'user'));
         $owner = substr($owner, 0, 32) ?: 'user';
-        $filename = $owner . '-' . time() . '-' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
+        // Extensão do MIME, não do client (evita .html/.php no storage público).
+        $ext = match ($file->getMimeType()) {
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+            'image/gif'  => 'gif',
+            default      => 'jpg',
+        };
+        $filename = $owner . '-' . time() . '-' . bin2hex(random_bytes(3)) . '.' . $ext;
 
         $path = $file->storeAs('posts', $filename, 'public');
 

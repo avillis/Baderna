@@ -23,12 +23,25 @@ class AvatarUploadController extends Controller
 
         $owner = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($user->summoner_name ?? 'user'));
         $owner = substr($owner, 0, 32) ?: 'user';
-        $filename = $owner . '-' . time() . '.' . $file->getClientOriginalExtension();
+        // Extensão derivada do MIME real (não do client) pra evitar arquivos
+        // tipo .html/.php servindo XSS no domínio da API.
+        $ext = $this->extFromMime($file->getMimeType());
+        $filename = $owner . '-' . time() . '.' . $ext;
 
         $path = $file->storeAs('avatars', $filename, 'public');
 
         return response()->json([
             'url' => url(Storage::url($path)),
         ]);
+    }
+
+    private function extFromMime(?string $mime): string
+    {
+        return match ($mime) {
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+            'image/gif'  => 'gif',
+            default      => 'jpg', // image/jpeg + fallback
+        };
     }
 }

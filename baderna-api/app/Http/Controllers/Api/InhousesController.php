@@ -56,6 +56,13 @@ class InhousesController extends Controller
             return response()->json(['error' => 'Não encontrada.'], 404);
         }
 
+        // Ownership: só quem criou (ou admin) pode editar. Sem essa checagem
+        // qualquer user logado podia reescrever inhouses alheios.
+        $user = $request->user();
+        if ($inhouse->created_by_user_id !== $user->id && !$user->is_admin) {
+            return response()->json(['error' => 'Sem permissão.'], 403);
+        }
+
         $data = $request->validate([
             'payload' => 'required|array',
         ]);

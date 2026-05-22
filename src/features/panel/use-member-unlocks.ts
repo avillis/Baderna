@@ -2,13 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { authToken } from "@/features/panel/use-auth";
+import { authToken, useAuth } from "@/features/panel/use-auth";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
 const CACHE_KEY = "baderna:unlocks-cache";
 const UPDATE_EVENT = "baderna:unlocks-updated";
+
+// Mesmas chaves que use-member-coins usa — pra escrever o novo saldo
+// devolvido pela API direto no cache que o hook de moedas lê.
+const COINS_CACHE_PREFIX = "baderna:member-coins-cache:";
+const COINS_UPDATE_EVENT = "baderna:member-coins-updated";
 
 export type UnlockKind = "title" | "capa" | "name";
 
@@ -53,9 +58,19 @@ async function fetchFromApi(): Promise<UnlocksMap | null> {
   };
 }
 
-async function postUnlockToApi(kind: UnlockKind, slug: string): Promise<boolean> {
+type UnlockResponse = {
+  kind: UnlockKind;
+  slug: string;
+  balance: number;
+  duplicate: boolean;
+};
+
+async function postUnlockToApi(
+  kind: UnlockKind,
+  slug: string,
+): Promise<UnlockResponse | null> {
   const token = authToken();
-  if (!token) return false;
+  if (!token) return null;
   const res = await fetch(`${API_BASE}/account/unlocks`, {
     method: "POST",
     headers: {
@@ -65,7 +80,8 @@ async function postUnlockToApi(kind: UnlockKind, slug: string): Promise<boolean>
     },
     body: JSON.stringify({ kind, slug }),
   });
-  return res.ok;
+  if (!res.ok) return null;
+  return (await res.json()) as UnlockResponse;
 }
 
 /**
@@ -73,6 +89,8 @@ async function postUnlockToApi(kind: UnlockKind, slug: string): Promise<boolean>
  * em localStorage pra hidratação rápida.
  */
 export function useMemberUnlocks() {
+  const { user } = useAuth();
+  const userId = user ? String(user.id) : null;
   const [unlocks, setUnlocks] = useState<UnlocksMap>(() => readCache());
 
   useEffect(() => {
@@ -101,21 +119,36 @@ export function useMemberUnlocks() {
   const unlock = useCallback(
     async (kind: UnlockKind, slug: string) => {
       const list = unlocks[kind];
-      if (list.includes(slug)) return;
-      const next: UnlocksMap = {
-        ...unlocks,
-        [kind]: [...list, slug],
-      };
-      setUnlocks(next);
-      writeCache(next);
-      const ok = await postUnlockToApi(kind, slug);
-      if (!ok) {
+      const wasAlreadyOwned = list.includes(slug);
+      if (!wasAlreadyOwned) {
+        const next: UnlocksMap = {
+          ...unlocks,
+          [kind]: [...list, slug],
+        };
+        setUnlocks(next);
+        writeCache(next);
+      }
+      const result = await postUnlockToApi(kind, slug);
+      if (!result) {
         // rollback otimista
         setUnlocks(unlocks);
         writeCache(unlocks);
+        return null;
       }
+      // Backend acabou de debitar — escreve o novo saldo no cache que o
+      // hook de moedas lê + dispara o evento pra ele atualizar a UI.
+      if (userId && typeof window !== "undefined") {
+        window.localStorage.setItem(
+          COINS_CACHE_PREFIX + userId,
+          JSON.stringify(result.balance),
+        );
+        queueMicrotask(() =>
+          window.dispatchEvent(new Event(COINS_UPDATE_EVENT)),
+        );
+      }
+      return result;
     },
-    [unlocks],
+    [unlocks, userId],
   );
 
   const isUnlocked = useCallback(

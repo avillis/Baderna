@@ -3,8 +3,15 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Pencil } from "lucide-react";
 
+import { authToken } from "@/features/panel/use-auth";
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api";
+
+function authHeaders(): Record<string, string> {
+  const token = authToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 type RiotKeyState = {
   masked: string | null;
@@ -40,7 +47,9 @@ export function AdminIntegrationsCard() {
 
   async function refresh() {
     try {
-      const res = await fetch(`${API_BASE}/admin/riot-key`);
+      const res = await fetch(`${API_BASE}/admin/riot-key`, {
+        headers: { Accept: "application/json", ...authHeaders() },
+      });
       if (!res.ok) throw new Error(`API respondeu ${res.status}`);
       const data = (await res.json()) as RiotKeyState;
       setState({ status: "ready", data });
@@ -62,7 +71,11 @@ export function AdminIntegrationsCard() {
     try {
       const res = await fetch(`${API_BASE}/admin/riot-key`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...authHeaders(),
+        },
         body: JSON.stringify({ key }),
       });
       const body = (await res.json().catch(() => null)) as

@@ -19,8 +19,11 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TitlesController;
 
 // ── Auth ───────────────────────────────────────────────────────────────
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// Rate limit pra defender de brute-force / spam: 10 tentativas/min por IP.
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 // ── Públicos ───────────────────────────────────────────────────────────
 Route::get(
@@ -37,10 +40,6 @@ Route::get('/members/ranks', [MemberRanksController::class, 'index']);
 Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
 Route::get('/inhouses', [InhousesController::class, 'index']);
 Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
-
-// Admin (sem auth em dev — adicionar middleware quando subir).
-Route::get('/admin/riot-key', [SettingsController::class, 'showRiotKey']);
-Route::put('/admin/riot-key', [SettingsController::class, 'updateRiotKey']);
 
 // ── Autenticados ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -66,7 +65,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Saldo do próprio usuário + unlocks
     Route::get('/account/coins', [MemberCoinsController::class, 'me']);
-    Route::post('/account/coins/adjust', [MemberCoinsController::class, 'adjust']);
+    // ATENÇÃO: /account/coins/adjust foi REMOVIDA — permitia self-credit
+    // ilimitado. Débito agora é feito atomicamente dentro do unlocks/store.
     Route::get('/account/unlocks', [MemberUnlocksController::class, 'index']);
     Route::post('/account/unlocks', [MemberUnlocksController::class, 'store']);
 
@@ -81,6 +81,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin-only — só rolam com Sanctum válido + is_admin=true
     Route::middleware('admin')->prefix('admin')->group(function () {
+        // Riot API key — leitura E escrita atrás de auth+admin (era público).
+        Route::get('/riot-key', [SettingsController::class, 'showRiotKey']);
+        Route::put('/riot-key', [SettingsController::class, 'updateRiotKey']);
         Route::put('/coin-rewards', [AppSettingsController::class, 'updateCoinRewards']);
         Route::put('/inhouse-points', [AppSettingsController::class, 'updateInhousePoints']);
         Route::post('/titles', [TitlesController::class, 'store']);
