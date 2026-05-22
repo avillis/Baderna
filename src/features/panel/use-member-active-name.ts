@@ -4,10 +4,12 @@ import { useCallback } from "react";
 
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
+import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 
 /**
- * Estilo de nome ativo do usuário logado.
- * Persiste via `account.activeNameId` no Laravel.
+ * Estilo de nome ativo do membro alvo.
+ * - Pra o usuário logado: lê/grava em `account.activeNameId` (Laravel).
+ * - Pra outros membros: lê o `activeNameId` retornado pelo /api/members.
  */
 export function useMemberActiveName(
   memberId: string,
@@ -15,6 +17,7 @@ export function useMemberActiveName(
 ): { active: string; setActive: (id: string) => void } {
   const { user } = useAuth();
   const { account, updateField } = useAccount();
+  const members = useBadernaMembers();
 
   const selfNick = account.gameNick.split("#")[0]?.toLowerCase() ?? "";
   const selfUserId = user ? String(user.id) : "";
@@ -23,7 +26,19 @@ export function useMemberActiveName(
     memberId === selfNick ||
     memberId.toLowerCase() === selfNick;
 
-  const active = isSelf ? account.activeNameId ?? fallback : fallback;
+  // Pra outros membros, busca a row na lista global.
+  const member = isSelf
+    ? null
+    : members.find(
+        (m) =>
+          m.id === memberId ||
+          m.id.toLowerCase() === memberId.toLowerCase() ||
+          (m.userId != null && String(m.userId) === memberId),
+      );
+
+  const active = isSelf
+    ? account.activeNameId ?? fallback
+    : member?.activeNameId ?? fallback;
 
   const setActive = useCallback(
     (id: string) => {
