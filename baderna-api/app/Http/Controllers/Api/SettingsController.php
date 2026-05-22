@@ -43,8 +43,10 @@ class SettingsController extends Controller
             ], 422);
         }
 
-        Cache::forever(RiotAPIServices::SETTINGS_KEY, $data['key']);
+        // ORDEM IMPORTA: limpa o cache ANTES de salvar a chave, senão
+        // o flush apaga a key recém-salva. Bug clássico.
         $this->clearProfileCache();
+        Cache::forever(RiotAPIServices::SETTINGS_KEY, $data['key']);
 
         return response()->json([
             'masked' => $this->mask($data['key']),
