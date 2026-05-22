@@ -10,6 +10,10 @@ import {
   getChampionTileSrc,
 } from "@/features/panel/champion-avatar";
 import { useAccount } from "@/features/panel/use-account";
+import { authToken } from "@/features/panel/use-auth";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
 type Tab = "riot" | "champions" | "upload";
 
@@ -63,18 +67,28 @@ export function AvatarPickerModal({
     setError(null);
     setUploading(true);
     try {
+      const token = authToken();
+      if (!token) throw new Error("Você precisa estar logado pra subir avatar.");
       const form = new FormData();
       form.append("file", file);
-      form.append("owner", ownerId);
-      const res = await fetch("/api/upload-avatar", {
+      const res = await fetch(`${API_BASE}/account/avatar`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
         body: form,
       });
       const body = (await res.json().catch(() => null)) as
-        | { url?: string; error?: string }
+        | { url?: string; message?: string; errors?: Record<string, string[]> }
         | null;
       if (!res.ok || !body?.url) {
-        throw new Error(body?.error ?? `Falha no upload (${res.status})`);
+        const firstErr = body?.errors
+          ? Object.values(body.errors)[0]?.[0]
+          : undefined;
+        throw new Error(
+          firstErr ?? body?.message ?? `Falha no upload (${res.status})`,
+        );
       }
       onClose();
       onSelect(body.url);
@@ -259,17 +273,15 @@ export function AvatarPickerModal({
             >
               {uploading ? (
                 <svg
-                  className="capas-spinner h-[20px] w-[20px] [&_circle]:stroke-white"
+                  className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
                   viewBox="25 25 50 50"
                 >
                   <circle r="20" cy="50" cx="50" />
                 </svg>
               ) : (
-                <>
-                  <Upload className="h-[16px] w-[16px]" strokeWidth={2.4} />
-                  Escolher arquivo
-                </>
+                <Upload className="h-[16px] w-[16px]" strokeWidth={2.4} />
               )}
+              {uploading ? "Enviando..." : "Escolher arquivo"}
             </button>
             <p className="max-w-[320px] text-center text-[12px] text-[#8d8d8d]">
               PNG, JPG, WEBP ou GIF. Máx. 5 MB. A imagem fica salva no servidor

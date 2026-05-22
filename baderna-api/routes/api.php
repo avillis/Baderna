@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AppSettingsController;
+use App\Http\Controllers\Api\AvatarUploadController;
 use App\Http\Controllers\Api\InhousesController;
 use App\Http\Controllers\Api\MemberCoinsController;
 use App\Http\Controllers\Api\MemberCommentsController;
@@ -60,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Account (Minha Conta)
     Route::get('/account', [AccountController::class, 'show']);
     Route::put('/account', [AccountController::class, 'update']);
+    Route::post('/account/avatar', [AvatarUploadController::class, 'store']);
 
     // Saldo do próprio usuário + unlocks
     Route::get('/account/coins', [MemberCoinsController::class, 'me']);
