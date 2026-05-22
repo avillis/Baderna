@@ -255,7 +255,7 @@ export function AvatarPickerModal({
               type="button"
               onClick={() => fileInput.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-[10px] rounded-full bg-[#ff4100] px-[24px] py-[12px] text-[14px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-8 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {uploading ? (
                 <svg
