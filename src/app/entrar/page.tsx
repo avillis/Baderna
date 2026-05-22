@@ -1,13 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 
 import { useAuth } from "@/features/panel/use-auth";
 
+// Wrapper com Suspense — useSearchParams() exige isso no Next.js 16+
 export default function EntrarPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f7f7f7]" />}>
+      <EntrarPageInner />
+    </Suspense>
+  );
+}
+
+function EntrarPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
