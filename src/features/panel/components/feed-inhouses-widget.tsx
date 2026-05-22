@@ -29,7 +29,7 @@ export function FeedInhousesWidget() {
   if (recent.length === 0) return null;
 
   return (
-    <section className="rounded-[20px] border border-[#ededed] bg-white p-[20px]">
+    <section className="rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       <h3 className="text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
         Últimos inhouses
       </h3>
@@ -40,9 +40,6 @@ export function FeedInhousesWidget() {
             href={`/inhouse/${ih.shortCode}`}
             className="flex items-center gap-[12px] rounded-[12px] p-[8px] transition-colors hover:bg-[#f7f7f7]"
           >
-            <div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-[10px] bg-[#0f0f0f] text-[10px] font-black text-white">
-              {ih.shortCode.slice(0, 4)}
-            </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
                 {ih.shortCode}

@@ -232,7 +232,7 @@ export default async function MembroPage({ params }: MembroPageProps) {
         </div>
 
         <div className="hidden 2xl:block">
-          <div className="origin-top-left scale-[0.955]">
+          <div>
             <div className="grid grid-cols-[1.67fr_repeat(4,minmax(0,1fr))] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="pl-0">
                 <PanelProfileSummary

@@ -762,18 +762,26 @@ function InhouseListCard({
 }
 
 function CaptainAvatar({ player }: { player: InhousePlayer }) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  // Inicia "loaded" se a imagem já estiver em cache (complete=true antes do
+  // primeiro paint). Evita o flash do skeleton em refreshes.
+  const [loaded, setLoaded] = useState(() => false);
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, [player.avatarSrc]);
   return (
-    <div className="relative h-[48px] w-[48px] shrink-0">
+    <div className="relative h-[48px] w-[48px] shrink-0 overflow-hidden rounded-full ring-[2px] ring-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] bg-[#ededed]">
       {player.avatarSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          ref={imgRef}
           src={player.avatarSrc}
-          alt={player.nickname}
-          className="h-full w-full rounded-full object-cover ring-[2px] ring-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+          alt=""
+          className="h-full w-full object-cover"
+          onLoad={() => setLoaded(true)}
+          style={{ opacity: loaded ? 1 : 0 }}
         />
-      ) : (
-        <div className="h-full w-full rounded-full bg-[#d9d9d9] ring-[2px] ring-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]" />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -816,11 +824,11 @@ function TeamRow({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={p.avatarSrc}
-                  alt={p.nickname}
-                  className="h-full w-full object-cover"
+                  alt=""
+                  className="h-full w-full object-cover bg-[#ededed]"
                 />
               ) : (
-                <div className="h-full w-full bg-[#d9d9d9]" />
+                <div className="h-full w-full bg-[#ededed]" />
               )}
             </div>
           ))}

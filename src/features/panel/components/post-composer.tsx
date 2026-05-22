@@ -177,9 +177,18 @@ export function PostComposer({
               type="button"
               onClick={handleSubmit}
               disabled={!canPost || posting}
-              className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#ff4100] px-[24px] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="flex h-[50px] w-[120px] flex-shrink-0 items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {posting ? "Postando..." : "Postar"}
+              {posting ? (
+                <svg
+                  className="capas-spinner h-[18px] w-[18px] [&_circle]:stroke-white"
+                  viewBox="25 25 50 50"
+                >
+                  <circle r="20" cy="50" cx="50" />
+                </svg>
+              ) : (
+                "Postar"
+              )}
             </button>
           </div>
 

@@ -44,7 +44,7 @@ const recentMatches = [
 
 export function FeedHistoryWidget() {
   return (
-    <section className="rounded-[20px] border border-[#ededed] bg-white p-[20px]">
+    <section className="rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       <h3 className="text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
         Histórico de partidas
       </h3>

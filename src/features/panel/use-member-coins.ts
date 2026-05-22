@@ -87,22 +87,9 @@ async function adminSetBalance(userId: number, balance: number): Promise<void> {
   });
 }
 
-async function adjustSelfBalance(delta: number): Promise<number | null> {
-  const token = authToken();
-  if (!token) return null;
-  const res = await fetch(`${API_BASE}/account/coins/adjust`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ delta }),
-  });
-  if (!res.ok) return null;
-  const body = (await res.json()) as { balance: number };
-  return body.balance;
-}
+// /account/coins/adjust foi removida do backend (vulnerabilidade
+// self-credit). Função mantida só pra manter assinatura, sem efeito.
+
 
 /**
  * Hook que retorna o saldo de moedas do USUÁRIO LOGADO + admin actions.
@@ -167,22 +154,12 @@ export function useMemberCoins() {
   const setCoinsFor = useCallback(
     (memberId: string, coins: number) => {
       const sanitized = Math.max(0, Math.floor(coins));
-      // Próprio usuário OU slug do próprio (compatibilidade)
+      // Próprio usuário: apenas atualiza local. Débito real só vem via
+      // backend (/account/unlocks debita atomicamente na compra). Self
+      // adjust endpoint foi removido pra fechar self-credit ilimitado.
       if (memberId === userId) {
-        const previous = balance;
         setBalance(sanitized);
         writeSelfCache(userId, sanitized);
-        // Self: usa endpoint de adjust (atômico + autorizado pro próprio
-        // user). Admin endpoint dá 403 pra non-admins → loja não persistia.
-        const delta = sanitized - previous;
-        if (delta !== 0) {
-          void adjustSelfBalance(delta).then((fresh) => {
-            if (fresh !== null) {
-              setBalance(fresh);
-              writeSelfCache(userId, fresh);
-            }
-          });
-        }
         return;
       }
       // Outro membro — admin set

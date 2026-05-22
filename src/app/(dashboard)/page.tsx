@@ -19,9 +19,14 @@ export default function FeedPage() {
           <PostComposer onCreate={createPost} />
 
           {loading && posts.length === 0 && (
-            <p className="py-[40px] text-center text-[13px] text-[#8d8d8d]">
-              Carregando posts...
-            </p>
+            <div className="flex items-center justify-center py-[40px]">
+              <svg
+                className="capas-spinner h-[28px] w-[28px] [&_circle]:stroke-[#ff4100]"
+                viewBox="25 25 50 50"
+              >
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+            </div>
           )}
 
           {!loading && posts.length === 0 && (

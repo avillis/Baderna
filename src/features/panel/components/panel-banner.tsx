@@ -154,7 +154,7 @@ export function PanelBanner({
       className="group relative isolate overflow-hidden rounded-none bg-black
         -mt-[calc(6vh+16px)] h-[calc(250px+6vh+16px)]
         sm:-mt-[calc(6vh+24px)] sm:h-[calc(290px+6vh+24px)]
-        xl:-mt-[calc(6vh+45px)] xl:h-[calc(320px+6vh+45px)] xl:rounded-bl-[var(--panel-radius-shell)]
+        xl:-mt-[calc(6vh+45px)] xl:-mr-[45px] xl:h-[calc(320px+6vh+45px)] xl:rounded-bl-[var(--panel-radius-shell)]
         2xl:h-[calc(350px+6vh+45px)]"
     >
       <div

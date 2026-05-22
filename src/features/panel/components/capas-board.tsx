@@ -170,7 +170,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   const LOGGED_USER_ID = user ? String(user.id) : "__guest__";
   // Coins now keyed pelo user.id (numérico) — saldo vem da API.
   const COINS_KEY = LOGGED_USER_ID;
-  const { getCoinsFor, setCoinsFor } = useMemberCoins();
+  const { getCoinsFor, setLocalBalance } = useMemberCoins();
   const { unlock: unlockBanner, isUnlocked: isBannerUnlocked, unlocked: unlockedBanners } =
     useUnlockedBanners(LOGGED_USER_ID);
   const { unlocked: unlockedTitles, setUnlocked: setUnlockedTitles } =
@@ -378,20 +378,30 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       const container = stripRef.current?.parentElement;
       if (!container) return;
       const cardStride = CARD_WIDTH + CARD_GAP;
-      const STRIP_PADDING_LEFT = 12;
+      const STRIP_PADDING_LEFT = 0;
       const indicatorX = getIndicatorOffset();
-      // Pick a card to centre such that there are enough cards before it to
-      // fill the visible area to the left of the indicator (so the roulette
-      // looks "full" at rest, not empty on the left side).
-      const cardsToLeft = Math.ceil(indicatorX / cardStride) + 1;
+      // Escolhe a card cujo CENTRO fica MAIS PERTO de indicatorX (em vez de
+      // arredondar pra cima com ceil + 1). Com a estratégia anterior a card
+      // ficava sempre 1 índice à direita do natural, criando um deslocamento
+      // visual de meio cardStride que ninguém consegue calibrar à mão.
+      const cardIndex = Math.max(
+        0,
+        Math.round((indicatorX - STRIP_PADDING_LEFT - CARD_WIDTH / 2) / cardStride),
+      );
       const targetCenter =
-        STRIP_PADDING_LEFT + cardsToLeft * cardStride + CARD_WIDTH / 2;
+        STRIP_PADDING_LEFT + cardIndex * cardStride + CARD_WIDTH / 2;
       setTranslateX(-(targetCenter - indicatorX));
     }
+    // Roda duas vezes: uma agora e outra no próximo frame, garantindo que
+    // o DOM já fez o layout (indicador + strip posicionados certinhos).
     center();
+    const raf = requestAnimationFrame(center);
     window.addEventListener("resize", center);
-    return () => window.removeEventListener("resize", center);
-  }, [spinning, mounted, rouletteItems.length]);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", center);
+    };
+  }, [spinning, mounted, rouletteItems.length, tab]);
 
   const coins = getCoinsFor(COINS_KEY, 0);
 
@@ -553,18 +563,20 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     setResetting(true);
     setTranslateX(0);
     setSpinning(true);
-    // Free spin (capas) skips the coin deduction; otherwise charge now so
-    // the balance ticks down right away.
+    // Free spin (capas) pula o débito. Senão, deduz LOCAL otimisticamente
+    // (sem bater na API) — o débito real acontece server-side no /unlocks
+    // quando rolar o unlock no final da animação. Se for duplicada, backend
+    // não cobra e devolve o saldo cheio (sincronizado via storage event).
     if (usingFreeSpin) {
       claimFreeSpin();
     } else {
-      setCoinsFor(COINS_KEY, coins - activeConfig.cost);
+      setLocalBalance(coins - activeConfig.cost);
     }
 
     // Compute the translateX to land the winner card centered under the indicator
     const cardStride = CARD_WIDTH + CARD_GAP;
     // Strip has paddingLeft = 12, so each card's left edge is shifted by that
-    const STRIP_PADDING_LEFT = 12;
+    const STRIP_PADDING_LEFT = 0;
     const winnerCenter =
       STRIP_PADDING_LEFT + WIN_INDEX * cardStride + CARD_WIDTH / 2;
     const finalX = -(winnerCenter - getIndicatorOffset());
@@ -587,10 +599,12 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       const rarity = activeConfig.getRarity(winner);
       const isDuplicate = activeConfig.isOwned(winner);
       const wasFree = usingFreeSpin;
-      // Free spin → no cost was deducted, no refund needed.
-      // Duplicate (paid) → full refund (give the coins back).
-      if (!wasFree && isDuplicate) {
-        setCoinsFor(COINS_KEY, coins);
+      // Free spin → backend nem é chamado pra debitar.
+      // Duplicada (paga) → ainda chamamos unlock; backend devolve {duplicate:true}
+      //   sem cobrar e o saldo é sincronizado de volta automaticamente.
+      // Nova → backend cobra e devolve o novo saldo.
+      if (!wasFree) {
+        activeConfig.unlock(winner);
       } else if (!isDuplicate) {
         activeConfig.unlock(winner);
       }
@@ -641,7 +655,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     setReveal(null);
     // Directly snap to the idle position right now (don't wait for effect).
     const cardStride = CARD_WIDTH + CARD_GAP;
-    const STRIP_PADDING_LEFT = 12;
+    const STRIP_PADDING_LEFT = 0;
     const indicatorX = getIndicatorOffset();
     const cardsToLeft = Math.ceil(indicatorX / cardStride) + 1;
     const targetCenter =
@@ -650,7 +664,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   }
 
   return (
-    <div className="relative pb-12 xl:pr-[45px]">
+    <div className="relative pb-12">
       {/* Header */}
       <div className="flex items-start justify-between pt-[6vh]">
         <div>
@@ -725,14 +739,14 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       <div className="flex flex-col items-center pt-[28px]">
       {/* Roulette — extends edge-to-edge of the viewport on xl. The indicator
           stays aligned with the main column center (where the action button is). */}
-      <section className="relative z-0 w-full overflow-hidden xl:-ml-[423px] xl:-mr-[45px] xl:w-[calc(100%+468px)]">
+      <section className="relative z-0 w-full overflow-hidden xl:-mr-[45px] xl:w-[calc(100%+45px)]">
         <div className="relative h-[210px] overflow-hidden">
           <div
             ref={stripRef}
             className="absolute inset-y-0 flex items-center"
             style={{
               gap: `${CARD_GAP}px`,
-              paddingLeft: 12,
+              paddingLeft: 0,
               transform: `translate3d(${translateX}px, 0, 0)`,
               transition: resetting
                 ? "none"
@@ -827,7 +841,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
 
           {/* Indicator wrapper — pinned to the main column area so its centre
               equals the action button's centre below. */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 right-0 xl:left-[423px] xl:right-[45px]">
+          <div className="pointer-events-none absolute inset-y-0 left-0 right-0 xl:right-[45px]">
             <div
               ref={indicatorRef}
               className="absolute left-1/2 top-0 z-10 h-full w-[2px] -translate-x-1/2 bg-[#ff4100]"
@@ -963,7 +977,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       <section className="rounded-[var(--panel-radius-card)] bg-[#f7f7f7] py-3">
         {tab === "capas" ? (
           <>
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-12">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-12 2xl:grid-cols-[repeat(16,minmax(0,1fr))]">
               {sortedBannerPool.slice(0, visibleCount).map((fileName) => {
                 const owned = isBannerUnlocked(fileName);
                 const loaded = loadedImages.has(fileName);
@@ -971,7 +985,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 return (
                   <div
                     key={fileName}
-                    className={`relative aspect-[1215/717] overflow-hidden rounded-[var(--panel-radius-tile)] border-[2px] ${
+                    className={`relative aspect-[1215/717] overflow-hidden border-[2px] [container-type:inline-size] rounded-[clamp(4px,6cqw,16px)] ${
                       loaded ? "bg-[#0c0c0c]" : "animate-pulse bg-[#d0d0d0]"
                     }`}
                     style={{

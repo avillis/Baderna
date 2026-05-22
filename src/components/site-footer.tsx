@@ -51,7 +51,7 @@ const CONNECT_ITEMS: Array<{
 export function SiteFooter() {
   return (
     <footer className="mt-[60px] w-full border-t border-[#ececec] bg-[#f7f7f7] xl:mt-[80px]">
-      <div className="mx-auto max-w-[1920px] px-4 pb-[20px] pt-[40px] sm:px-6 xl:px-[45px] xl:pb-[28px] xl:pt-[60px]">
+      <div className="w-full px-4 pb-[20px] pt-[40px] sm:px-6 xl:px-[45px] xl:pb-[28px] xl:pt-[60px]">
         <div className="grid grid-cols-1 gap-y-[32px] md:grid-cols-[35fr_65fr] md:gap-x-[40px]">
           {/* Left: isolated logo (33%) */}
           <div>

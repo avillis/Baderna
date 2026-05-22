@@ -19,12 +19,16 @@ export function useMemberActiveName(
   const { account, updateField } = useAccount();
   const members = useBadernaMembers();
 
-  const selfNick = account.gameNick.split("#")[0]?.toLowerCase() ?? "";
+  // Nick "fresco": preferimos gameNick do account (já normalizado), mas se
+  // ainda não carregou caímos no summoner_name do JWT/useAuth. Sem essa
+  // fallback, clicks rápidos depois do login viravam no-op (isSelf=false).
+  const accountNick = account.gameNick.split("#")[0]?.toLowerCase() ?? "";
+  const authNick = user?.summoner_name?.toLowerCase() ?? "";
+  const selfNick = accountNick || authNick;
   const selfUserId = user ? String(user.id) : "";
   const isSelf =
     memberId === selfUserId ||
-    memberId === selfNick ||
-    memberId.toLowerCase() === selfNick;
+    (selfNick.length > 0 && memberId.toLowerCase() === selfNick);
 
   // Pra outros membros, busca a row na lista global.
   const member = isSelf

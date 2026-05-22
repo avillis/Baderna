@@ -28,7 +28,7 @@ export function PanelShell({
 }) {
   return (
     <div className={`relative min-h-screen overflow-x-clip ${bgClassName}`}>
-      <div className="relative mx-auto max-w-[2400px] px-4 pt-4 sm:px-6 sm:pt-6 xl:pl-[45px] xl:pr-0 xl:pt-[45px]">
+      <div className="relative w-full px-4 pt-4 sm:px-6 sm:pt-6 xl:px-[45px] xl:pt-[45px]">
         <div className="grid gap-6 xl:grid-cols-[318px_minmax(0,1fr)] xl:gap-[60px] 2xl:gap-[80px]">
           <PanelSidebar />
 

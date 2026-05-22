@@ -19,12 +19,15 @@ export function useMemberActiveTitles(
   const { user } = useAuth();
   const { account, updateField } = useAccount();
 
-  const selfNick = account.gameNick.split("#")[0]?.toLowerCase() ?? "";
+  // Mesma lógica do useMemberActiveName: usa gameNick do account, com
+  // fallback no summoner_name do JWT quando o account ainda não carregou.
+  const accountNick = account.gameNick.split("#")[0]?.toLowerCase() ?? "";
+  const authNick = user?.summoner_name?.toLowerCase() ?? "";
+  const selfNick = accountNick || authNick;
   const selfUserId = user ? String(user.id) : "";
   const isSelf =
     memberId === selfUserId ||
-    memberId === selfNick ||
-    memberId.toLowerCase() === selfNick;
+    (selfNick.length > 0 && memberId.toLowerCase() === selfNick);
 
   const active = isSelf
     ? account.activeTitleSlugs ?? fallback
