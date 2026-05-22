@@ -124,14 +124,16 @@ function AccountDropdown({
           Minha Conta
         </Link>
 
-        <Link
-          href="/admin"
-          onClick={onClose}
-          className="flex items-center gap-[8px] rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
-        >
-          <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-[#ff4100]" />
-          {panelSidebarAdminItem.label}
-        </Link>
+        {user?.is_admin && (
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className="flex items-center gap-[8px] rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
+          >
+            <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-[#ff4100]" />
+            {panelSidebarAdminItem.label}
+          </Link>
+        )}
 
         {panelProfile.isAdmin && (
           <Link
@@ -376,12 +378,14 @@ export function PanelSidebar() {
                 />
               );
             })}
-            <MenuItem
-              label="Admin"
-              tone={pathname === "/admin" ? "active" : "default"}
-              href="/admin"
-              mobile
-            />
+            {user?.is_admin && (
+              <MenuItem
+                label="Admin"
+                tone={pathname === "/admin" ? "active" : "default"}
+                href="/admin"
+                mobile
+              />
+            )}
           </div>
         </div>
       </div>

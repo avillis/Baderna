@@ -106,6 +106,22 @@ class AuthController extends Controller
             /* segue sem avatar */
         }
 
+        // Fallback: se a Riot não retornou nada, escolhe um campeão aleatório
+        // do Data Dragon pra servir como avatar padrão (tile).
+        if (!$avatarUrl) {
+            $defaultAvatars = [
+                'Aatrox', 'Ahri', 'Akali', 'Alistar', 'Ashe', 'Azir',
+                'Caitlyn', 'Darius', 'Diana', 'Ekko', 'Ezreal', 'Fiora',
+                'Garen', 'Jhin', 'Jinx', 'Kaisa', 'Katarina', 'Leblanc',
+                'LeeSin', 'Lux', 'Malphite', 'MissFortune', 'Nasus', 'Pyke',
+                'Riven', 'Senna', 'Sett', 'Sona', 'Soraka', 'Sylas', 'Syndra',
+                'Thresh', 'Tristana', 'Vayne', 'Vi', 'Viego', 'Yasuo',
+                'Yone', 'Zed', 'Zoe',
+            ];
+            $champion = $defaultAvatars[array_rand($defaultAvatars)];
+            $avatarUrl = "https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/{$champion}_0.jpg";
+        }
+
         // Existe stub pendente com mesmo summoner+tag? Reivindica em vez de criar.
         $pending = User::where('pending_registration', true)
             ->whereRaw('LOWER(summoner_name) = ?', [strtolower($finalSummoner)])

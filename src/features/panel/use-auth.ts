@@ -16,6 +16,7 @@ export type AuthUser = {
   summoner_name: string | null;
   tagLine: string | null;
   riot_puuid: string | null;
+  is_admin?: boolean;
 };
 
 function readToken(): string | null {
