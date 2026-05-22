@@ -222,27 +222,16 @@ export function AvatarPickerModal({
                 const src = getChampionTileSrc(file);
                 const isCurrent = currentSrc === src;
                 return (
-                  <button
+                  <ChampionTile
                     key={file}
-                    type="button"
-                    onClick={() => {
+                    file={file}
+                    src={src}
+                    isCurrent={isCurrent}
+                    onPick={() => {
                       onClose();
                       onSelect(src);
                     }}
-                    title={file.replace("_0.jpg", "")}
-                    className={`relative aspect-square w-full overflow-hidden rounded-full ring-2 transition-all hover:scale-[1.06] ${
-                      isCurrent ? "ring-[#ff4100]" : "ring-transparent"
-                    }`}
-                  >
-                    <Image
-                      src={src}
-                      alt={file}
-                      fill
-                      className="object-cover"
-                      sizes="110px"
-                      unoptimized
-                    />
-                  </button>
+                  />
                 );
               })}
               {filtered.length === 0 && (
@@ -295,5 +284,44 @@ export function AvatarPickerModal({
       </div>
     </div>,
     document.body,
+  );
+}
+
+function ChampionTile({
+  file,
+  src,
+  isCurrent,
+  onPick,
+}: {
+  file: string;
+  src: string;
+  isCurrent: boolean;
+  onPick: () => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      title={file.replace("_0.jpg", "")}
+      className={`relative aspect-square w-full overflow-hidden rounded-full ring-2 transition-all hover:scale-[1.06] ${
+        isCurrent ? "ring-[#ff4100]" : "ring-transparent"
+      }`}
+    >
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse rounded-full bg-[#ededed]" />
+      )}
+      <Image
+        src={src}
+        alt={file}
+        fill
+        className={`object-cover transition-opacity duration-200 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        sizes="110px"
+        unoptimized
+        onLoad={() => setLoaded(true)}
+      />
+    </button>
   );
 }
