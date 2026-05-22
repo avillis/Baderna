@@ -45,8 +45,32 @@ class AccountController extends Controller
         ]);
 
         $user = $request->user();
+        $changedRiotId =
+            (isset($data['summoner_name']) && $data['summoner_name'] !== $user->summoner_name) ||
+            (isset($data['tagLine']) && $data['tagLine'] !== $user->tagLine);
         $user->fill($data);
         $user->save();
+
+        // Trocou nick ou tag → resolve PUUID + ícone na Riot e atualiza.
+        if ($changedRiotId && $user->summoner_name && $user->tagLine) {
+            try {
+                $account = $riot->getPlayerPUUIDByRiotId($user->summoner_name, $user->tagLine);
+                if (!empty($account['puuid'])) {
+                    $user->riot_puuid = $account['puuid'];
+                    $user->summoner_name = $account['gameName'] ?? $user->summoner_name;
+                    $user->tagLine = $account['tagLine'] ?? $user->tagLine;
+                    $summoner = $riot->getSummonerByPUUID($user->riot_puuid);
+                    $iconId = $summoner['profileIconId'] ?? null;
+                    if ($iconId) {
+                        $user->profile_icon_id = $iconId;
+                        $user->avatar_src = $riot->profileIconUrl($iconId);
+                    }
+                    $user->save();
+                }
+            } catch (\Throwable $e) {
+                /* mantém o que tinha */
+            }
+        }
 
         return response()->json($this->serialize($user->fresh(), $riot));
     }
