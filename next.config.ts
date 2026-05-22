@@ -10,6 +10,21 @@ const nextConfig: NextConfig = {
       { pathname: "/api/champion-splash/**", search: "?size=full" },
       { pathname: "/api/champion-splash/**", search: "?size=thumb" },
     ],
+    // Hosts externos liberados pro next/image:
+    //   - ddragon: avatares Riot e splash defaults
+    //   - api.bdrn.com.br: storage dos splashes processados
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "ddragon.leagueoflegends.com",
+        pathname: "/cdn/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api.bdrn.com.br",
+        pathname: "/storage/**",
+      },
+    ],
   },
 };
 
