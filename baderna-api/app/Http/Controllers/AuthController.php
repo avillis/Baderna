@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Services\RiotAPIServices;
 use Illuminate\Validation\ValidationException;
+use App\Models\MemberCoin;
 use App\Models\MemberUnlock;
 use App\Models\User;
 
@@ -156,6 +157,12 @@ class AuthController extends Controller
 
         // Libera 5 capas aleatórias pro user (se não tiver nenhuma ainda).
         $this->grantStarterCapas($user);
+
+        // Bônus de boas-vindas: 250 moedas pra começar.
+        MemberCoin::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 250],
+        );
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
