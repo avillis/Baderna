@@ -9,8 +9,9 @@ import {
   CHAMPION_AVATAR_FILES,
   getChampionTileSrc,
 } from "@/features/panel/champion-avatar";
+import { useAccount } from "@/features/panel/use-account";
 
-type Tab = "champions" | "upload";
+type Tab = "riot" | "champions" | "upload";
 
 export function AvatarPickerModal({
   open,
@@ -25,8 +26,11 @@ export function AvatarPickerModal({
   ownerId: string;
   onSelect: (src: string) => void;
 }) {
+  const { account } = useAccount();
+  const riotIconUrl = account.riotIconUrl ?? null;
   const [mounted, setMounted] = useState(false);
-  const [tab, setTab] = useState<Tab>("champions");
+  // Inicial: Riot se tiver ícone disponível, senão Campeões
+  const [tab, setTab] = useState<Tab>(riotIconUrl ? "riot" : "champions");
   const [query, setQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,41 +108,91 @@ export function AvatarPickerModal({
             Foto de perfil
           </h2>
           <div className="mt-[14px]">
-            <div
-              className="relative flex h-[40px] w-[220px] items-center rounded-[25px] p-[4px]"
-              style={{ background: "#ededed" }}
-            >
-              <div
-                aria-hidden
-                className="pointer-events-none absolute top-[4px] bottom-[4px] w-[calc((100%-8px)/2)] rounded-[25px]"
-                style={{
-                  background: "#ffffff",
-                  transform: `translateX(${tab === "champions" ? 0 : 100}%)`,
-                  transition:
-                    "transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-                  zIndex: 0,
-                }}
-              />
-              {(["champions", "upload"] as Tab[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTab(t)}
-                  className={`relative z-[1] flex h-full flex-1 items-center justify-center rounded-[25px] text-[13px] font-semibold transition-colors duration-300 ${
-                    tab === t
-                      ? "text-[#0f0f0f]"
-                      : "text-black/40 hover:text-black/70"
-                  }`}
-                  style={{ whiteSpace: "nowrap" }}
+            {(() => {
+              const tabs: Tab[] = riotIconUrl
+                ? ["riot", "champions", "upload"]
+                : ["champions", "upload"];
+              const labels: Record<Tab, string> = {
+                riot: "Riot",
+                champions: "Campeões",
+                upload: "Importar",
+              };
+              const width = riotIconUrl ? 300 : 220;
+              const activeIdx = tabs.indexOf(tab);
+              return (
+                <div
+                  className="relative flex h-[40px] items-center rounded-[25px] p-[4px]"
+                  style={{ background: "#ededed", width }}
                 >
-                  {t === "champions" ? "Campeões" : "Importar"}
-                </button>
-              ))}
-            </div>
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute top-[4px] bottom-[4px] rounded-[25px]"
+                    style={{
+                      background: "#ffffff",
+                      width: `calc((100% - 8px) / ${tabs.length})`,
+                      transform: `translateX(${activeIdx * 100}%)`,
+                      transition:
+                        "transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+                      zIndex: 0,
+                    }}
+                  />
+                  {tabs.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTab(t)}
+                      className={`relative z-[1] flex h-full flex-1 items-center justify-center rounded-[25px] text-[13px] font-semibold transition-colors duration-300 ${
+                        tab === t
+                          ? "text-[#0f0f0f]"
+                          : "text-black/40 hover:text-black/70"
+                      }`}
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      {labels[t]}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
-        {tab === "champions" ? (
+        {tab === "riot" && riotIconUrl ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-[18px] px-[28px] py-[40px]">
+            <p className="max-w-[360px] text-center text-[13px] text-[#8d8d8d]">
+              O ícone que você usa no League. Atualiza junto com sua conta da
+              Riot.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onSelect(riotIconUrl);
+              }}
+              className="relative h-[148px] w-[148px] overflow-hidden rounded-full ring-4 ring-transparent transition-all hover:scale-[1.04] hover:ring-[#ff4100]"
+              title="Usar ícone Riot"
+            >
+              <Image
+                src={riotIconUrl}
+                alt="Ícone Riot"
+                fill
+                className="object-cover"
+                sizes="148px"
+                unoptimized
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onSelect(riotIconUrl);
+              }}
+              className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#ff4100] px-8 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+            >
+              Usar ícone Riot
+            </button>
+          </div>
+        ) : tab === "champions" ? (
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="border-b border-[#ededed] px-[28px] py-[12px]">
               <input

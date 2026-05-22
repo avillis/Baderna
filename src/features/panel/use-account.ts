@@ -24,6 +24,7 @@ export type Account = {
   activeTitleSlugs?: string[];
   primaryLane?: Lane | null;
   secondaryLane?: Lane | null;
+  riotIconUrl?: string | null;
 };
 
 function buildDefaults(user: AuthUser | null): Account {
