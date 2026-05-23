@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\PostCommentsController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AppSettingsController;
 use App\Http\Controllers\Api\AvatarUploadController;
+use App\Http\Controllers\Api\EmailTemplatesController;
 use App\Http\Controllers\Api\ErrorLogsController;
 use App\Http\Controllers\Api\InhousesController;
 use App\Http\Controllers\Api\MemberCoinsController;
@@ -27,6 +29,9 @@ use App\Http\Controllers\Api\TitlesController;
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    // Recuperação de senha — públicas, com rate limit anti-spam.
+    Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
+    Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 });
 
 // ── Autenticados ───────────────────────────────────────────────────────
@@ -121,6 +126,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/members/{user}', [MembersController::class, 'softDelete']);
         Route::post('/members/{user}/restore', [MembersController::class, 'restore']);
         Route::put('/members/{user}/role', [MembersController::class, 'setRole']);
+        // Email templates — catálogo, preview e envio de teste
+        Route::get('/emails', [EmailTemplatesController::class, 'index']);
+        Route::get('/emails/{id}/preview', [EmailTemplatesController::class, 'preview']);
+        Route::post('/emails/{id}/test', [EmailTemplatesController::class, 'sendTest']);
+
         Route::get('/error-logs', [ErrorLogsController::class, 'index']);
         Route::delete('/error-logs/all', [ErrorLogsController::class, 'destroyAll']);
         Route::delete('/error-logs/{id}', [ErrorLogsController::class, 'destroy'])->whereNumber('id');

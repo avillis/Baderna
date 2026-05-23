@@ -16,6 +16,7 @@ export const panelMenuItems = [
   { label: "Meu Perfil", tone: "active" as const, href: "/membro" },
   { label: "Membros", tone: "default" as const, href: "/membros" },
   { label: "Loja", tone: "default" as const, href: "/loja" },
+  { label: "RPG", tone: "default" as const, href: "/rpg" },
   { label: "Inhouse", tone: "default" as const, href: "/inhouse" },
   { label: "Flex", tone: "default" as const, href: "/flex" },
 ];

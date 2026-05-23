@@ -145,3 +145,54 @@ export function useAuth() {
 
   return { token, user, login, register, logout, hydrated };
 }
+
+/**
+ * Dispara o envio do email de recuperação. Resposta sempre OK (mesmo se o
+ * email não existir, pra evitar enumeration). Retorna a mensagem do server.
+ */
+export async function forgotPassword(email: string): Promise<string | null> {
+  const res = await fetch(`${API_BASE}/password/forgot`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) return null;
+  try {
+    const body = (await res.json()) as { message?: string };
+    return body.message ?? "Email enviado.";
+  } catch {
+    return "Email enviado.";
+  }
+}
+
+/**
+ * Confirma a redefinição com token (do link do email) + nova senha.
+ * Retorna null se ok, ou mensagem de erro.
+ */
+export async function resetPassword(
+  token: string,
+  email: string,
+  password: string,
+): Promise<string | null> {
+  const res = await fetch(`${API_BASE}/password/reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ token, email, password }),
+  });
+  if (res.ok) return null;
+  try {
+    const body = (await res.json()) as {
+      error?: string;
+      message?: string;
+      errors?: Record<string, string[]>;
+    };
+    if (body.error) return body.error;
+    if (body.errors?.password?.[0]) return body.errors.password[0];
+    if (body.errors?.email?.[0]) return body.errors.email[0];
+    if (body.errors?.token?.[0]) return body.errors.token[0];
+    if (body.message) return body.message;
+  } catch {
+    /* ignore */
+  }
+  return "Não foi possível redefinir a senha.";
+}

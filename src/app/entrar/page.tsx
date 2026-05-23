@@ -163,6 +163,16 @@ function EntrarPageInner() {
                   )}
                 </button>
               </div>
+              {isLogin && (
+                <div className="text-right">
+                  <a
+                    href="/recuperar-senha"
+                    className="text-[12px] font-medium text-[#8d8d8d] hover:text-[#ff4100]"
+                  >
+                    Esqueci minha senha
+                  </a>
+                </div>
+              )}
               {error && (
                 <p className="text-center text-[13px] font-semibold text-[#c53030]">
                   {error}

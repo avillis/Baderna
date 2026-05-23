@@ -228,15 +228,6 @@ export function AdminErrorLogsCard() {
             />
             Atualizar
           </button>
-          <button
-            type="button"
-            onClick={handleClearAll}
-            disabled={logs.length === 0}
-            className="flex h-[36px] items-center gap-[6px] rounded-[12px] bg-[#fff4f4] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#c53030] transition-colors hover:bg-[#ffe6e6] disabled:opacity-50"
-          >
-            <TrashIcon className="h-[14px] w-[14px]" />
-            Limpar tudo
-          </button>
         </div>
       </div>
 
