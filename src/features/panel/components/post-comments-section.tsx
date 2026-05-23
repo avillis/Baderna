@@ -6,7 +6,9 @@ import { ArrowUp, X } from "lucide-react";
 import { useState } from "react";
 
 import { getMemberSlug } from "@/features/panel/members-data";
+import { StyledName } from "@/features/panel/components/styled-name";
 import { useAuth } from "@/features/panel/use-auth";
+import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatCommentDate } from "@/features/panel/use-comments";
 import { usePostComments } from "@/features/panel/use-post-comments";
 
@@ -22,8 +24,21 @@ export function PostCommentsSection({
 }) {
   const { comments, addComment, removeComment } = usePostComments(postId);
   const { user } = useAuth();
+  const members = useBadernaMembers();
   const [draft, setDraft] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Mapeia user_id → nickname/estilo do autor, pra exibir o nome com o
+  // estilo escolhido pela pessoa (StyledName) e refletir mudança de nick
+  // sem invalidar o cache local de comentários.
+  const nickByUserId = new Map<number, string>();
+  const styleByUserId = new Map<number, string | undefined>();
+  for (const m of members) {
+    if (m.userId) {
+      nickByUserId.set(m.userId, m.nickname);
+      styleByUserId.set(m.userId, m.activeNameId);
+    }
+  }
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -53,7 +68,14 @@ export function PostCommentsSection({
         ) : (
           <div className="space-y-[18px]">
             {comments.map((comment) => {
-              const profileHref = `/membro/${getMemberSlug({ nickname: comment.author })}`;
+              const liveNick = comment.authorId
+                ? nickByUserId.get(comment.authorId)
+                : undefined;
+              const displayNick = liveNick ?? comment.author;
+              const authorStyleId = comment.authorId
+                ? styleByUserId.get(comment.authorId)
+                : undefined;
+              const profileHref = `/membro/${getMemberSlug({ nickname: displayNick })}`;
               const canDelete =
                 user != null &&
                 ((comment.authorId != null && comment.authorId === user.id) ||
@@ -67,14 +89,14 @@ export function PostCommentsSection({
                   <div className="flex items-start gap-[12px]">
                     <Link
                       href={profileHref}
-                      aria-label={`Ver perfil de ${comment.author}`}
+                      aria-label={`Ver perfil de ${displayNick}`}
                       className="shrink-0 transition-opacity hover:opacity-80"
                     >
                       {comment.authorAvatar ? (
                         <div className="relative h-[42px] w-[42px] overflow-hidden rounded-full bg-[#efeae6]">
                           <Image
                             src={comment.authorAvatar}
-                            alt={comment.author}
+                            alt={displayNick}
                             fill
                             className="object-cover"
                             sizes="42px"
@@ -82,7 +104,7 @@ export function PostCommentsSection({
                         </div>
                       ) : (
                         <div className="relative flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#efeae6] text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                          {comment.author.charAt(0)}
+                          {displayNick.charAt(0)}
                         </div>
                       )}
                     </Link>
@@ -92,7 +114,9 @@ export function PostCommentsSection({
                         href={profileHref}
                         className="inline-block max-w-full truncate text-[13px] font-bold tracking-[-0.03em] text-[#0f0f0f] transition-opacity hover:opacity-70"
                       >
-                        {comment.author}
+                        <StyledName styleId={authorStyleId}>
+                          {displayNick}
+                        </StyledName>
                       </Link>
                       <p className="-mt-[1px] text-[11px] font-medium tracking-[-0.03em] text-[#adadad]">
                         {formatCommentDate(comment.createdAt)}
