@@ -107,7 +107,7 @@ export function CreateTitleModal() {
                     <label className="block text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
                       Raridade
                     </label>
-                    <div className="mt-[8px] flex flex-wrap justify-between gap-y-[8px]">
+                    <div className="mt-[8px] flex flex-wrap gap-[8px]">
                       {RARITY_ORDER.map((r) => {
                         const meta = RARITY_META[r];
                         const isActive = rarity === r;

@@ -164,7 +164,7 @@ export default function PostPage() {
         )}
         </div>
 
-        <aside className="flex flex-col gap-[14px]">
+        <aside className="mt-[72px] flex flex-col gap-[14px] xl:mt-0">
           <FeedHistoryWidget />
           <FeedInhousesWidget />
           <FeedMembersWidget />

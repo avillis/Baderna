@@ -38,6 +38,35 @@ function defaultUnlockedFor(_memberId: string): string[] {
   return ["aprendiz"];
 }
 
+/**
+ * Mostra o avatar do membro com o shimmer padrão enquanto carrega ou se
+ * falhar. Mesma estratégia do RankedAvatar — substitui o bg cinza por uma
+ * classe `skeleton-shimmer` quando a imagem ainda não veio.
+ */
+function MemberAvatar({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+  const showSkeleton = !loaded || errored;
+  return (
+    <div
+      className={`relative h-[38px] w-[38px] shrink-0 overflow-hidden rounded-full ${
+        showSkeleton ? "skeleton-shimmer" : "bg-[#ededed]"
+      }`}
+    >
+      {!errored && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-cover"
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
+        />
+      )}
+    </div>
+  );
+}
+
 export function MembersTable() {
   const allMembers = useBadernaMembers();
   const { account } = useAccount();
@@ -121,13 +150,7 @@ export function MembersTable() {
                       href={`/membro/${member.id}`}
                       className="flex items-center gap-4 w-max transition-opacity hover:opacity-80"
                     >
-                      <div className="relative h-[38px] w-[38px] shrink-0 overflow-hidden rounded-full">
-                        <img
-                          src={avatar}
-                          alt={member.nickname}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
+                      <MemberAvatar src={avatar} alt={member.nickname} />
                       <div>
                         <div className="text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
                           {member.nickname}

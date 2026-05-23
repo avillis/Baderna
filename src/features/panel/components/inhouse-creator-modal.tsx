@@ -349,7 +349,7 @@ function InhouseCreatorContent({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative flex h-[88vh] max-h-[780px] w-full max-w-[860px] flex-col overflow-hidden rounded-[var(--panel-radius-shell)] bg-[#f7f7f7] shadow-[0px_30px_90px_rgba(0,0,0,0.18)]">
+      <div className="relative flex h-[94vh] max-h-[780px] w-full max-w-[860px] flex-col overflow-hidden rounded-[var(--panel-radius-shell)] bg-[#f7f7f7] shadow-[0px_30px_90px_rgba(0,0,0,0.18)] sm:h-[88vh]">
         {/* Close button */}
         <button
           type="button"
@@ -361,25 +361,25 @@ function InhouseCreatorContent({
         </button>
 
         {/* Header */}
-        <div className="shrink-0 border-b border-[#ece7e2] bg-white px-8 py-6">
+        <div className="shrink-0 border-b border-[#ece7e2] bg-white px-5 py-5 pr-[64px] sm:px-8 sm:py-6">
           <h2 className="text-[20px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
             Criar Inhouse
           </h2>
-          <p className="mt-1 text-[13px] font-medium text-[#8d8d8d]">
+          <p className="mt-1 text-[13px] font-medium leading-[1.4] text-[#8d8d8d]">
             {mode === "random"
               ? "Selecione os 10 participantes. As lanes são definidas no perfil de cada um."
               : "Selecione os 10 participantes. Os líderes serão sorteados e você monta os times no inhouse."}
           </p>
         </div>
 
-        {/* Body — two columns */}
-        <div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_280px]">
+        {/* Body — two columns (mobile: lista menor, convidados maior) */}
+        <div className="grid min-h-0 flex-1 grid-rows-[38%_minmax(0,1fr)] overflow-hidden lg:grid-cols-[minmax(0,1fr)_280px] lg:grid-rows-1">
           {/* Left: member list */}
-          <div className="flex min-h-0 flex-col overflow-hidden border-r border-[#ece7e2] bg-white">
-            <div className="shrink-0 px-6 py-3 text-[11px] font-bold text-[#8d8d8d]">
+          <div className="flex min-h-0 flex-col overflow-hidden border-b border-[#ece7e2] bg-white lg:border-b-0 lg:border-r">
+            <div className="shrink-0 px-5 py-3 text-[11px] font-bold text-[#8d8d8d] sm:px-6">
               Membros ({visibleMembers.length})
             </div>
-            <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-2">
+            <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-2">
               <div className="space-y-2">
                 {visibleMembers.map((member, idx) => {
                   const isSelected = selectedIds.has(member.id);
@@ -462,7 +462,7 @@ function InhouseCreatorContent({
           {/* Right: guests + summary */}
           <div className="flex min-h-0 flex-col overflow-hidden bg-[#f7f7f7]">
             {/* Mode toggle */}
-            <div className="shrink-0 border-b border-[#ece7e2] bg-white p-5">
+            <div className="shrink-0 border-b border-[#ece7e2] bg-white p-4 sm:p-5">
               <p className="mb-3 text-[12px] font-bold text-[#0f0f0f]">
                 Modo de jogo
               </p>
@@ -499,7 +499,7 @@ function InhouseCreatorContent({
               </div>
             </div>
             {/* Guest input */}
-            <div className="shrink-0 border-b border-[#ece7e2] bg-white p-5">
+            <div className="shrink-0 border-b border-[#ece7e2] bg-white p-4 sm:p-5">
               <p className="mb-3 text-[12px] font-bold text-[#0f0f0f]">
                 Adicionar convidado
               </p>
@@ -523,7 +523,7 @@ function InhouseCreatorContent({
             </div>
 
             {/* Guest list */}
-            <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto p-4">
+            <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
               {guests.length === 0 ? (
                 <p className="mt-4 text-center text-[12px] font-semibold text-[#b0a8a4]">
                   Nenhum convidado adicionado
@@ -593,8 +593,8 @@ function InhouseCreatorContent({
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-[#ece7e2] bg-white px-8 py-4">
-          <div className="flex items-center justify-between">
+        <div className="shrink-0 border-t border-[#ece7e2] bg-white px-5 py-4 sm:px-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
               {mode === "leader" ? (
                 <>
@@ -644,7 +644,7 @@ function InhouseCreatorContent({
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex w-full items-center gap-3 sm:w-auto">
               {error && (
                 <p className="text-[12px] font-semibold text-[#c53030]">
                   {error}
@@ -657,7 +657,7 @@ function InhouseCreatorContent({
                   creating ||
                   (mode === "leader" ? totalSelected < 10 : totalSelected !== 10)
                 }
-                className="flex h-[50px] min-w-[200px] items-center justify-center rounded-[18px] bg-[#ff4100] px-12 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-[50px] w-full items-center justify-center rounded-[18px] bg-[#ff4100] px-6 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:min-w-[200px] sm:px-12"
               >
                 {creating ? (
                   <svg
