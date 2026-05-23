@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\RiotAPIServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AccountController extends Controller
 {
@@ -97,6 +99,30 @@ class AccountController extends Controller
         } catch (\Throwable $e) {
             /* segue */
         }
+    }
+
+    /**
+     * Troca a senha do usuário logado. Exige senha atual pra evitar troca
+     * por sessão sequestrada. Rate-limit pra brute-force.
+     */
+    public function updatePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|max:200',
+        ]);
+
+        $user = $request->user();
+        if (!Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Senha atual incorreta.'],
+            ]);
+        }
+
+        $user->password = Hash::make($data['new_password']);
+        $user->save();
+
+        return response()->json(['ok' => true]);
     }
 
     private function serialize($user, RiotAPIServices $riot): array

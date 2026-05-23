@@ -156,15 +156,25 @@ export function PostComposer({
               <div className="relative h-fit w-[200px] flex-shrink-0 overflow-hidden rounded-[16px] bg-black">
                 <video
                   src={videoUrl ?? undefined}
-                  className="aspect-video w-full object-cover"
-                  controls
+                  className="pointer-events-none aspect-video w-full object-cover"
                   preload="metadata"
+                  muted
+                  playsInline
+                  /* Sem controls, sem play — só preview estática (primeiro frame). */
                 />
+                {/* Overlay sutil indicando que é vídeo, sem controles. */}
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20">
+                  <span className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-white/85 text-[#0f0f0f]">
+                    <svg viewBox="0 0 24 24" className="ml-[2px] h-[16px] w-[16px]" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => setVideoUrl(null)}
                   aria-label="Remover vídeo"
-                  className="absolute right-[6px] top-[6px] flex h-[24px] w-[24px] items-center justify-center rounded-full bg-black/60 text-white transition-opacity hover:opacity-85"
+                  className="absolute right-[6px] top-[6px] z-10 flex h-[24px] w-[24px] items-center justify-center rounded-full bg-black/60 text-white transition-opacity hover:opacity-85"
                 >
                   <X className="h-[12px] w-[12px]" strokeWidth={2.4} />
                 </button>

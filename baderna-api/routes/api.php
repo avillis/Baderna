@@ -81,6 +81,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Account (Minha Conta)
     Route::get('/account', [AccountController::class, 'show']);
     Route::put('/account', [AccountController::class, 'update']);
+    Route::put('/account/password', [AccountController::class, 'updatePassword'])
+        ->middleware('throttle:6,1');
     Route::post('/account/avatar', [AvatarUploadController::class, 'store']);
 
     // Saldo do próprio usuário + unlocks

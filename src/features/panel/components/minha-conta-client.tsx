@@ -11,7 +11,7 @@ import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-mod
 import { StyledName } from "@/features/panel/components/styled-name";
 import { NAME_BY_ID } from "@/features/panel/names-data";
 import { panelProfile } from "@/features/panel/panel-data";
-import { useAccount, useCurrentUserId } from "@/features/panel/use-account";
+import { changePassword, useAccount, useCurrentUserId } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
 import { useMemberUnlockedTitles } from "@/features/panel/use-member-titles";
 import { useMemberUnlockedNames } from "@/features/panel/use-member-unlocked-names";
@@ -329,33 +329,79 @@ function GameNickField({
 }
 
 function PasswordFields() {
+  const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const mismatch = next.length > 0 && confirm.length > 0 && next !== confirm;
-  const ok = next.length >= 6 && next === confirm;
+  const tooShort = next.length > 0 && next.length < 6;
+  const ok =
+    current.length > 0 &&
+    next.length >= 6 &&
+    next === confirm &&
+    !submitting;
 
-  function handleCommit() {
+  async function handleCommit() {
     if (!ok) return;
+    setSubmitting(true);
+    setApiError(null);
+    const err = await changePassword(current, next);
+    setSubmitting(false);
+    if (err) {
+      setApiError(err);
+      return;
+    }
+    setCurrent("");
     setNext("");
     setConfirm("");
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 2500);
   }
 
   return (
     <>
-      <label className="flex flex-col gap-[8px]">
+      <label className="flex flex-col gap-[8px] sm:col-span-2">
         <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
-          Nova senha
+          Redefinir senha
         </span>
+        <div className="relative">
+          <input
+            type={showCurrent ? "text" : "password"}
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            placeholder="Sua senha atual"
+            autoComplete="current-password"
+            className="w-full rounded-full border-none bg-[#ededed] py-4 pl-6 pr-12 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+          />
+          <button
+            type="button"
+            onClick={() => setShowCurrent((s) => !s)}
+            aria-label={showCurrent ? "Ocultar senha" : "Mostrar senha"}
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-[#0f0f0f]"
+          >
+            {showCurrent ? (
+              <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
+            ) : (
+              <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
+            )}
+          </button>
+        </div>
+      </label>
+
+      <label className="flex flex-col gap-[8px]">
         <div className="relative">
           <input
             type={showNext ? "text" : "password"}
             value={next}
             onChange={(e) => setNext(e.target.value)}
-            onBlur={handleCommit}
-            placeholder="••••••••"
-            className="w-full rounded-full border-none bg-[#ededed] py-4 pl-6 pr-12 text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+            placeholder="Nova senha"
+            autoComplete="new-password"
+            className="w-full rounded-full border-none bg-[#ededed] py-4 pl-6 pr-12 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
           />
           <button
             type="button"
@@ -370,38 +416,55 @@ function PasswordFields() {
             )}
           </button>
         </div>
+        {tooShort && (
+          <span className="text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
+            Mínimo 6 caracteres.
+          </span>
+        )}
       </label>
       <label className="flex flex-col gap-[8px]">
-        <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
-          Confirmar nova senha
-        </span>
-        <div className="relative">
-          <input
-            type={showConfirm ? "text" : "password"}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            onBlur={handleCommit}
-            placeholder="••••••••"
-            className={`w-full rounded-full border-none bg-[#ededed] py-4 pl-6 pr-12 text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400 focus:outline-none focus:ring-2 ${
-              mismatch ? "focus:ring-[#c53030]/30" : "focus:ring-[#ff4100]/20"
-            }`}
-          />
+        <div className="flex items-center gap-[8px]">
+          <div className="relative flex-1 min-w-0">
+            <input
+              type={showConfirm ? "text" : "password"}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Confirmar"
+              autoComplete="new-password"
+              className={`w-full rounded-full border-none bg-[#ededed] py-4 pl-6 pr-12 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 ${
+                mismatch ? "focus:ring-[#c53030]/30" : "focus:ring-[#ff4100]/20"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((s) => !s)}
+              aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
+              className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-[#0f0f0f]"
+            >
+              {showConfirm ? (
+                <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              ) : (
+                <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              )}
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => setShowConfirm((s) => !s)}
-            aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
-            className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-[#0f0f0f]"
+            onClick={handleCommit}
+            disabled={!ok}
+            className="flex h-[52px] w-[110px] shrink-0 items-center justify-center rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {showConfirm ? (
-              <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            ) : (
-              <Eye className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            )}
+            {submitting ? "..." : saved ? "Salvo" : "Salvar"}
           </button>
         </div>
         {mismatch && (
           <span className="text-[11px] font-medium tracking-[-0.02em] text-[#c53030]">
             As senhas não coincidem.
+          </span>
+        )}
+        {apiError && (
+          <span className="text-[11px] font-medium tracking-[-0.02em] text-[#c53030]">
+            {apiError}
           </span>
         )}
       </label>

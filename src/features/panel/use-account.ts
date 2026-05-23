@@ -108,6 +108,41 @@ async function putToApi(patch: Record<string, unknown>): Promise<Account | null>
   return (await res.json()) as Account;
 }
 
+/** Troca a senha. Retorna null se ok, ou mensagem de erro. */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<string | null> {
+  const token = authToken();
+  if (!token) return "Sem autenticação.";
+  const res = await fetch(`${API_BASE}/account/password`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+  if (res.ok) return null;
+  // Tenta extrair erro estruturado do Laravel.
+  try {
+    const body = (await res.json()) as {
+      errors?: Record<string, string[]>;
+      message?: string;
+    };
+    if (body.errors?.current_password?.[0]) return body.errors.current_password[0];
+    if (body.errors?.new_password?.[0]) return body.errors.new_password[0];
+    if (body.message) return body.message;
+  } catch {
+    /* ignore */
+  }
+  return "Não foi possível trocar a senha.";
+}
+
 const FIELD_TO_API: Partial<Record<keyof Account, string>> = {
   name: "display_name",
   bio: "bio",

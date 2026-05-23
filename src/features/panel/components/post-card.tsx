@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { getMemberSlug } from "@/features/panel/members-data";
+import { VideoPlayer } from "@/features/panel/components/video-player";
 import { useAuth } from "@/features/panel/use-auth";
 import { formatPostDate, type FeedPost } from "@/features/panel/use-posts";
 
@@ -194,24 +195,8 @@ export function PostCard({
           )}
 
           {post.videoUrl && !media && (
-            <div
-              className="mt-[12px] overflow-hidden rounded-[16px] bg-black"
-              onClick={(e) => {
-                // Não navega pro permalink ao interagir com o player.
-                e.stopPropagation();
-              }}
-            >
-              <video
-                src={post.videoUrl}
-                className={
-                  expanded
-                    ? "h-auto max-h-[80vh] w-full"
-                    : "max-h-[520px] w-full"
-                }
-                controls
-                preload="metadata"
-                playsInline
-              />
+            <div className="mt-[12px]">
+              <VideoPlayer src={post.videoUrl} expanded={expanded} />
             </div>
           )}
 
