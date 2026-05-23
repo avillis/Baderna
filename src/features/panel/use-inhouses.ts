@@ -72,8 +72,13 @@ function writeCache(list: ApiInhouse[]) {
 }
 
 async function fetchAll(): Promise<ApiInhouse[] | null> {
+  const token = authToken();
+  if (!token) return null;
   const res = await fetch(`${API_BASE}/inhouses`, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   });
   if (!res.ok) return null;
   return (await res.json()) as ApiInhouse[];

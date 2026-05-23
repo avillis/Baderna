@@ -40,9 +40,16 @@ function writeCache(memberId: string, list: Comment[]) {
 }
 
 async function fetchFromApi(memberId: string): Promise<Comment[] | null> {
+  const token = authToken();
+  if (!token) return null;
   const res = await fetch(
     `${API_BASE}/members/${encodeURIComponent(memberId)}/comments`,
-    { headers: { Accept: "application/json" } },
+    {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    },
   );
   if (!res.ok) return null;
   return (await res.json()) as Comment[];

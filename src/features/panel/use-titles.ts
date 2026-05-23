@@ -39,8 +39,13 @@ function writeCache(titles: ApiTitle[]) {
 }
 
 async function fetchTitles(): Promise<ApiTitle[]> {
+  const token = authToken();
+  if (!token) throw new Error("Sem token");
   const res = await fetch(`${API_BASE}/titles`, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   });
   if (!res.ok) throw new Error(`API respondeu ${res.status}`);
   return (await res.json()) as ApiTitle[];

@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { InhouseDetail } from "@/features/panel/components/inhouse-lobby-board";
+import { authToken } from "@/features/panel/use-auth";
 import {
   matchIdFromInhouseId,
   useInhouses,
@@ -34,9 +35,16 @@ function unwrap(api: ApiInhouse): Inhouse {
 
 async function fetchOne(shortCode: string): Promise<Inhouse | null> {
   try {
+    const token = authToken();
+    if (!token) return null;
     const res = await fetch(
       `${API_BASE}/inhouses/${encodeURIComponent(shortCode)}`,
-      { headers: { Accept: "application/json" } },
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
     );
     if (!res.ok) return null;
     const body = (await res.json()) as ApiInhouse;

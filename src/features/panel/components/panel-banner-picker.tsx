@@ -273,7 +273,7 @@ export function PanelBannerPicker({
                   {selectedVariant ? (
                     <div className="pt-[24px] pb-[18px] shrink-0">
                       <div className="overflow-hidden rounded-[var(--panel-radius-card-sm)] bg-white p-[14px]">
-                        <div className="relative h-[190px] overflow-hidden rounded-[var(--panel-radius-block)] bg-black">
+                        <div className="relative aspect-[3/1] overflow-hidden rounded-[var(--panel-radius-block)] bg-black">
                           <Image
                             src={selectedVariant.src}
                             alt={`${selectedVariant.displayChampion} splash selecionada`}

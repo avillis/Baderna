@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ACCOUNT_UPDATED_EVENT, useAccount } from "@/features/panel/use-account";
-import { useAuth } from "@/features/panel/use-auth";
+import { authToken, useAuth } from "@/features/panel/use-auth";
 import { useMemberRanks } from "@/features/panel/use-member-ranks";
 import { useRiotProfile } from "@/features/panel/use-riot-profile";
 import type { RankType } from "@/features/panel/rank-utils";
@@ -69,7 +69,7 @@ type ApiMember = {
   avatarSrc: string | null;
   bannerFileName: string | null;
   bannerFocusY: number | null;
-  isAdmin: boolean;
+  isAdmin?: boolean;
   bio: string | null;
   teamName: string | null;
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
@@ -111,8 +111,13 @@ async function fetchFromApi(): Promise<ApiMember[] | null> {
 
   inflightFetch = (async () => {
     try {
+      const token = authToken();
+      if (!token) return null;
       const res = await fetch(`${API_BASE}/members`, {
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!res.ok) return null;
       return (await res.json()) as ApiMember[];
@@ -266,7 +271,7 @@ export function useBadernaMembers(): BadernaMember[] {
         ],
         laneFocus: "—",
         status: "online",
-        isAdmin: m.isAdmin,
+        isAdmin: m.isAdmin ?? false,
         avatarSrc: m.avatarSrc ?? undefined,
         summonerName: m.summonerName ?? undefined,
         tagLine: m.tagLine ?? undefined,

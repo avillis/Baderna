@@ -21,39 +21,38 @@ use App\Http\Controllers\Api\RiotProfileController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TitlesController;
 
-// ── Auth ───────────────────────────────────────────────────────────────
+// ── Públicas (auth) ────────────────────────────────────────────────────
+// Únicas rotas SEM auth: register e login (não tem como ter token antes).
 // Rate limit pra defender de brute-force / spam: 10 tentativas/min por IP.
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// ── Públicos ───────────────────────────────────────────────────────────
-// Riot profile lookup é usado no registro (verifica se Riot ID existe).
-Route::get(
-    '/riot-profile/{gameName}/{tagLine}',
-    [RiotProfileController::class, 'show']
-)->where('tagLine', '[A-Za-z0-9]+');
-
-Route::get('/coin-rewards', [AppSettingsController::class, 'showCoinRewards']);
-Route::get('/inhouse-points', [AppSettingsController::class, 'showInhousePoints']);
-Route::get('/titles', [TitlesController::class, 'index']);
-
-// Listagens da comunidade — públicas porque o app é SSR e a página
-// /membro/[slug] precisa dessa lista pra resolver o user antes da auth
-// client-side rolar. Email/PUUID/is_admin ficam fora via User::$hidden,
-// então o risco real é só "qualquer um vê a lista de membros" (aceitável
-// num site de comunidade).
-Route::get('/members', [MembersController::class, 'index']);
-Route::get('/members/ranks', [MemberRanksController::class, 'index']);
-Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
-Route::get('/inhouses', [InhousesController::class, 'index']);
-Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
-
 // ── Autenticados ───────────────────────────────────────────────────────
+// TUDO o resto exige Sanctum válido. Nenhum dado da comunidade vaza pra
+// anônimos (lista de membros, ranks, inhouses, posts, comentários, etc).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Lookup Riot (usado dentro do app pra perfis de membros)
+    Route::get(
+        '/riot-profile/{gameName}/{tagLine}',
+        [RiotProfileController::class, 'show']
+    )->where('tagLine', '[A-Za-z0-9]+');
+
+    // App settings públicos pra qualquer logado
+    Route::get('/coin-rewards', [AppSettingsController::class, 'showCoinRewards']);
+    Route::get('/inhouse-points', [AppSettingsController::class, 'showInhousePoints']);
+    Route::get('/titles', [TitlesController::class, 'index']);
+
+    // Listagens da comunidade
+    Route::get('/members', [MembersController::class, 'index']);
+    Route::get('/members/ranks', [MemberRanksController::class, 'index']);
+    Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
+    Route::get('/inhouses', [InhousesController::class, 'index']);
+    Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
 
     // Feed (Posts)
     Route::get('/posts', [PostController::class, 'index']);
@@ -96,14 +95,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/members/{slug}/comments', [MemberCommentsController::class, 'store']);
     Route::delete('/members/{slug}/comments/{commentId}', [MemberCommentsController::class, 'destroy']);
 
-    // Inhouses (criar/atualizar/apagar — listar é público)
+    // Inhouses (criar/atualizar/apagar)
     Route::post('/inhouses', [InhousesController::class, 'store']);
     Route::patch('/inhouses/{shortCode}', [InhousesController::class, 'update']);
     Route::delete('/inhouses/{shortCode}', [InhousesController::class, 'destroy']);
 
     // Admin-only — só rolam com Sanctum válido + is_admin=true
     Route::middleware('admin')->prefix('admin')->group(function () {
-        // Riot API key — leitura E escrita atrás de auth+admin (era público).
         Route::get('/riot-key', [SettingsController::class, 'showRiotKey']);
         Route::put('/riot-key', [SettingsController::class, 'updateRiotKey']);
         Route::put('/coin-rewards', [AppSettingsController::class, 'updateCoinRewards']);
@@ -119,7 +117,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/members/{user}', [MembersController::class, 'softDelete']);
         Route::post('/members/{user}/restore', [MembersController::class, 'restore']);
         Route::put('/members/{user}/role', [MembersController::class, 'setRole']);
-        // Logs do site (admin-only)
         Route::get('/error-logs', [ErrorLogsController::class, 'index']);
         Route::delete('/error-logs/all', [ErrorLogsController::class, 'destroyAll']);
         Route::delete('/error-logs/{id}', [ErrorLogsController::class, 'destroy'])->whereNumber('id');

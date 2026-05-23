@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { authToken } from "@/features/panel/use-auth";
+
 export type RiotMatch = {
   matchId: string;
   gameStart: number | null;
@@ -132,8 +134,19 @@ export function useRiotProfile(riotId: string | null | undefined) {
     if (isFresh) return;
 
     const ctrl = new AbortController();
+    const token = authToken();
+    if (!token) {
+      setState({ status: "error", message: "Sem autenticação." });
+      return () => ctrl.abort();
+    }
     const url = `${API_BASE}/riot-profile/${encodeURIComponent(parsed.gameName)}/${encodeURIComponent(parsed.tagLine)}`;
-    fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } })
+    fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then(async (res) => {
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as { error?: string } | null;

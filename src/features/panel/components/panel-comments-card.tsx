@@ -99,7 +99,7 @@ export function PanelCommentsCard({
                         >
                           {comment.author}
                         </Link>
-                        <p className="mt-[2px] text-[11px] font-medium tracking-[-0.03em] text-[#adadad]">
+                        <p className="-mt-[1px] text-[11px] font-medium tracking-[-0.03em] text-[#adadad]">
                           {formatCommentDate(comment.createdAt)}
                         </p>
                         <p className="mt-[10px] text-[13px] font-medium leading-[1.45] tracking-[-0.02em] text-[#666666]">

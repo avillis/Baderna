@@ -42,8 +42,13 @@ function writeCache(rewards: CoinRewards) {
 }
 
 async function fetchFromApi(): Promise<CoinRewards> {
+  const token = authToken();
+  if (!token) throw new Error("Sem token");
   const res = await fetch(`${API_BASE}/coin-rewards`, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   });
   if (!res.ok) throw new Error(`API respondeu ${res.status}`);
   return normalize((await res.json()) as Partial<CoinRewards>);

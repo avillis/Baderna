@@ -35,15 +35,20 @@ class MembersController extends Controller
      * Lista todos os usuários cadastrados (não-deletados). Usado pelos
      * componentes que listam membros (Inhouse builder, página /membros, etc).
      */
-    public function index()
+    public function index(Request $request)
     {
         $users = User::where('is_deleted', false)
             ->orderBy('id')
             ->get();
 
-        return response()->json($users->map(function ($u) {
+        // isAdmin é privacy-sensitive: só serializa pra quem JÁ é admin
+        // (admin members-table, badge "Admin" no inhouse-builder pra admins).
+        // Pra anônimos e membros normais, o campo nem aparece na resposta.
+        $viewerIsAdmin = $request->user() && $request->user()->is_admin;
+
+        return response()->json($users->map(function ($u) use ($viewerIsAdmin) {
             $nick = $u->summoner_name ?: $u->name;
-            return [
+            $row = [
                 'id'              => $this->slugify($nick, $u->id),
                 'userId'          => $u->id,
                 'name'            => $u->display_name ?: $u->name,
@@ -53,7 +58,6 @@ class MembersController extends Controller
                 'avatarSrc'       => $u->avatar_src,
                 'bannerFileName'  => $u->banner_filename,
                 'bannerFocusY'    => (int)($u->banner_focus_y ?? 16),
-                'isAdmin'         => (bool)$u->is_admin,
                 'bio'             => $u->bio,
                 'teamName'        => $u->team_name,
                 'primaryLane'     => $u->primary_lane,
@@ -63,6 +67,10 @@ class MembersController extends Controller
                 'cachedRankDivision'  => $u->cached_rank_division,
                 'cachedRankLp'        => $u->cached_rank_lp,
             ];
+            if ($viewerIsAdmin) {
+                $row['isAdmin'] = (bool)$u->is_admin;
+            }
+            return $row;
         }));
     }
 

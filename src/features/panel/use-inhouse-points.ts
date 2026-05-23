@@ -55,8 +55,13 @@ function writeCache(points: InhousePoints) {
 }
 
 async function fetchFromApi(): Promise<InhousePoints> {
+  const token = authToken();
+  if (!token) throw new Error("Sem token");
   const res = await fetch(`${API_BASE}/inhouse-points`, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   });
   if (!res.ok) throw new Error(`API respondeu ${res.status}`);
   return normalize((await res.json()) as Partial<InhousePoints>);

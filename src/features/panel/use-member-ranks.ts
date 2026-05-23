@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { authToken } from "@/features/panel/use-auth";
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
@@ -42,21 +44,34 @@ function writeCache(rows: MemberRank[]) {
   }
 }
 
-// Dedup: 1 fetch em voo no máximo entre todos os hooks.
+// Dedup: 1 fetch em voo no máximo entre todos os hooks + janela de tempo
+// (TTL_MS) pra evitar refetch a cada navegação. Backend tem TTL próprio de
+// 6h, então re-bater a cada 5min é mais que suficiente.
 let inflight: Promise<MemberRank[] | null> | null = null;
+let lastFetchAt = 0;
 
-async function fetchRanks(): Promise<MemberRank[] | null> {
+async function fetchRanks(force = false): Promise<MemberRank[] | null> {
   if (inflight) return inflight;
+  if (!force && Date.now() - lastFetchAt < TTL_MS) {
+    const cached = readCache();
+    return cached?.rows ?? null;
+  }
   inflight = (async () => {
     try {
+      const token = authToken();
+      if (!token) return null;
       const res = await fetch(`${API_BASE}/members/ranks`, {
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!res.ok) return null;
       const data = (await res.json()) as MemberRank[];
       writeCache(data);
       return data;
     } finally {
+      lastFetchAt = Date.now();
       inflight = null;
     }
   })();
