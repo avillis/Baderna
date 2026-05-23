@@ -20,6 +20,20 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// Esconde a scrollbar do iframe de preview sem bloquear o scroll. Injeta
+// um <style> no <head> do HTML que vem do backend — o conteúdo continua
+// rolável com mouse wheel/touch, só não mostra a barra cinza.
+function hideScrollbar(html: string): string {
+  if (!html) return html;
+  const css =
+    "<style>html,body{scrollbar-width:none;-ms-overflow-style:none;}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0;}</style>";
+  if (/<\/head>/i.test(html)) {
+    return html.replace(/<\/head>/i, `${css}</head>`);
+  }
+  // Fallback: sem <head>, injeta antes do </html> ou no fim.
+  return css + html;
+}
+
 export function AdminEmailsCard() {
   const toast = useToast();
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
@@ -169,9 +183,18 @@ export function AdminEmailsCard() {
                     type="button"
                     onClick={handleSendTest}
                     disabled={sending}
-                    className="flex h-[44px] items-center justify-center rounded-full bg-[#ff4100] px-[24px] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#ff4100] px-[24px] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {sending ? "Enviando…" : "Enviar teste"}
+                    {sending ? (
+                      <svg
+                        className="capas-spinner h-[20px] w-[20px] [&_circle]:stroke-white"
+                        viewBox="25 25 50 50"
+                      >
+                        <circle r="20" cy="50" cx="50" />
+                      </svg>
+                    ) : (
+                      "Enviar teste"
+                    )}
                   </button>
                 </div>
                 <p className="mt-[8px] text-[11px] text-[#8d8d8d]">
@@ -188,7 +211,7 @@ export function AdminEmailsCard() {
               ) : (
                 <iframe
                   title="Preview do email"
-                  srcDoc={previewHtml}
+                  srcDoc={hideScrollbar(previewHtml)}
                   className="h-[640px] w-full border-none"
                   sandbox=""
                 />

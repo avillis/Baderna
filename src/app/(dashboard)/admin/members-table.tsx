@@ -6,6 +6,7 @@ import { X as XIcon } from "lucide-react";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { AddMemberModal } from "@/features/panel/components/add-member-modal";
+import { EditMemberNamesModal } from "@/features/panel/components/edit-member-names-modal";
 import { EditMemberTitlesModal } from "@/features/panel/components/edit-member-titles-modal";
 import { ConfirmDeleteMemberModal } from "@/features/panel/components/confirm-delete-member-modal";
 import { useAccount } from "@/features/panel/use-account";
@@ -46,6 +47,7 @@ export function MembersTable() {
   const [roles, setRoles] = useState<RoleMap>({});
 
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editingNamesMemberId, setEditingNamesMemberId] = useState<string | null>(null);
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
   const { deleteMember } = useDeletedMembers();
 
@@ -70,6 +72,9 @@ export function MembersTable() {
 
   const editingMember = editingMemberId
     ? allMembers.find((m) => m.id === editingMemberId)
+    : null;
+  const editingNamesMember = editingNamesMemberId
+    ? allMembers.find((m) => m.id === editingNamesMemberId)
     : null;
 
   const deletingMember = deletingMemberId
@@ -171,6 +176,13 @@ export function MembersTable() {
                       </button>
                       <button
                         type="button"
+                        onClick={() => setEditingNamesMemberId(member.id)}
+                        className="text-[12px] font-bold text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
+                      >
+                        Editar nomes
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => {
                           if (isSelf) return;
                           setDeletingMemberId(member.id);
@@ -208,6 +220,15 @@ export function MembersTable() {
           targetUserId={editingMember.userId ?? null}
           memberNickname={editingMember.nickname}
           defaultUnlocked={defaultUnlockedFor(editingMember.id)}
+        />
+      )}
+
+      {editingNamesMember && (
+        <EditMemberNamesModal
+          open
+          onClose={() => setEditingNamesMemberId(null)}
+          targetUserId={editingNamesMember.userId ?? null}
+          memberNickname={editingNamesMember.nickname}
         />
       )}
 

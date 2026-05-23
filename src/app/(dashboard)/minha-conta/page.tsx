@@ -11,7 +11,11 @@ export default async function MinhaContaPage() {
   );
   return (
     <PanelShell showBanner={false}>
-      <MinhaContaClient bannersTotal={bannersTotal} namesTotal={NAME_STYLES.length} />
+      <MinhaContaClient
+        bannersTotal={bannersTotal}
+        namesTotal={NAME_STYLES.length}
+        splashGroups={splashGroups}
+      />
     </PanelShell>
   );
 }

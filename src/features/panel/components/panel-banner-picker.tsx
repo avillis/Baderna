@@ -106,6 +106,15 @@ export function PanelBannerPicker({
     setSelectedFocusY(DEFAULT_BANNER_FOCUS_Y);
   }, []);
 
+  // Permite abrir o picker via custom event (usado pelo atalho de "Editar
+  // capa" na página /minha-conta). Sem isso, o picker só abre pelo botão
+  // que aparece em hover sobre o banner.
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener("panel:open-banner-picker", open);
+    return () => window.removeEventListener("panel:open-banner-picker", open);
+  }, []);
+
   useEffect(() => {
     if (!activeGroup) {
       return;
@@ -207,8 +216,8 @@ export function PanelBannerPicker({
               </button>
 
               <div className="grid min-h-0 flex-1 gap-0 overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)]">
-                <aside className="flex min-h-0 flex-col border-r border-[#ece7e2] bg-white px-[14px]">
-                  <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pr-[6px] py-[18px]">
+                <aside className="flex min-h-0 max-h-[28vh] flex-col border-b border-[#ece7e2] bg-white px-[14px] lg:max-h-none lg:border-b-0 lg:border-r">
+                  <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pr-[6px] py-[14px] lg:py-[18px]">
                     <div className="space-y-[6px] pr-[4px]">
                       {unlockedGroup ? (
                         <>
@@ -269,11 +278,11 @@ export function PanelBannerPicker({
                   </div>
                 </aside>
 
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f7f7f7] px-[24px]">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f7f7f7] px-[16px] lg:px-[24px]">
                   {selectedVariant ? (
-                    <div className="pt-[24px] pb-[18px] shrink-0">
-                      <div className="overflow-hidden rounded-[var(--panel-radius-card-sm)] bg-white p-[14px]">
-                        <div className="relative aspect-[3/1] overflow-hidden rounded-[var(--panel-radius-block)] bg-black">
+                    <div className="pt-[14px] pb-[12px] shrink-0 lg:pt-[24px] lg:pb-[18px]">
+                      <div className="overflow-hidden rounded-[var(--panel-radius-card-sm)] bg-white p-[10px] lg:p-[14px]">
+                        <div className="relative aspect-[2.2/1] overflow-hidden rounded-[var(--panel-radius-block)] bg-black lg:aspect-[3/1]">
                           <Image
                             src={selectedVariant.src}
                             alt={`${selectedVariant.displayChampion} splash selecionada`}
@@ -312,8 +321,8 @@ export function PanelBannerPicker({
                     </div>
                   ) : null}
 
-                  <div className={`no-scrollbar min-h-0 flex-1 overflow-y-auto pr-[4px] pb-[24px] ${selectedVariant ? "pt-0" : "pt-[24px]"}`}>
-                    <div className="grid gap-[14px] pb-[12px] sm:grid-cols-2 xl:grid-cols-3">
+                  <div className={`no-scrollbar min-h-0 flex-1 overflow-y-auto pr-[4px] pb-[16px] lg:pb-[24px] ${selectedVariant ? "pt-0" : "pt-[14px] lg:pt-[24px]"}`}>
+                    <div className="grid grid-cols-2 gap-[10px] pb-[8px] sm:grid-cols-2 lg:gap-[14px] lg:pb-[12px] xl:grid-cols-3">
                       {activeGroup?.variants.map((variant) => {
                         const isSelected = variant.fileName === selectedFileName;
                         const locked = !isUnlocked(variant.fileName);

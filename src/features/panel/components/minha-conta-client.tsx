@@ -9,7 +9,9 @@ import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
 import { NameStyleModal } from "@/features/panel/components/name-style-modal";
+import { PanelBannerPicker } from "@/features/panel/components/panel-banner-picker";
 import { TitleModal } from "@/features/panel/components/title-modal";
+import type { SplashGroup } from "@/features/panel/splash-catalog";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { NAME_BY_ID } from "@/features/panel/names-data";
 import { panelProfile } from "@/features/panel/panel-data";
@@ -26,9 +28,11 @@ type CollectionKey = "capas" | "titulos" | "nomes";
 export function MinhaContaClient({
   bannersTotal,
   namesTotal,
+  splashGroups,
 }: {
   bannersTotal: number;
   namesTotal: number;
+  splashGroups: SplashGroup[];
 }) {
   const { account, updateField } = useAccount();
   const { user } = useAuth();
@@ -87,6 +91,15 @@ export function MinhaContaClient({
         titlesById={titlesById}
         nameIds={unlockedNames}
       />
+
+      {/* Picker montado invisível — só pra escutar o evento custom disparado
+          pelo botão "Editar capa". O wrapper `hidden` esconde o botão flutuante
+          do picker; o modal vira portal pro body, então abre normal. */}
+      {splashGroups.length > 0 && (
+        <div className="hidden" aria-hidden="true">
+          <PanelBannerPicker splashGroups={splashGroups} defaultBannerFileName="" />
+        </div>
+      )}
     </div>
   );
 }
@@ -146,6 +159,15 @@ function BasicInfoCard({
 
           {/* Atalhos pros modais de personalização */}
           <div className="flex w-full max-w-[220px] flex-col gap-[10px] pt-[8px] sm:max-w-none">
+            <button
+              type="button"
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("panel:open-banner-picker"))
+              }
+              className="w-full rounded-[18px] bg-[#ededed] py-[14px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
+            >
+              Editar capa
+            </button>
             <button
               type="button"
               onClick={() => setNamesOpen(true)}
