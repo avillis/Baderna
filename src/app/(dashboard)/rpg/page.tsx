@@ -8,7 +8,7 @@ export default function RPGPage() {
         <img
           src="/gifs/braum2.gif"
           alt=""
-          className="mb-[18px] h-[260px] w-[260px] object-contain"
+          className="mb-[18px] h-[280px] w-[280px] object-contain"
         />
         <p className="text-[16px] font-semibold tracking-[-0.02em] text-[#0f0f0f]">
           Tem coisa boa vindo ai...
