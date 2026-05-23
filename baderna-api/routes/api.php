@@ -95,6 +95,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/account/coins', [MemberCoinsController::class, 'me']);
     Route::get('/account/winrates-with-members', [MemberWinratesController::class, 'index']);
     Route::post('/account/winrates-with-members/refresh', [MemberWinratesController::class, 'refresh']);
+    // Mesma feature, mas pra um member específico (perfil de terceiros).
+    Route::get('/members/{user}/winrates-with-members', [MemberWinratesController::class, 'showForMember'])
+        ->whereNumber('user');
+    Route::post('/members/{user}/winrates-with-members/refresh', [MemberWinratesController::class, 'refreshForMember'])
+        ->whereNumber('user');
     // ATENÇÃO: /account/coins/adjust foi REMOVIDA — permitia self-credit
     // ilimitado. Débito agora é feito atomicamente dentro do unlocks/store.
     Route::get('/account/unlocks', [MemberUnlocksController::class, 'index']);

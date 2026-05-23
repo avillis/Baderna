@@ -32,11 +32,15 @@ function authHeaders(): Record<string, string> {
 }
 
 /**
- * Winrate do user logado COM cada outro membro da Baderna (Flex, season atual).
- * O backend cacheia 1h — primeira chamada pode demorar 30s-2min porque puxa
- * detalhes de cada partida da Riot.
+ * Winrate de um user (logado por padrão, ou outro via `targetUserId`) COM
+ * cada outro membro da Baderna (Flex, season atual). O backend cacheia 1h
+ * — primeira chamada pode demorar 30s-2min porque puxa detalhes de cada
+ * partida da Riot.
+ *
+ * Passar `targetUserId` faz a request bater na rota /members/{id}/...
+ * (usada quando o card aparece em perfis de terceiros).
  */
-export function useWinratesWithMembers() {
+export function useWinratesWithMembers(targetUserId?: number | null) {
   const [rows, setRows] = useState<WinrateRow[]>([]);
   const [debug, setDebug] = useState<WinrateDebug | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,9 +48,10 @@ export function useWinratesWithMembers() {
 
   const fetchData = useCallback(
     async (force: boolean): Promise<{ rows: WinrateRow[]; debug: WinrateDebug | null }> => {
-      const url = force
-        ? `${API_BASE}/account/winrates-with-members/refresh`
+      const base = targetUserId
+        ? `${API_BASE}/members/${targetUserId}/winrates-with-members`
         : `${API_BASE}/account/winrates-with-members`;
+      const url = force ? `${base}/refresh` : base;
       const res = await fetch(url, {
         method: force ? "POST" : "GET",
         headers: { Accept: "application/json", ...authHeaders() },
@@ -55,7 +60,7 @@ export function useWinratesWithMembers() {
       const data = (await res.json()) as { rows?: WinrateRow[]; debug?: WinrateDebug };
       return { rows: data.rows ?? [], debug: data.debug ?? null };
     },
-    [],
+    [targetUserId],
   );
 
   useEffect(() => {

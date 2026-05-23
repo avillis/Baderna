@@ -64,6 +64,47 @@ class MemberWinratesController extends Controller
     }
 
     /**
+     * Winrate de QUALQUER member (perfil de terceiros). Mesma lógica do
+     * index() mas pra um user passado na rota — usado quando o admin/qualquer
+     * logado abre o perfil de outra pessoa e quer ver os winrates dela.
+     */
+    public function showForMember(int $user, RiotAPIServices $riot)
+    {
+        $target = User::where('is_deleted', false)->find($user);
+        if (!$target || !$target->riot_puuid) {
+            return response()->json([
+                'rows' => [],
+                'debug' => ['reason' => 'target_no_puuid'],
+            ]);
+        }
+
+        $seasonId = $riot->getCurrentSeasonId();
+        $cacheKey = "winrates_with_members:{$target->riot_puuid}:{$seasonId}";
+
+        $result = Cache::remember($cacheKey, now()->addHour(), function () use ($target, $riot) {
+            return $this->computeWinrates($target, $riot);
+        });
+
+        return response()->json($result);
+    }
+
+    public function refreshForMember(int $user, RiotAPIServices $riot)
+    {
+        $target = User::where('is_deleted', false)->find($user);
+        if (!$target || !$target->riot_puuid) {
+            return response()->json([
+                'rows' => [],
+                'debug' => ['reason' => 'target_no_puuid'],
+            ]);
+        }
+        $seasonId = $riot->getCurrentSeasonId();
+        Cache::forget("winrates_with_members:{$target->riot_puuid}:{$seasonId}");
+        $result = $this->computeWinrates($target, $riot);
+        Cache::put("winrates_with_members:{$target->riot_puuid}:{$seasonId}", $result, now()->addHour());
+        return response()->json($result);
+    }
+
+    /**
      * Retorna ['rows' => [...], 'debug' => {meta}]. Debug ajuda admin a
      * descobrir por que tá vazio (sem PUUID? sem partidas? Riot caiu?).
      */

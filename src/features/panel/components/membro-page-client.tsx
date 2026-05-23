@@ -248,7 +248,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
             </div>
             <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
               <LiveHistoryCard riotId={riotId} />
-              <PanelMemberWinratesCard />
+              <PanelMemberWinratesCard targetUserId={targetUserId} />
               <div className="flex flex-col gap-8">
                 <LiveFavoriteChampionsCard riotId={riotId} />
                 <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
@@ -307,7 +307,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
             </div>
             <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="col-start-1 col-span-1">
-                <PanelMemberWinratesCard />
+                <PanelMemberWinratesCard targetUserId={targetUserId} />
               </div>
 
               <div className="col-start-2 col-span-2">

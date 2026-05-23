@@ -21,13 +21,35 @@ class RiotAPIServices
         $this->apiKey = Cache::get(self::SETTINGS_KEY) ?? env('RIOT_API_KEY');
     }
 
-    protected function request(string $url)
+    /**
+     * Faz a request HTTP pra Riot com cache opcional.
+     *
+     * Por que cachear aqui (e não só no controller): cada perfil dispara ~30
+     * chamadas (PUUID + rank + summoner + 25 match details + mastery). Sem
+     * cache interno, visitar 4 perfis diferentes estoura o rate limit da
+     * chave de dev (20 req/s, 100 req/2min) e dá 429.
+     *
+     * @param int $cacheSeconds 0 = sem cache. Default 1800 = 30 minutos.
+     */
+    protected function request(string $url, int $cacheSeconds = 1800)
     {
-        $response = Http::withHeader('X-Riot-Token', $this->apiKey)->get($url);
-        if ($response->failed()) {
-            throw new Exception('Erro ao buscar dados na Riot: ' . $response->status());
+        $fetch = function () use ($url) {
+            $response = Http::withHeader('X-Riot-Token', $this->apiKey)->get($url);
+            if ($response->failed()) {
+                throw new Exception('Erro ao buscar dados na Riot: ' . $response->status());
+            }
+            return $response->json();
+        };
+
+        if ($cacheSeconds <= 0) {
+            return $fetch();
         }
-        return $response->json();
+
+        return Cache::remember(
+            'riot_req:' . sha1($url),
+            $cacheSeconds,
+            $fetch,
+        );
     }
 
     public function getPlayerPUUIDByRiotId(string $gameName, string $tagLine): array
@@ -164,12 +186,19 @@ class RiotAPIServices
         if ($queue !== null) {
             $url .= "&queue={$queue}";
         }
-        return $this->request($url);
+        // 5 minutos — partidas novas aparecem aqui rápido, mas dá tempo
+        // de evitar refetch repetido se o user navega entre perfis.
+        return $this->request($url, 300);
     }
 
     public function getMatchDetail(string $matchId): array
     {
-        return $this->request("{$this->americasBaseUrl}/lol/match/v5/matches/{$matchId}");
+        // Match já finalizada nunca muda — cache 30 dias evita estourar
+        // rate limit quando vários perfis pedem as mesmas matches.
+        return $this->request(
+            "{$this->americasBaseUrl}/lol/match/v5/matches/{$matchId}",
+            60 * 60 * 24 * 30,
+        );
     }
 
     /**

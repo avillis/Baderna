@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { RotateCw } from "lucide-react";
 
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { StyledName } from "@/features/panel/components/styled-name";
+import { getMemberSlug } from "@/features/panel/members-data";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { useWinratesWithMembers } from "@/features/panel/use-winrates-with-members";
 
@@ -33,15 +35,32 @@ function MemberAvatar({
   );
 }
 
-export function PanelMemberWinratesCard() {
-  const { rows, debug, loading, refreshing, refresh } = useWinratesWithMembers();
+export function PanelMemberWinratesCard({
+  /** Quando passado, mostra winrates DESSE user (perfil de terceiros).
+   *  Omitido = usa o user logado. */
+  targetUserId,
+}: {
+  targetUserId?: number | null;
+} = {}) {
+  const { rows, debug, loading, refreshing, refresh } = useWinratesWithMembers(targetUserId);
   const members = useBadernaMembers();
 
-  // Resolve activeNameId/slug via lista global de membros (pra StyledName).
+  // Resolve activeNameId/slug via lista global de membros (pra StyledName +
+  // link pro perfil de cada membro listado no card).
   const styleByMemberId = new Map<number, string | undefined>();
+  const memberById = new Map<number, (typeof members)[number]>();
   for (const m of members) {
-    if (m.userId) styleByMemberId.set(m.userId, m.activeNameId);
+    if (m.userId) {
+      styleByMemberId.set(m.userId, m.activeNameId);
+      memberById.set(m.userId, m);
+    }
   }
+
+  // Se o card é de um terceiro, filtra ele mesmo da lista — não faz
+  // sentido aparecer "X jogou com X mesmo" no próprio perfil dele.
+  const visibleRows = targetUserId
+    ? rows.filter((r) => r.memberId !== targetUserId)
+    : rows;
 
   return (
     <section className="flex h-full flex-col rounded-[var(--panel-radius-card)] bg-white px-[28px] py-[34px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
@@ -86,7 +105,7 @@ export function PanelMemberWinratesCard() {
           </div>
         )}
 
-        {!loading && rows.length === 0 && (
+        {!loading && visibleRows.length === 0 && (
           <div className="my-auto flex flex-col items-center gap-[12px] px-[20px] text-center">
             <p className="text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
               Você não jogou Flex com nenhum membro da Baderna nessa season.
@@ -126,15 +145,14 @@ export function PanelMemberWinratesCard() {
         )}
 
         {!loading &&
-          rows.map((row) => {
+          visibleRows.map((row) => {
             const games = row.wins + row.losses;
             const winRate = games > 0 ? Math.round((row.wins / games) * 100) : 0;
             const styleId = styleByMemberId.get(row.memberId);
-            return (
-              <article
-                key={row.memberId}
-                className="flex items-center gap-[14px] py-[11px]"
-              >
+            const member = memberById.get(row.memberId);
+            const slug = member ? getMemberSlug(member) : null;
+            const content = (
+              <>
                 <MemberAvatar
                   avatarSrc={row.avatarSrc}
                   id={String(row.memberId)}
@@ -157,6 +175,22 @@ export function PanelMemberWinratesCard() {
                 >
                   {winRate}%
                 </div>
+              </>
+            );
+            return slug ? (
+              <Link
+                key={row.memberId}
+                href={`/membros/${slug}`}
+                className="flex items-center gap-[14px] py-[11px] transition-opacity hover:opacity-70"
+              >
+                {content}
+              </Link>
+            ) : (
+              <article
+                key={row.memberId}
+                className="flex items-center gap-[14px] py-[11px]"
+              >
+                {content}
               </article>
             );
           })}
