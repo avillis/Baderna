@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { VideoPlayer } from "@/features/panel/components/video-player";
 import { useAuth } from "@/features/panel/use-auth";
+import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 
 export function PostCard({
@@ -36,6 +37,15 @@ export function PostCard({
   const authorSlug = post.author.gameNick
     ? getMemberSlug({ nickname: post.author.gameNick.split("#")[0] })
     : "";
+
+  // Pega o nome ATUAL do autor (caso ele tenha mudado depois de postar).
+  // O backend salva snapshot no payload do post; aqui sobrescreve com a
+  // versão fresh da lista de membros, vinculada por user_id.
+  const members = useBadernaMembers();
+  const liveAuthorName = post.author.id
+    ? members.find((m) => m.userId === post.author.id)?.nickname
+    : undefined;
+  const authorName = liveAuthorName ?? post.author.name ?? "Anônimo";
 
   // Click no card → permalink do post. Buttons/links internos param
   // propagação pra não disparar duas navegações.
@@ -113,11 +123,11 @@ export function PostCard({
                   href={`/membro/${authorSlug}`}
                   className="block truncate text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-80 sm:text-[15px]"
                 >
-                  {post.author.name ?? "Anônimo"}
+                  {authorName}
                 </Link>
               ) : (
                 <span className="block truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                  {post.author.name ?? "Anônimo"}
+                  {authorName}
                 </span>
               )}
               {/* Expanded: slug embaixo do nome (estilo Twitter).

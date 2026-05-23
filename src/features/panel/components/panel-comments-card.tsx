@@ -31,11 +31,16 @@ export function PanelCommentsCard({
   const isOwnProfile =
     user != null && targetUserId != null && user.id === targetUserId;
 
-  // Mapeia user_id → activeNameId pra renderizar o nome do autor do
-  // comentário com o estilo que ele escolheu no perfil dele.
+  // Mapeia user_id → activeNameId e display name ATUAL. O backend cacheia
+  // o display_name no payload do comentário, mas se a pessoa mudar o nome
+  // depois, queremos refletir a versão nova sem invalidar o cache local.
   const styleByUserId = new Map<number, string | undefined>();
+  const nameByUserId = new Map<number, string>();
   for (const m of members) {
-    if (m.userId) styleByUserId.set(m.userId, m.activeNameId);
+    if (m.userId) {
+      styleByUserId.set(m.userId, m.activeNameId);
+      nameByUserId.set(m.userId, m.nickname);
+    }
   }
 
   function handleSubmit(e?: React.FormEvent) {
@@ -73,7 +78,13 @@ export function PanelCommentsCard({
             ) : (
               <div className="space-y-[18px]">
                 {comments.map((comment) => {
-                  const profileHref = `/membro/${getMemberSlug({ nickname: comment.author })}`;
+                  // Prefere o nome atual do membro (atualizado em tempo
+                  // quase real) ao snapshot que veio no payload do comment.
+                  const liveName = comment.authorId
+                    ? nameByUserId.get(comment.authorId)
+                    : undefined;
+                  const displayName = liveName ?? comment.author;
+                  const profileHref = `/membro/${getMemberSlug({ nickname: displayName })}`;
                   const authorStyleId = comment.authorId
                     ? styleByUserId.get(comment.authorId)
                     : undefined;
@@ -85,14 +96,14 @@ export function PanelCommentsCard({
                     <div className="flex items-start gap-[12px]">
                       <Link
                         href={profileHref}
-                        aria-label={`Ver perfil de ${comment.author}`}
+                        aria-label={`Ver perfil de ${displayName}`}
                         className="shrink-0 transition-opacity hover:opacity-80"
                       >
                         {comment.authorAvatar ? (
                           <div className="relative h-[42px] w-[42px] overflow-hidden rounded-full bg-[#efeae6]">
                             <Image
                               src={comment.authorAvatar}
-                              alt={comment.author}
+                              alt={displayName}
                               fill
                               className="object-cover"
                               sizes="42px"
@@ -100,7 +111,7 @@ export function PanelCommentsCard({
                           </div>
                         ) : (
                           <div className="relative flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#efeae6] text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                            {comment.author.charAt(0)}
+                            {displayName.charAt(0)}
                           </div>
                         )}
                       </Link>
@@ -111,7 +122,7 @@ export function PanelCommentsCard({
                           className="inline-block max-w-full truncate text-[13px] font-bold tracking-[-0.03em] text-[#0f0f0f] transition-opacity hover:opacity-70"
                         >
                           <StyledName styleId={authorStyleId}>
-                            {comment.author}
+                            {displayName}
                           </StyledName>
                         </Link>
                         <p className="-mt-[1px] text-[11px] font-medium tracking-[-0.03em] text-[#adadad]">
