@@ -36,18 +36,23 @@ class PostController extends Controller
         ]);
     }
 
-    public function show(Request $request, int $id)
+    public function show(Request $request, string $idOrCode)
     {
         $userId = $request->user()->id;
-        $post = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src'])
-            ->withCount(['likes', 'comments'])
-            ->find($id);
+        $query = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src'])
+            ->withCount(['likes', 'comments']);
+
+        // Aceita ID numérico (compat com links antigos) OU short_code novo.
+        $post = ctype_digit($idOrCode)
+            ? $query->find((int)$idOrCode)
+            : $query->where('short_code', $idOrCode)->first();
+
         if (!$post) {
             return response()->json(['error' => 'Post não encontrado.'], 404);
         }
-        $liked = PostLike::where('user_id', $userId)->where('post_id', $id)->exists();
+        $liked = PostLike::where('user_id', $userId)->where('post_id', $post->id)->exists();
         return response()->json([
-            'post' => $this->serialize($post, $liked ? [$id] : []),
+            'post' => $this->serialize($post, $liked ? [$post->id] : []),
         ]);
     }
 
@@ -186,6 +191,7 @@ class PostController extends Controller
 
         return [
             'id'         => $post->id,
+            'shortCode'  => $post->short_code,
             'content'    => $post->content,
             'imageUrl'   => $post->image_url,
             'gifUrl'     => $post->gif_url,

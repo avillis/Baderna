@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 import type { RankType } from "@/features/panel/rank-utils";
 import { getRankFrameSrc } from "@/features/panel/rank-utils";
@@ -29,25 +32,35 @@ export function RankedAvatar({
   priority = false,
   unranked = false,
 }: RankedAvatarProps) {
+  const [errored, setErrored] = useState(false);
   return (
     <div
       className="relative shrink-0"
       style={{ width: `${size}px`, height: `${size}px` }}
     >
       <div
-        className={`absolute overflow-hidden rounded-full ${ringClassName}`.trim()}
+        className={`absolute overflow-hidden rounded-full ${
+          !errored && src ? "bg-[#ededed]" : "skeleton-shimmer"
+        } ${ringClassName}`.trim()}
         style={{
           inset: `${avatarInset}px`,
         }}
       >
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          className="object-cover"
-          sizes={`${size}px`}
-          priority={priority}
-        />
+        {!errored && src ? (
+          <Image
+            src={src}
+            alt=""
+            fill
+            className="object-cover"
+            sizes={`${size}px`}
+            priority={priority}
+            onError={() => setErrored(true)}
+          />
+        ) : (
+          <span aria-label={alt} className="sr-only">
+            {alt}
+          </span>
+        )}
       </div>
 
       {!unranked && (

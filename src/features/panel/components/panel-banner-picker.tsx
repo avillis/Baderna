@@ -386,7 +386,7 @@ export function PanelBannerPicker({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="absolute left-[24px] top-[24px] z-10 rounded-full bg-black/50 px-[16px] py-[8px] text-[12px] font-bold tracking-[-0.03em] text-white backdrop-blur-md transition-all duration-200 hover:bg-black/70 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+        className="absolute left-[24px] top-[24px] z-10 hidden rounded-full bg-black/50 px-[16px] py-[8px] text-[12px] font-bold tracking-[-0.03em] text-white backdrop-blur-md transition-all duration-200 hover:bg-black/70 xl:block xl:opacity-0 xl:group-hover:opacity-100"
       >
         Trocar capa
       </button>

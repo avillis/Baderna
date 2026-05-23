@@ -45,11 +45,7 @@ export function PostCommentsSection({
 
   return (
     <section className="rounded-[20px] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-      <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-        Comentários
-      </h2>
-
-      <div className="mt-[20px]">
+      <div>
         {comments.length === 0 ? (
           <p className="py-[24px] text-center text-[13px] font-medium tracking-[-0.02em] text-[#b0a8a4]">
             Nenhum comentário ainda. Seja o primeiro!

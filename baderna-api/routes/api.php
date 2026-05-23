@@ -56,7 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Feed (Posts)
     Route::get('/posts', [PostController::class, 'index']);
-    Route::get('/posts/{id}', [PostController::class, 'show'])->whereNumber('id');
+    Route::get('/posts/{idOrCode}', [PostController::class, 'show'])
+        ->where('idOrCode', '[A-Za-z0-9]+');
     Route::post('/posts', [PostController::class, 'store']);
     Route::post('/posts/image', [PostController::class, 'uploadImage']);
     Route::post('/posts/video', [PostController::class, 'uploadVideo']);

@@ -90,6 +90,9 @@ export function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [volume, setVolume] = useState(1);
   const [volumeOpen, setVolumeOpen] = useState(false);
+  // Antes do primeiro play, só o botão central aparece (sem barra inferior).
+  // Depois da primeira interação, controles seguem o padrão hover/pausado.
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   // Sincroniza estado de fullscreen com a API do browser (Esc também sai).
   useEffect(() => {
@@ -107,7 +110,17 @@ export function VideoPlayer({
       if (!scrubbing && v) setCurrent(v.currentTime);
     }
     function onMeta() {
-      if (v) setDuration(v.duration || 0);
+      if (!v) return;
+      setDuration(v.duration || 0);
+      // Força o navegador a renderizar o primeiro frame como thumbnail.
+      // Safari/iOS não mostra preview do vídeo sem isso.
+      if (!hasInteracted && v.currentTime === 0) {
+        try {
+          v.currentTime = 0.1;
+        } catch {
+          /* alguns codecs reclamam de seek antes de buffer; ignora */
+        }
+      }
     }
     function onPlay() {
       setPlaying(true);
@@ -130,6 +143,7 @@ export function VideoPlayer({
   function togglePlay() {
     const v = videoRef.current;
     if (!v) return;
+    if (!hasInteracted) setHasInteracted(true);
     if (v.paused) void v.play();
     else v.pause();
   }
@@ -217,7 +231,9 @@ export function VideoPlayer({
         </button>
       )}
 
-      {/* Controles bottom — aparecem on hover sempre, e sempre quando pausado */}
+      {/* Controles bottom — só renderiza depois do primeiro play. Depois disso,
+          aparecem on hover quando playing e sempre quando pausado. */}
+      {hasInteracted && (
       <div
         className={`absolute inset-x-0 bottom-0 flex flex-col gap-[6px] bg-gradient-to-t from-black/70 via-black/40 to-transparent px-[12px] pb-[10px] pt-[28px] transition-opacity ${
           playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"
@@ -318,6 +334,7 @@ export function VideoPlayer({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -689,7 +689,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   return (
     <div className="relative pb-12">
       {/* Header */}
-      <div className="flex items-start justify-between pt-[6vh]">
+      <div className="flex items-start justify-between pt-[1.5vh] sm:pt-[6vh]">
         <div>
           <h1 className="text-[32px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
             Loja

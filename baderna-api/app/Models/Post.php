@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use App\Models\Comment;
 
 class Post extends Model
@@ -13,7 +14,21 @@ class Post extends Model
         'image_url',
         'gif_url',
         'video_url',
+        'short_code',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Post $post) {
+            if (empty($post->short_code)) {
+                // Gera um código único de 8 chars alfanuméricos.
+                do {
+                    $code = Str::random(8);
+                } while (self::where('short_code', $code)->exists());
+                $post->short_code = $code;
+            }
+        });
+    }
 
     public function comments()
     {

@@ -131,7 +131,7 @@ export function PostComposer({
             />
 
             {mediaUrl && (
-              <div className="relative h-fit w-[180px] flex-shrink-0 overflow-hidden rounded-[16px] bg-[#ededed]">
+              <div className="relative h-fit w-[90px] flex-shrink-0 overflow-hidden rounded-[12px] bg-[#ededed] sm:w-[180px] sm:rounded-[16px]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={mediaUrl}
@@ -153,7 +153,7 @@ export function PostComposer({
             )}
 
             {isVideoMedia && (
-              <div className="relative h-fit w-[200px] flex-shrink-0 overflow-hidden rounded-[16px] bg-black">
+              <div className="relative h-fit w-[100px] flex-shrink-0 overflow-hidden rounded-[12px] bg-black sm:w-[200px] sm:rounded-[16px]">
                 <video
                   src={videoUrl ?? undefined}
                   className="pointer-events-none aspect-video w-full object-cover"

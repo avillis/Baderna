@@ -44,9 +44,9 @@ export default function FeedPage() {
 
   return (
     <PanelShell showBanner={false}>
-      <section className="grid gap-[20px] pb-[80px] pt-[6vh] xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="grid gap-[28px] pb-[20px] pt-[1.5vh] sm:gap-[20px] sm:pb-[40px] sm:pt-[6vh] xl:pb-[80px] xl:grid-cols-[minmax(0,1fr)_320px]">
         {/* Coluna esquerda: composer + feed (centralizado a 680px dentro da coluna) */}
-        <div className="mx-auto flex w-full min-w-0 max-w-[680px] flex-col gap-[14px]">
+        <div className="mx-auto flex w-full min-w-0 max-w-[680px] flex-col gap-[20px] sm:gap-[14px]">
           <PostComposer onCreate={createPost} />
 
           {loading && posts.length === 0 && (
@@ -102,7 +102,7 @@ export default function FeedPage() {
         </div>
 
         {/* Coluna direita: histórico + inhouses + membros */}
-        <aside className="flex flex-col gap-[14px]">
+        <aside className="flex flex-col gap-[20px] pt-[72px] sm:gap-[14px] sm:pt-0">
           <FeedHistoryWidget />
           <FeedInhousesWidget />
           <FeedMembersWidget />

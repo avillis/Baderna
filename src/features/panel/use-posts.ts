@@ -9,6 +9,7 @@ const API_BASE =
 
 export type FeedPost = {
   id: number;
+  shortCode: string;
   content: string;
   imageUrl: string | null;
   gifUrl: string | null;
@@ -45,8 +46,8 @@ async function fetchPosts(before?: number): Promise<FeedPost[]> {
   return data.posts ?? [];
 }
 
-export async function fetchPost(id: number): Promise<FeedPost | null> {
-  const res = await fetch(`${API_BASE}/posts/${id}`, {
+export async function fetchPost(idOrCode: string | number): Promise<FeedPost | null> {
+  const res = await fetch(`${API_BASE}/posts/${encodeURIComponent(String(idOrCode))}`, {
     headers: { Accept: "application/json", ...authHeaders() },
   });
   if (!res.ok) return null;
@@ -133,6 +134,44 @@ async function apiDeletePost(id: number): Promise<boolean> {
 
 const PAGE_SIZE = 5;
 
+// ── Mock pra testes locais ─────────────────────────────────────────────
+// Só aparece em localhost. Remove esse bloco quando não precisar mais.
+export function isLocalDev() {
+  return (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
+  );
+}
+
+export const MOCK_POST_ID = -1;
+export const MOCK_POST_CODE = "mockpost";
+
+export function getMockPost(): FeedPost {
+  return MOCK_POST;
+}
+
+const MOCK_POST: FeedPost = {
+  id: -1,
+  shortCode: "mockpost",
+  content:
+    "Post fictício pra testar ajustes de UI 🛠️\n\nLike, comentário, vídeo etc são mockados — não tocam na API.",
+  imageUrl:
+    "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Jinx_0.jpg",
+  gifUrl: null,
+  videoUrl: null,
+  createdAt: new Date().toISOString(),
+  likesCount: 7,
+  commentsCount: 2,
+  liked: false,
+  author: {
+    id: -1,
+    name: "Mock Tester",
+    gameNick: "MockTester#000",
+    avatarSrc: null,
+  },
+};
+
 export function usePosts() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,9 +183,16 @@ export function usePosts() {
     fetchPosts()
       .then((fresh) => {
         if (cancelled) return;
-        setPosts(fresh);
-        // Se a primeira página já veio com menos que o limite, não tem mais.
+        const withMock = isLocalDev() ? [MOCK_POST, ...fresh] : fresh;
+        setPosts(withMock);
         if (fresh.length < PAGE_SIZE) setHasMore(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        if (isLocalDev()) {
+          setPosts([MOCK_POST]);
+          setHasMore(false);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -202,6 +248,8 @@ export function usePosts() {
           : p,
       ),
     );
+    // Mock: pula a API, só vive em memória.
+    if (id === MOCK_POST_ID) return;
     const result = await apiToggleLike(id);
     if (!result) {
       // Rollback se falhou
@@ -259,6 +307,17 @@ export function formatPostDate(iso: string): string {
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d`;
   return new Date(ts).toLocaleDateString("pt-BR");
+}
+
+/** Formato "23/05/2025" — usado no permalink. */
+export function formatPostDateLong(iso: string): string {
+  const ts = new Date(iso).getTime();
+  if (Number.isNaN(ts)) return "";
+  return new Date(ts).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 // Exporta o toggle/delete pra páginas individuais (post detail) usarem.

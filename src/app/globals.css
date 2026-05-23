@@ -1160,3 +1160,15 @@ button {
 .mobile-menu-item-out {
   animation: mobile-menu-item-out 0.3s cubic-bezier(0.4, 0, 0.6, 1) both;
 }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  background-color: #ededed;
+  background-image: linear-gradient(90deg, #ededed 0%, #f5f5f5 50%, #ededed 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}

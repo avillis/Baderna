@@ -243,7 +243,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 <PanelGameModeToggle />
               </div>
             </div>
-            <div className="mb-4 flex justify-end xl:hidden">
+            <div className="mb-4 flex justify-center xl:hidden">
               <PanelGameModeToggle />
             </div>
             <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">

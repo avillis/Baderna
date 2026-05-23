@@ -939,7 +939,7 @@ export function InhouseLobbyBoard() {
   }
 
   return (
-    <section className="relative w-full pt-[6vh]">
+    <section className="relative w-full pt-[1.5vh] sm:pt-[6vh]">
       <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-3">
         {inhouses.map((inhouse) => (
           <InhouseListCard

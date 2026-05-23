@@ -16,6 +16,10 @@ import {
   apiDeletePost,
   apiToggleLike,
   fetchPost,
+  getMockPost,
+  isLocalDev,
+  MOCK_POST_CODE,
+  MOCK_POST_ID,
   type FeedPost,
 } from "@/features/panel/use-posts";
 
@@ -23,19 +27,28 @@ export default function PostPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
-  const id = Number(params.id);
+  // Pode ser ID numérico (compat legado) ou short_code novo (8 chars).
+  const idOrCode = params.id;
   const [post, setPost] = useState<FeedPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (Number.isNaN(id)) {
+    if (!idOrCode) {
       setNotFound(true);
       setLoading(false);
       return;
     }
+    // Mock local: serve da memória, evita 404 na API.
+    const isMock =
+      idOrCode === MOCK_POST_CODE || idOrCode === String(MOCK_POST_ID);
+    if (isMock && isLocalDev()) {
+      setPost(getMockPost());
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
-    fetchPost(id)
+    fetchPost(idOrCode)
       .then((fresh) => {
         if (cancelled) return;
         if (!fresh) {
@@ -50,10 +63,19 @@ export default function PostPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [idOrCode]);
 
   async function handleLike(postId: number) {
     if (!post) return;
+    // Mock: toggle só em memória, sem API.
+    if (postId === MOCK_POST_ID) {
+      setPost({
+        ...post,
+        liked: !post.liked,
+        likesCount: post.likesCount + (post.liked ? -1 : 1),
+      });
+      return;
+    }
     const prev = post;
     setPost({
       ...post,
@@ -85,7 +107,7 @@ export default function PostPage() {
 
   return (
     <PanelShell showBanner={false}>
-      <section className="grid gap-[20px] pb-[80px] pt-[6vh] xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="grid gap-[20px] pb-[80px] pt-[1.5vh] sm:pt-[6vh] xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="mx-auto flex w-full min-w-0 max-w-[680px] flex-col gap-[14px]">
         <Link
           href="/"

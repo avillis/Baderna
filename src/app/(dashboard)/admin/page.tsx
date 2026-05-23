@@ -12,7 +12,7 @@ export default function AdminPage() {
   return (
     <PanelShell showBanner={false}>
       <AdminGuard>
-        <div className="flex flex-col gap-6 pt-[6vh]">
+        <div className="flex flex-col gap-6 pt-[1.5vh] sm:pt-[6vh]">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
 
             <MembersTable />

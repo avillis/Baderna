@@ -41,7 +41,7 @@ export function MinhaContaClient({
   const [openCollection, setOpenCollection] = useState<CollectionKey | null>(null);
 
   return (
-    <div className="grid grid-cols-1 gap-[18px] pt-[6vh] xl:grid-cols-[minmax(0,1fr)_280px]">
+    <div className="grid grid-cols-1 gap-[18px] pt-[1.5vh] sm:pt-[6vh] xl:grid-cols-[minmax(0,1fr)_280px]">
       <BasicInfoCard
         account={account}
         updateField={updateField}

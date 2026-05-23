@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { VideoPlayer } from "@/features/panel/components/video-player";
 import { useAuth } from "@/features/panel/use-auth";
-import { formatPostDate, type FeedPost } from "@/features/panel/use-posts";
+import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 
 export function PostCard({
   post,
@@ -26,6 +26,7 @@ export function PostCard({
   const { user } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const media = post.imageUrl ?? post.gifUrl;
   const canDelete =
@@ -43,7 +44,7 @@ export function PostCard({
     const target = e.target as HTMLElement;
     if (window.getSelection()?.toString()) return; // user selecionando texto
     if (target.closest("a, button")) return;
-    router.push(`/post/${post.id}`);
+    router.push(`/post/${post.shortCode || post.id}`);
   }
 
   useEffect(() => {
@@ -57,24 +58,27 @@ export function PostCard({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [menuOpen]);
 
-  function handleDelete() {
-    if (!onDelete) return;
-    if (window.confirm("Apagar esse post? Não dá pra desfazer.")) {
-      onDelete(post.id);
-    }
+  function openDeleteConfirm() {
     setMenuOpen(false);
+    setConfirmOpen(true);
+  }
+
+  function confirmDelete() {
+    setConfirmOpen(false);
+    onDelete?.(post.id);
   }
 
   return (
     <article
       onClick={handleCardClick}
-      className="cursor-pointer rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa]"
+      className="cursor-pointer rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa] sm:p-[24px]"
     >
-      <div className="flex items-start gap-[14px]">
+      {/* Header: avatar + nome + nick + (menu). Sempre em linha. */}
+      <div className="flex items-start gap-[12px] sm:gap-[14px]">
         {authorSlug ? (
           <Link
             href={`/membro/${authorSlug}`}
-            className="relative h-[48px] w-[48px] flex-shrink-0 overflow-hidden rounded-full bg-[#ededed] transition-opacity hover:opacity-85"
+            className="relative h-[42px] w-[42px] flex-shrink-0 overflow-hidden rounded-full bg-[#ededed] transition-opacity hover:opacity-85 sm:h-[48px] sm:w-[48px]"
           >
             {post.author.avatarSrc ? (
               <Image
@@ -102,37 +106,52 @@ export function PostCard({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-[8px]">
-            {authorSlug ? (
-              <Link
-                href={`/membro/${authorSlug}`}
-                className="truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-80"
-              >
-                {post.author.name ?? "Anônimo"}
-              </Link>
-            ) : (
-              <span className="truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                {post.author.name ?? "Anônimo"}
-              </span>
-            )}
-            {post.author.gameNick && authorSlug ? (
-              <Link
-                href={`/membro/${authorSlug}`}
-                className="truncate text-[13px] text-[#8d8d8d] transition-opacity hover:opacity-80"
-              >
-                @{post.author.gameNick.split("#")[0].replace(/\s+/g, "_")}
-              </Link>
-            ) : (
-              post.author.gameNick && (
-                <span className="truncate text-[13px] text-[#8d8d8d]">
-                  @{post.author.gameNick.split("#")[0].replace(/\s+/g, "_")}
+          <div className="flex items-start gap-[8px]">
+            <div className="min-w-0 flex-1">
+              {authorSlug ? (
+                <Link
+                  href={`/membro/${authorSlug}`}
+                  className="block truncate text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-80 sm:text-[15px]"
+                >
+                  {post.author.name ?? "Anônimo"}
+                </Link>
+              ) : (
+                <span className="block truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+                  {post.author.name ?? "Anônimo"}
                 </span>
-              )
-            )}
-            <span className="text-[13px] text-[#8d8d8d]">·</span>
-            <span className="text-[13px] text-[#8d8d8d]">
-              {formatPostDate(post.createdAt)}
-            </span>
+              )}
+              {/* Expanded: slug embaixo do nome (estilo Twitter).
+                  Compact (feed): inline com @ ao lado. */}
+              {expanded ? (
+                post.author.gameNick && authorSlug ? (
+                  <Link
+                    href={`/membro/${authorSlug}`}
+                    className="mt-[2px] block truncate text-[12px] text-[#8d8d8d] transition-opacity hover:opacity-80 sm:text-[13px]"
+                  >
+                    {post.author.gameNick.split("#")[0]}
+                  </Link>
+                ) : null
+              ) : (
+                <div className="mt-[2px] flex items-baseline gap-[6px] text-[12px] text-[#8d8d8d] sm:text-[13px]">
+                  {post.author.gameNick && authorSlug ? (
+                    <Link
+                      href={`/membro/${authorSlug}`}
+                      className="truncate transition-opacity hover:opacity-80"
+                    >
+                      {post.author.gameNick.split("#")[0]}
+                    </Link>
+                  ) : (
+                    post.author.gameNick && (
+                      <span className="truncate">
+                        {post.author.gameNick.split("#")[0]}
+                      </span>
+                    )
+                  )}
+                  <span>·</span>
+                  <span>{formatPostDate(post.createdAt)}</span>
+                </div>
+              )}
+            </div>
             {canDelete && (
               <div className="relative ml-auto" ref={menuRef}>
                 <button
@@ -147,7 +166,7 @@ export function PostCard({
                   <div className="absolute right-0 top-[34px] z-10 overflow-hidden rounded-[12px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]">
                     <button
                       type="button"
-                      onClick={handleDelete}
+                      onClick={openDeleteConfirm}
                       className="flex w-full items-center gap-[8px] px-[14px] py-[10px] text-[13px] font-semibold text-[#c53030] transition-colors hover:bg-[#fff4f4]"
                     >
                       <svg
@@ -171,49 +190,97 @@ export function PostCard({
               </div>
             )}
           </div>
-
-          {post.content && (
-            <p className="mt-[6px] whitespace-pre-wrap break-words text-[15px] leading-[1.45] text-[#0f0f0f]">
-              {post.content}
-            </p>
-          )}
-
-          {media && (
-            <div className="mt-[12px] overflow-hidden rounded-[16px] bg-[#ededed]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={media}
-                alt=""
-                className={
-                  expanded
-                    ? "h-auto w-full object-contain"
-                    : "max-h-[520px] w-full object-cover"
-                }
-                loading="lazy"
-              />
-            </div>
-          )}
-
-          {post.videoUrl && !media && (
-            <div className="mt-[12px]">
-              <VideoPlayer src={post.videoUrl} expanded={expanded} />
-            </div>
-          )}
-
-          {/* Linha de ações: like + comentários */}
-          <div className="mt-[18px] flex items-center gap-[16px]">
-            <LikeButton
-              liked={post.liked}
-              count={post.likesCount}
-              onClick={() => onLike?.(post.id)}
-            />
-            <CommentButton
-              count={post.commentsCount}
-              href={`/post/${post.id}`}
-            />
-          </div>
         </div>
       </div>
+
+      {/* Body: full-width no mobile (sem ml). Em sm:+ fica indentado sob o avatar
+          (avatar 48 + gap 14 = 62) pra manter o visual estilo Twitter. */}
+      <div className="mt-[16px] sm:ml-[62px]">
+        {post.content && (
+          <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.45] text-[#0f0f0f] sm:text-[15px]">
+            {post.content}
+          </p>
+        )}
+
+        {media && (
+          <div className="mt-[12px] overflow-hidden rounded-[16px] bg-[#ededed]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={media}
+              alt=""
+              className={
+                expanded
+                  ? "h-auto w-full object-contain"
+                  : "max-h-[520px] w-full object-cover"
+              }
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        {post.videoUrl && !media && (
+          <div className="mt-[12px]">
+            <VideoPlayer src={post.videoUrl} expanded={expanded} />
+          </div>
+        )}
+
+        {/* Linha de ações: like + comentários. Expanded mostra data à direita. */}
+        <div className="mt-[18px] flex items-center gap-[16px]">
+          <LikeButton
+            liked={post.liked}
+            count={post.likesCount}
+            onClick={() => onLike?.(post.id)}
+          />
+          <CommentButton
+            count={post.commentsCount}
+            href={`/post/${post.shortCode || post.id}`}
+          />
+          <BookmarkButton />
+          {expanded && (
+            <span className="ml-auto text-[12px] text-[#8d8d8d]">
+              {formatPostDateLong(post.createdAt)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {confirmOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmOpen(false);
+          }}
+        >
+          <div
+            className="w-full max-w-[360px] overflow-hidden rounded-[20px] bg-white p-[24px] shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[18px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+              Apagar post?
+            </h3>
+            <p className="mt-[8px] text-[13px] leading-[1.5] tracking-[-0.01em] text-[#7c7c7c]">
+              Essa ação não pode ser desfeita. O post e seus comentários serão removidos.
+            </p>
+            <div className="mt-[20px] flex gap-[10px]">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="flex h-[44px] flex-1 items-center justify-center rounded-[14px] bg-[#ededed] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-85"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="flex h-[44px] flex-1 items-center justify-center rounded-[14px] bg-[#c53030] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+              >
+                Apagar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 }
@@ -223,48 +290,66 @@ export function PostCard({
  * (balão com 3 pontinhos) vs vazio (balão sem dots). Link pro permalink.
  */
 function CommentButton({ count, href }: { count: number; href: string }) {
-  const hasComments = count > 0;
   return (
     <Link
       href={href}
       aria-label="Comentários"
       className="group flex items-center gap-[6px] text-[13px] font-semibold text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
     >
-      <span className="relative inline-flex h-[20px] w-[20px] items-center justify-center">
-        {hasComments ? (
-          <svg
-            className="h-[18px] w-[18px]"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M7.5 10.5H7.51M12 10.5H12.01M16.5 10.5H16.51M9.9 19.2L11.36 21.1467C11.5771 21.4362 11.6857 21.5809 11.8188 21.6327C11.9353 21.678 12.0647 21.678 12.1812 21.6327C12.3143 21.5809 12.4229 21.4362 12.64 21.1467L14.1 19.2C14.3931 18.8091 14.5397 18.6137 14.7185 18.4645C14.9569 18.2656 15.2383 18.1248 15.5405 18.0535C15.7671 18 16.0114 18 16.5 18C17.8978 18 18.5967 18 19.1481 17.7716C19.8831 17.4672 20.4672 16.8831 20.7716 16.1481C21 15.5967 21 14.8978 21 13.5V7.8C21 6.11984 21 5.27976 20.673 4.63803C20.3854 4.07354 19.9265 3.6146 19.362 3.32698C18.7202 3 17.8802 3 16.2 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V13.5C3 14.8978 3 15.5967 3.22836 16.1481C3.53284 16.8831 4.11687 17.4672 4.85195 17.7716C5.40326 18 6.10218 18 7.5 18C7.98858 18 8.23287 18 8.45951 18.0535C8.76169 18.1248 9.04312 18.2656 9.2815 18.4645C9.46028 18.6137 9.60685 18.8091 9.9 19.2ZM8 10.5C8 10.7761 7.77614 11 7.5 11C7.22386 11 7 10.7761 7 10.5C7 10.2239 7.22386 10 7.5 10C7.77614 10 8 10.2239 8 10.5ZM12.5 10.5C12.5 10.7761 12.2761 11 12 11C11.7239 11 11.5 10.7761 11.5 10.5C11.5 10.2239 11.7239 10 12 10C12.2761 10 12.5 10.2239 12.5 10.5ZM17 10.5C17 10.7761 16.7761 11 16.5 11C16.2239 11 16 10.7761 16 10.5C16 10.2239 16.2239 10 16.5 10C16.7761 10 17 10.2239 17 10.5Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ) : (
-          <svg
-            className="h-[18px] w-[18px]"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M3 7.8C3 6.11984 3 5.27976 3.32698 4.63803C3.6146 4.07354 4.07354 3.6146 4.63803 3.32698C5.27976 3 6.11984 3 7.8 3H16.2C17.8802 3 18.7202 3 19.362 3.32698C19.9265 3.6146 20.3854 4.07354 20.673 4.63803C21 5.27976 21 6.11984 21 7.8V13.5C21 14.8978 21 15.5967 20.7716 16.1481C20.4672 16.8831 19.8831 17.4672 19.1481 17.7716C18.5967 18 17.8978 18 16.5 18C16.0114 18 15.7671 18 15.5405 18.0535C15.2383 18.1248 14.9569 18.2656 14.7185 18.4645C14.5397 18.6137 14.3931 18.8091 14.1 19.2L12.64 21.1467C12.4229 21.4362 12.3143 21.5809 12.1812 21.6327C12.0647 21.678 11.9353 21.678 11.8188 21.6327C11.6857 21.5809 11.5771 21.4362 11.36 21.1467L9.9 19.2C9.60685 18.8091 9.46028 18.6137 9.2815 18.4645C9.04312 18.2656 8.76169 18.1248 8.45951 18.0535C8.23287 18 7.98858 18 7.5 18C6.10218 18 5.40326 18 4.85195 17.7716C4.11687 17.4672 3.53284 16.8831 3.22836 16.1481C3 15.5967 3 14.8978 3 13.5V7.8Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
+      <span className="relative inline-flex h-[22px] w-[22px] items-center justify-center">
+        <svg
+          className="h-[20px] w-[20px]"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M21 12C21 16.9706 16.9706 21 12 21C10.8029 21 9.6603 20.7663 8.61549 20.3419C8.41552 20.2607 8.31554 20.2201 8.23472 20.202C8.15566 20.1843 8.09715 20.1778 8.01613 20.1778C7.9333 20.1778 7.84309 20.1928 7.66265 20.2229L4.10476 20.8159C3.73218 20.878 3.54589 20.909 3.41118 20.8512C3.29328 20.8007 3.19933 20.7067 3.14876 20.5888C3.09098 20.4541 3.12203 20.2678 3.18413 19.8952L3.77711 16.3374C3.80718 16.1569 3.82222 16.0667 3.82221 15.9839C3.8222 15.9028 3.81572 15.8443 3.798 15.7653C3.77988 15.6845 3.73927 15.5845 3.65806 15.3845C3.23374 14.3397 3 13.1971 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </span>
       <span>{count > 0 ? count : ""}</span>
     </Link>
+  );
+}
+
+/**
+ * Bookmark — placeholder visual. Toggle local apenas; sem persistência ainda.
+ */
+function BookmarkButton() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        setSaved((v) => !v);
+      }}
+      aria-label={saved ? "Remover dos salvos" : "Salvar post"}
+      aria-pressed={saved}
+      className="group flex items-center text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
+    >
+      <span className="relative inline-flex h-[22px] w-[22px] items-center justify-center">
+        <svg
+          className={`h-[20px] w-[20px] ${saved ? "text-[#ff4100]" : ""}`}
+          viewBox="0 0 24 24"
+          fill={saved ? "currentColor" : "none"}
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    </button>
   );
 }
 
@@ -297,11 +382,11 @@ function LikeButton({
       aria-label={liked ? "Descurtir" : "Curtir"}
       className="group flex items-center gap-[6px] text-[13px] font-semibold text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
     >
-      <span className="relative inline-flex h-[20px] w-[20px] items-center justify-center">
+      <span className="relative inline-flex h-[22px] w-[22px] items-center justify-center">
         {/* Outline quando não curtido */}
         {!liked && (
           <svg
-            className="h-[18px] w-[18px] text-[#8d8d8d] transition-colors group-hover:text-[#ff4100]"
+            className="h-[20px] w-[20px] text-[#8d8d8d] transition-colors group-hover:text-[#ff4100]"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -311,7 +396,7 @@ function LikeButton({
               clipRule="evenodd"
               d="M11.9932 5.13581C9.9938 2.7984 6.65975 2.16964 4.15469 4.31001C1.64964 6.45038 1.29697 10.029 3.2642 12.5604C4.89982 14.6651 9.84977 19.1041 11.4721 20.5408C11.6536 20.7016 11.7444 20.7819 11.8502 20.8135C11.9426 20.8411 12.0437 20.8411 12.1361 20.8135C12.2419 20.7819 12.3327 20.7016 12.5142 20.5408C14.1365 19.1041 19.0865 14.6651 20.7221 12.5604C22.6893 10.029 22.3797 6.42787 19.8316 4.31001C17.2835 2.19216 13.9925 2.7984 11.9932 5.13581Z"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -321,7 +406,7 @@ function LikeButton({
         {liked && (
           <svg
             key={animKey}
-            className="heart-pop h-[18px] w-[18px] text-[#ff4100]"
+            className="heart-pop h-[20px] w-[20px] text-[#ff4100]"
             viewBox="0 0 24 24"
             fill="currentColor"
             xmlns="http://www.w3.org/2000/svg"
