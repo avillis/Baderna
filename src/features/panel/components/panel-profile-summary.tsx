@@ -153,7 +153,7 @@ export function PanelProfileSummary({
 
   return (
     <section className="w-full max-w-[395px]">
-      <div className="pl-[42px]">
+      <div className="px-[16px] sm:px-0 sm:pl-[42px]">
         <div className="relative mb-[24px] h-[156px] w-[156px]">
           <RankedAvatar
             src={liveAvatarSrc}
@@ -169,19 +169,19 @@ export function PanelProfileSummary({
           />
         </div>
 
-        <div className="relative z-10 flex flex-nowrap items-center gap-x-[14px]">
+        <div className="relative z-10 flex flex-nowrap items-center gap-x-[10px] sm:gap-x-[14px]">
           {isOwnProfile ? (
             <button
               type="button"
               onClick={cycleNameStyle}
               aria-label="Próximo estilo do nome"
               title="Clique pra trocar o estilo"
-              className="shrink-0 cursor-pointer whitespace-nowrap rounded-[4px] text-[26px] font-bold leading-[1.2] tracking-[-0.03em] transition-opacity hover:opacity-80"
+              className="shrink-0 cursor-pointer whitespace-nowrap rounded-[4px] text-[22px] font-bold leading-[1.2] tracking-[-0.03em] transition-opacity hover:opacity-80 sm:text-[26px]"
             >
               <StyledName styleId={activeNameId}>{liveDisplayName}</StyledName>
             </button>
           ) : (
-            <h1 className="shrink-0 whitespace-nowrap text-[26px] font-bold leading-[1.2] tracking-[-0.03em]">
+            <h1 className="shrink-0 whitespace-nowrap text-[22px] font-bold leading-[1.2] tracking-[-0.03em] sm:text-[26px]">
               <StyledName styleId={activeNameId}>{liveDisplayName}</StyledName>
             </h1>
           )}
@@ -222,7 +222,7 @@ export function PanelProfileSummary({
         <p className="mt-[8px] text-[12px] font-semibold tracking-[-0.03em] text-[#989898]">
           {liveFullName}
         </p>
-        <p className="mt-[12px] text-[13px] font-medium leading-[1.5] tracking-[-0.02em] text-[#989898]">
+        <p className="mt-[12px] whitespace-pre-wrap text-[13px] font-medium leading-[1.5] tracking-[-0.02em] text-[#989898]">
           {liveBio}
         </p>
       </div>

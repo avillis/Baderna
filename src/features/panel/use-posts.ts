@@ -309,15 +309,21 @@ export function formatPostDate(iso: string): string {
   return new Date(ts).toLocaleDateString("pt-BR");
 }
 
-/** Formato "23/05/2025" — usado no permalink. */
+/** Formato "23/05/2025 às 14:32" — usado no permalink (post expandido). */
 export function formatPostDateLong(iso: string): string {
   const ts = new Date(iso).getTime();
   if (Number.isNaN(ts)) return "";
-  return new Date(ts).toLocaleDateString("pt-BR", {
+  const d = new Date(ts);
+  const date = d.toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
+  const time = d.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${date} às ${time}`;
 }
 
 // Exporta o toggle/delete pra páginas individuais (post detail) usarem.
