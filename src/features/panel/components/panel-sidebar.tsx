@@ -121,8 +121,9 @@ function AccountDropdown({
         };
   const router = useRouter();
   const { user, logout } = useAuth();
-  const displayFullName = user?.name ?? panelProfile.fullName;
-  const displayEmail = user?.email ?? panelProfile.email;
+  const { account } = useAccount();
+  const displayFullName = account.name || user?.name || panelProfile.fullName;
+  const displayEmail = account.email || user?.email || panelProfile.email;
 
   async function handleLogout() {
     onClose();
