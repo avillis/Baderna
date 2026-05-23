@@ -69,10 +69,10 @@ export function PostComposer({
   const mediaUrl = imageUrl ?? gifUrl;
 
   return (
-    <div className="rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-      <div className="flex gap-[14px]">
+    <div className="rounded-[18px] bg-white p-[14px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] sm:rounded-[20px] sm:p-[20px]">
+      <div className="flex gap-[10px] sm:gap-[14px]">
         {/* Avatar */}
-        <div className="relative h-[48px] w-[48px] flex-shrink-0 overflow-hidden rounded-full bg-[#ededed]">
+        <div className="relative h-[40px] w-[40px] flex-shrink-0 overflow-hidden rounded-full bg-[#ededed] sm:h-[48px] sm:w-[48px]">
           {account.avatarSrc ? (
             <Image
               src={account.avatarSrc}
@@ -86,7 +86,7 @@ export function PostComposer({
         </div>
 
         {/* Coluna principal */}
-        <div className="flex min-w-0 flex-1 flex-col gap-[14px]">
+        <div className="flex min-w-0 flex-1 flex-col gap-[12px] sm:gap-[14px]">
           {/* Linha texto + mídia lateral. Texto fica em flex-1, mídia
               ocupa coluna fixa à direita só quando existe. */}
           <div className="flex gap-[14px]">
@@ -96,7 +96,7 @@ export function PostComposer({
               placeholder="Qual a boa de hoje?"
               rows={4}
               maxLength={2000}
-              className="min-w-0 flex-1 resize-none border-none bg-transparent text-[16px] tracking-[-0.01em] text-[#0f0f0f] outline-none placeholder:text-[#a89e99] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="min-w-0 flex-1 resize-none border-none bg-transparent text-[15px] tracking-[-0.01em] text-[#0f0f0f] outline-none placeholder:text-[#a89e99] sm:text-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             />
 
             {mediaUrl && (
@@ -236,7 +236,7 @@ export function PostComposer({
               type="button"
               onClick={handleSubmit}
               disabled={!canPost || posting}
-              className="flex h-[50px] w-[120px] flex-shrink-0 items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="flex h-[40px] w-[96px] flex-shrink-0 items-center justify-center gap-[8px] rounded-[14px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:h-[50px] sm:w-[120px] sm:rounded-[18px]"
             >
               {posting ? (
                 <svg

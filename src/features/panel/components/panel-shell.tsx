@@ -29,7 +29,7 @@ export function PanelShell({
   bgClassName?: string;
 }) {
   return (
-    <div className={`relative min-h-screen overflow-x-clip ${bgClassName}`}>
+    <div className={`relative min-h-screen overflow-x-clip rounded-t-[24px] xl:rounded-none ${bgClassName}`}>
       <div className="relative w-full px-4 pt-4 sm:px-6 sm:pt-6 xl:px-[45px] xl:pt-[45px]">
         <div className="grid gap-6 xl:grid-cols-[318px_minmax(0,1fr)] xl:gap-[60px] 2xl:gap-[80px]">
           <PanelSidebar />
@@ -48,7 +48,7 @@ export function PanelShell({
                 />
               )}
 
-              <div className={showBanner ? "relative -mt-[42px] sm:-mt-[54px] xl:-mt-[78px] 2xl:-mt-[84px]" : "relative"}>
+              <div className={showBanner ? "relative -mt-[70px] sm:-mt-[82px] xl:-mt-[78px] 2xl:-mt-[84px]" : "relative"}>
                 {children}
               </div>
             </div>

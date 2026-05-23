@@ -174,7 +174,7 @@ function RankMedal({
     ? "/images/rank-badges/unranked.webp"
     : `/images/rank-badges/${rankType}.png`;
   return (
-    <div className="relative h-[60px] w-[60px] shrink-0">
+    <div className="relative h-[80px] w-[80px] shrink-0 lg:h-[60px] lg:w-[60px]">
       <Image
         src={src}
         alt={unranked ? "unranked" : rankType}
@@ -258,20 +258,22 @@ function MemberFlexCard({
       };
 
   return (
-    <article className="flex flex-col gap-4 rounded-[var(--panel-radius-card)] bg-white px-6 py-5 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] lg:flex-row lg:items-center">
-      <div className="flex w-full shrink-0 items-center gap-4 lg:w-[220px]">
+    <article className="flex flex-col gap-4 rounded-[var(--panel-radius-card)] bg-white px-6 py-8 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] lg:flex-row lg:items-center lg:py-5">
+      {/* Mobile: medalha em cima, nome/nick/elo centralizados abaixo.
+          lg+: lado a lado, alinhado à esquerda. */}
+      <div className="flex w-full shrink-0 flex-col items-center gap-0 text-center lg:w-[220px] lg:flex-row lg:items-center lg:gap-4 lg:text-left">
         <RankMedal
           rankType={rank.type}
           unranked={!profile || rank.label === "Sem classificação"}
         />
         <div className="min-w-0 flex-1">
-          <h2 className="max-w-[140px] truncate text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+          <h2 className="max-w-full truncate text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f] lg:max-w-[140px]">
             {displayName}
           </h2>
-          <p className="mt-0.5 max-w-[140px] truncate text-[12px] font-semibold text-[#8d8d8d]">
+          <p className="mt-0.5 max-w-full truncate text-[12px] font-semibold text-[#8d8d8d] lg:max-w-[140px]">
             {nickname}
           </p>
-          <p className="mt-1 max-w-[140px] truncate text-[11px] font-bold text-[#313131]">
+          <p className="mt-1 mb-[8px] max-w-full truncate text-[11px] font-bold text-[#313131] lg:mb-0 lg:max-w-[140px]">
             {rank.label}
           </p>
         </div>

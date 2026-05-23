@@ -57,7 +57,7 @@ export function FeedInhousesWidget() {
       </div>
       <Link
         href="/inhouse"
-        className="mt-[12px] block text-center text-[12px] font-semibold text-[#ff4100] hover:opacity-80"
+        className="mt-[12px] block text-center text-[12px] font-semibold text-[#4a4a4a] hover:opacity-70"
       >
         Ver todos
       </Link>

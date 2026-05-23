@@ -107,10 +107,10 @@ function BasicInfoCard({
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
-    <section className="rounded-[25px] bg-white px-[36px] py-[32px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <section className="rounded-[25px] bg-white px-[20px] py-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] sm:px-[36px] sm:py-[32px]">
       <SectionTitle>Informações básicas</SectionTitle>
 
-      <div className="mt-[24px] grid grid-cols-[140px_minmax(0,1fr)] gap-[32px]">
+      <div className="mt-[24px] flex flex-col items-center gap-[24px] sm:grid sm:grid-cols-[140px_minmax(0,1fr)] sm:items-start sm:gap-[32px]">
         <div className="flex flex-col items-center gap-[10px]">
           <button
             type="button"
@@ -139,7 +139,7 @@ function BasicInfoCard({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-[18px] md:grid-cols-2">
+        <div className="grid w-full min-w-0 grid-cols-1 gap-[18px] md:grid-cols-2">
           <Field
             label="Nome"
             defaultValue={account.name}

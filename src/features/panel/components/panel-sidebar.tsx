@@ -5,7 +5,26 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, MoreHorizontal, LogOut } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, X } from "lucide-react";
+
+function LogOutIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M16 17L21 12M21 12L16 7M21 12H9M12 17C12 17.93 12 18.395 11.8978 18.7765C11.6204 19.8117 10.8117 20.6204 9.77646 20.8978C9.39496 21 8.92997 21 8 21H7.5C6.10218 21 5.40326 21 4.85195 20.7716C4.11687 20.4672 3.53284 19.8831 3.22836 19.1481C3 18.5967 3 17.8978 3 16.5V7.5C3 6.10217 3 5.40326 3.22836 4.85195C3.53284 4.11687 4.11687 3.53284 4.85195 3.22836C5.40326 3 6.10218 3 7.5 3H8C8.92997 3 9.39496 3 9.77646 3.10222C10.8117 3.37962 11.6204 4.18827 11.8978 5.22354C12 5.60504 12 6.07003 12 7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 import {
   panelSidebarAdminItem,
@@ -76,13 +95,30 @@ function AccountDropdown({
   onClose,
   anchorRect,
   dropdownRef,
+  placement = "right",
 }: {
   onClose: () => void;
   anchorRect: DOMRect;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
+  /** "right": cresce pra direita do anchor (desktop sidebar). "below":
+   *  cresce pra baixo do anchor, alinhado à direita do anchor (mobile). */
+  placement?: "right" | "below";
 }) {
-  const left = anchorRect.right + 36;
-  const bottom = window.innerHeight - anchorRect.bottom;
+  const positionStyle =
+    placement === "right"
+      ? {
+          position: "fixed" as const,
+          left: anchorRect.right + 36,
+          bottom: window.innerHeight - anchorRect.bottom,
+          zIndex: 9999,
+        }
+      : {
+          // Alinhado à margem direita do viewport (mesma usada no header).
+          position: "fixed" as const,
+          right: 20,
+          top: anchorRect.bottom + 8,
+          zIndex: 9999,
+        };
   const router = useRouter();
   const { user, logout } = useAuth();
   const displayFullName = user?.name ?? panelProfile.fullName;
@@ -97,7 +133,7 @@ function AccountDropdown({
   return createPortal(
     <div
       ref={dropdownRef}
-      style={{ position: "fixed", left, bottom, zIndex: 9999 }}
+      style={positionStyle}
       className="w-[240px] overflow-hidden rounded-[16px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]"
     >
       {/* Conta */}
@@ -156,7 +192,7 @@ function AccountDropdown({
           onClick={handleLogout}
           className="flex w-full items-center gap-[10px] rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#cc2200] transition-colors duration-150 hover:bg-[#fff4f4]"
         >
-          <LogOut className="h-[14px] w-[14px]" strokeWidth={2.2} />
+          <LogOutIcon className="h-[14px] w-[14px]" />
           Sair
         </button>
       </div>
@@ -363,35 +399,222 @@ export function PanelSidebar() {
         <AccountDropdown onClose={() => setMenuOpen(false)} anchorRect={anchorRect} dropdownRef={dropdownRef} />
       )}
 
-      <div className="xl:hidden">
-        <div className="rounded-[var(--panel-radius-card)] bg-white px-5 py-5 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-          <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.22em] text-[#8d8d8d]">
-            {"Navegação"}
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {panelMenuItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <MenuItem
-                  key={item.label}
-                  label={item.label}
-                  tone={isActive ? "active" : "default"}
-                  href={item.href}
-                  mobile
+      <MobileHeader />
+    </>
+  );
+}
+
+/**
+ * Burger de 2 listras → X. Cada traço fica a 4px do centro; quando `open`,
+ * ambos colapsam pro centro e giram pra formar o X.
+ */
+function BurgerIcon({ open }: { open: boolean }) {
+  return (
+    <div className="relative h-[18px] w-[18px]">
+      <span
+        className={cn(
+          "absolute left-0 top-1/2 block h-[2px] w-full -translate-y-1/2 rounded-full bg-current transition-transform duration-300 ease-out",
+          open ? "rotate-45" : "-translate-y-[5px]",
+        )}
+      />
+      <span
+        className={cn(
+          "absolute left-0 top-1/2 block h-[2px] w-full -translate-y-1/2 rounded-full bg-current transition-transform duration-300 ease-out",
+          open ? "-rotate-45" : "translate-y-[3px]",
+        )}
+      />
+    </div>
+  );
+}
+
+function MobileHeader() {
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const { account } = useAccount();
+  const members = useBadernaMembers();
+  const profileSlugSource = account.gameNick.split("#")[0] || user?.name || "";
+  const selfMember = profileSlugSource
+    ? members.find((m) => m.nickname === profileSlugSource)
+    : undefined;
+  const meuPerfilSlug =
+    selfMember?.id || (profileSlugSource ? slugify(profileSlugSource) : "");
+  const [open, setOpen] = useState(false);
+  // `mounted` controla se o overlay tá no DOM; `open` controla o estado
+  // ativo. Quando fecha, mantém montado pela duração da animação reversa.
+  const [mounted, setMounted] = useState(false);
+  const [acctOpen, setAcctOpen] = useState(false);
+  const [acctRect, setAcctRect] = useState<DOMRect | null>(null);
+  const acctBtnRef = useRef<HTMLButtonElement>(null);
+  const acctDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      return;
+    }
+    if (!mounted) return;
+    // Tempo total: 0.4s (animação base) + atraso máximo dos itens.
+    const t = window.setTimeout(() => setMounted(false), 500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  function toggleAcct() {
+    const rect = acctBtnRef.current?.getBoundingClientRect();
+    if (rect) setAcctRect(rect);
+    setAcctOpen((v) => !v);
+  }
+
+  // Fecha dropdown clicando fora.
+  useEffect(() => {
+    if (!acctOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        acctBtnRef.current?.contains(target) ||
+        acctDropdownRef.current?.contains(target)
+      ) return;
+      setAcctOpen(false);
+    }
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [acctOpen]);
+
+  // Trava scroll do body quando o menu tá aberto.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  // Fecha ao trocar de rota.
+  useEffect(() => {
+    setOpen(false);
+    setAcctOpen(false);
+  }, [pathname]);
+
+  const items = panelMenuItems.map((item) =>
+    item.label === "Meu Perfil"
+      ? { ...item, href: meuPerfilSlug ? `/membro/${meuPerfilSlug}` : item.href }
+      : item,
+  );
+
+  return (
+    <>
+      <header className="fixed inset-x-0 top-[12px] z-[70] flex h-[64px] items-center justify-between bg-transparent px-[16px] sm:px-[24px] xl:hidden">
+        <Link
+          href="/"
+          aria-label="Baderna"
+          className={cn(
+            "flex h-[48px] w-[48px] items-center justify-center rounded-full transition-colors duration-300",
+            open ? "bg-white text-[#ff4100]" : "bg-[#ff4100] text-white",
+          )}
+        >
+          <span
+            className="block h-[40px] w-[40px] bg-current"
+            style={{
+              maskImage: "url('/logo.svg')",
+              maskPosition: "center",
+              maskRepeat: "no-repeat",
+              maskSize: "contain",
+              WebkitMaskImage: "url('/logo.svg')",
+              WebkitMaskPosition: "center",
+              WebkitMaskRepeat: "no-repeat",
+              WebkitMaskSize: "contain",
+            }}
+          />
+        </Link>
+
+        <div className="flex items-center gap-[10px]">
+          {user && (
+            <button
+              ref={acctBtnRef}
+              type="button"
+              aria-label="Abrir conta"
+              aria-expanded={acctOpen}
+              onClick={toggleAcct}
+              className="relative h-[48px] w-[48px] overflow-hidden rounded-full bg-[#ededed] transition-opacity hover:opacity-85"
+            >
+              {account.avatarSrc ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={account.avatarSrc}
+                  alt=""
+                  className="h-full w-full object-cover"
                 />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-[14px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                  {(account.name || user.name || "?").charAt(0).toUpperCase()}
+                </span>
+              )}
+            </button>
+          )}
+
+          <button
+            type="button"
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-[48px] w-[48px] cursor-pointer flex-col items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-opacity hover:opacity-85"
+          >
+            <BurgerIcon open={open} />
+          </button>
+        </div>
+      </header>
+
+      {acctOpen && acctRect && (
+        <AccountDropdown
+          onClose={() => setAcctOpen(false)}
+          anchorRect={acctRect}
+          dropdownRef={acctDropdownRef}
+          placement="below"
+        />
+      )}
+
+      {/* Spacer pra reservar o espaço do header fixo (só no mobile). */}
+      <div className="h-[76px] xl:hidden" />
+
+      {/* Overlay full-screen — vermelho/laranja da brand, igual o screenshot
+          do Visu Haus que serviu de referência. */}
+      {mounted && (
+        <div
+          className={cn(
+            "fixed inset-0 z-[60] flex flex-col bg-[#ff4100] xl:hidden transition-opacity duration-300",
+            open ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <nav className="flex flex-1 flex-col gap-[20px] overflow-y-auto px-[24px] pb-[32px] pt-[140px]">
+            {items.map((item, i) => {
+              const isActive = pathname === item.href;
+              const delay = open
+                ? 60 + i * 50
+                : (items.length - 1 - i) * 35;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  style={{ animationDelay: `${delay}ms` }}
+                  className={cn(
+                    "w-fit text-[44px] font-bold leading-[1.05] tracking-[-0.04em] text-white transition-opacity",
+                    open ? "mobile-menu-item-in" : "mobile-menu-item-out",
+                    isActive ? "opacity-100" : "opacity-90 hover:opacity-100",
+                  )}
+                >
+                  {item.label}
+                </Link>
               );
             })}
-            {user?.is_admin && (
-              <MenuItem
-                label="Admin"
-                tone={pathname === "/admin" ? "active" : "default"}
-                href="/admin"
-                mobile
-              />
-            )}
-          </div>
+          </nav>
         </div>
-      </div>
+      )}
     </>
   );
 }

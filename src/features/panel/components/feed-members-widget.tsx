@@ -60,7 +60,7 @@ export function FeedMembersWidget() {
       </div>
       <Link
         href="/membros"
-        className="mt-[14px] block text-center text-[12px] font-semibold text-[#ff4100] hover:opacity-80"
+        className="mt-[14px] block text-center text-[12px] font-semibold text-[#4a4a4a] hover:opacity-70"
       >
         Ver todos
       </Link>

@@ -77,7 +77,7 @@ function EntrarPageInner() {
           }
         `}</style>
         {/* Header */}
-        <div className="flex items-start justify-between p-8">
+        <div className="flex items-start justify-between px-4 py-6 sm:px-6 sm:py-8">
           <Image
             src="/logo.svg"
             alt="Baderna Logo"
@@ -89,7 +89,7 @@ function EntrarPageInner() {
         </div>
 
         {/* Form Container */}
-        <div className="flex flex-1 flex-col items-center justify-center px-8 sm:px-16 md:px-24">
+        <div className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 md:px-24">
           <div className="flex w-full max-w-[320px] flex-col items-center gap-6">
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
               {!isLogin && (

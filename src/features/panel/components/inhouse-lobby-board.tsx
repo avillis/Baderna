@@ -164,9 +164,12 @@ function PlayerRow({
   return (
     <Wrapper>
       <article className="flex h-[76px] w-full items-center gap-4 rounded-[22px] bg-white px-[20px] shadow-[0_16px_38px_rgba(0,0,0,0.09)]">
-        <LaneIcon lane={player.lane} specialist={specialist} />
-        <div className="min-w-0 flex-1 text-right">
-          <div className="flex items-center justify-end gap-2">
+        {/* Mobile: avatar à esquerda. Desktop: lane icon à esquerda. */}
+        <div className="order-3 xl:order-1">
+          <LaneIcon lane={player.lane} specialist={specialist} />
+        </div>
+        <div className="order-2 min-w-0 flex-1 text-left xl:text-right">
+          <div className="flex items-center justify-start gap-2 xl:justify-end">
             {isLeader ? (
               <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff1ea] px-2.5 py-1 text-[10px] font-bold tracking-[0em] text-[#ff4100]">
                 Lider
@@ -186,7 +189,9 @@ function PlayerRow({
           </p>
         </div>
 
-        <PlayerAvatar player={player} />
+        <div className="order-1 xl:order-3">
+          <PlayerAvatar player={player} />
+        </div>
       </article>
     </Wrapper>
   );
@@ -197,11 +202,13 @@ function TeamHeader({
   leader,
   align = "left",
   side,
+  hideAvatar = false,
 }: {
   label: string;
   leader: InhousePlayer;
-  align?: "left" | "right";
+  align?: "left" | "right" | "center";
   side: InhouseSide;
+  hideAvatar?: boolean;
 }) {
   const sideLabel = side === "blue" ? "Azul" : "Vermelho";
   const sideGradient =
@@ -219,21 +226,30 @@ function TeamHeader({
       </span>
     </p>
   );
+  const justifyClass =
+    align === "right"
+      ? "justify-self-end"
+      : align === "center"
+        ? "justify-self-center"
+        : "justify-self-start";
   return (
-    <div
-      className={`flex items-center gap-4 ${align === "right" ? "justify-self-end" : "justify-self-start"}`}
-    >
+    <div className={`flex items-center gap-4 ${justifyClass}`}>
       {align === "right" ? (
         <>
           <div className="text-right">
             <p className="text-[24px] font-bold tracking-[-0.03em] text-[#111111]">{label}</p>
             {subtitle}
           </div>
-          <PlayerAvatar player={leader} />
+          {!hideAvatar && <PlayerAvatar player={leader} />}
         </>
+      ) : align === "center" ? (
+        <div className="text-center">
+          <p className="text-[24px] font-bold tracking-[-0.03em] text-[#111111]">{label}</p>
+          {subtitle}
+        </div>
       ) : (
         <>
-          <PlayerAvatar player={leader} />
+          {!hideAvatar && <PlayerAvatar player={leader} />}
           <div className="text-left">
             <p className="text-[24px] font-bold tracking-[-0.03em] text-[#111111]">{label}</p>
             {subtitle}
@@ -268,9 +284,25 @@ function InhouseMatchHeader({
   const redLabel = resolveTeamLabel(redLeader);
   return (
     <section className="grid w-full items-center gap-6 xl:grid-cols-[minmax(0,0.84fr)_minmax(320px,0.7fr)_minmax(0,0.88fr)]">
+      {/* Mobile: compact status pill no topo. Desktop: continua no centro. */}
+      <div className="order-first flex items-center justify-center gap-[10px] xl:hidden">
+        <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8b8b8b]">
+          {inhouseLobby.matchType} · {inhouseLobby.region}
+        </span>
+        <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
+        <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
+          {inhouseLobby.status}
+        </span>
+        <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
+        <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8f8f8f]">
+          {mode === "leader" ? "Modo Líder" : "Modo Aleatório"}
+        </span>
+      </div>
+
       <TeamHeader label={blueLabel} leader={blueLeader} side="blue" />
 
-      <div className="text-center">
+      {/* Desktop only: bloco grande centralizado entre os times */}
+      <div className="hidden text-center xl:block">
         <p className="text-[14px] font-bold tracking-[0em] text-[#8b8b8b]">
           {inhouseLobby.matchType} - {inhouseLobby.region}
         </p>
@@ -306,7 +338,7 @@ function InhouseConnectCard() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-[#ffffff] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
+    <section className="mx-auto w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-[#ffffff] p-4 xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
       <div className="flex items-center gap-2 rounded-[18px] bg-[#ededed] p-2">
         <a
           href={inhouseLobby.consoleLinkHref}
@@ -350,6 +382,14 @@ const RANK_TIER_ORDER: Record<string, number> = {
 export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
   const { updateInhouse } = useInhouses();
   const allMembersForRank = useBadernaMembers();
+  const teamNames = useTeamNames();
+  function resolveTeamLabel(leader: InhousePlayer): string {
+    const member = allMembersForRank.find((m) => m.id === leader.id);
+    const apiTeam = member?.teamName?.trim();
+    if (apiTeam && apiTeam !== `Time ${leader.nickname}`) return apiTeam;
+    if (apiTeam) return apiTeam;
+    return teamNames[leader.id] ?? `Time ${leader.nickname}`;
+  }
   // Mapa { player.id -> posição no ranking Baderna }
   const badernaRankByMemberId = useMemo(() => {
     const sorted = [...allMembersForRank].sort(
@@ -535,8 +575,8 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
     : null;
 
   return (
-    <section className="relative min-h-[980px] overflow-visible rounded-[36px] bg-transparent px-0 py-2 xl:min-h-[calc(100vh-120px)]">
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[36px]">
+    <section className="relative min-h-0 overflow-visible rounded-[36px] bg-transparent px-0 py-2 xl:min-h-[calc(100vh-120px)]">
+      <div className="pointer-events-none absolute inset-0 z-0 hidden overflow-hidden rounded-[36px] xl:block">
         <div className="absolute inset-x-0 top-[30px] h-[120px] bg-[radial-gradient(circle_at_center,rgba(52,125,255,0.06),transparent_58%)] blur-[44px]" />
 
         <div className="absolute top-[200px] left-1/2 h-[540px] w-[820px] -translate-x-[calc(50%+16px)]">
@@ -561,18 +601,24 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
         </div>
       </div>
 
-      <div className="relative z-10 flex min-h-[860px] w-full flex-col gap-4 justify-center pt-[62px]">
-        <InhouseMatchHeader blueLeader={blueLeader} redLeader={redLeader} mode={inhouse.mode} />
+      <div className="relative z-10 flex w-full flex-col gap-4 justify-center pt-[24px] xl:min-h-[860px] xl:pt-[62px]">
+        <div className="hidden xl:block">
+          <InhouseMatchHeader blueLeader={blueLeader} redLeader={redLeader} mode={inhouse.mode} />
+        </div>
 
-        <div className="mt-[40px] grid w-full items-start gap-4 xl:grid-cols-[minmax(0,0.84fr)_minmax(340px,0.7fr)_minmax(0,0.88fr)] xl:gap-5">
+        <div className="mt-[20px] grid w-full items-start gap-6 xl:mt-[40px] xl:grid-cols-[minmax(0,0.84fr)_minmax(340px,0.7fr)_minmax(0,0.88fr)] xl:gap-5">
           <div
             data-drop-side={isAssigning ? "blue" : undefined}
-            className={`w-full max-w-[390px] space-y-7 xl:-ml-[4px] ${
+            className={`order-1 w-full max-w-[390px] space-y-4 xl:order-none xl:-ml-[4px] xl:space-y-7 ${
               isAssigning && hoverSide === "blue"
                 ? "rounded-[24px] outline-2 outline-dashed outline-[#347dff]"
                 : ""
             }`}
           >
+            {/* Mobile-only: header do time azul antes dos cards (centralizado) */}
+            <div className="mb-[32px] flex justify-center xl:hidden">
+              <TeamHeader label={resolveTeamLabel(blueLeader)} leader={blueLeader} side="blue" align="center" hideAvatar />
+            </div>
             {isAssigning && blueSlots
               ? blueSlots.map((p, i) =>
                   p ? (
@@ -601,8 +647,23 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
                 ))}
           </div>
 
-          <div className="flex items-end justify-center xl:min-h-[620px]">
-            <div className="w-full pt-[448px] xl:pt-[458px]">
+          {/* Mobile-only: status block ENTRE os dois times */}
+          <div className="order-2 my-[40px] flex items-center justify-center gap-[10px] xl:hidden">
+            <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8b8b8b]">
+              {inhouseLobby.matchType} · {inhouseLobby.region}
+            </span>
+            <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
+            <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
+              {inhouseLobby.status}
+            </span>
+            <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
+            <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8f8f8f]">
+              {inhouse.mode === "leader" ? "Modo Líder" : "Modo Aleatório"}
+            </span>
+          </div>
+
+          <div className="order-4 hidden items-end justify-center xl:flex xl:order-none xl:min-h-[620px]">
+            <div className="w-full pt-0 xl:pt-[458px]">
               {isAssigning ? (
                 <AssignmentPoolCard
                   players={poolPlayers}
@@ -619,14 +680,32 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
             </div>
           </div>
 
+          {/* Mobile: pool/connect vira bottom sheet ancorado no fim da tela. */}
+          <div className="order-4 xl:hidden">
+            <MobilePoolBottomSheet
+              isAssigning={isAssigning}
+              poolPlayers={poolPlayers}
+              total={blueTeam.length + redTeam.length}
+              isHover={hoverSide === "pool"}
+              onRandomize={randomize}
+              onChipPointerDown={(e, id) => startDrag(e, id)}
+              teamsFull={teamsFull}
+              onConfirm={confirmTeams}
+            />
+          </div>
+
           <div
             data-drop-side={isAssigning ? "red" : undefined}
-            className={`ml-auto w-full max-w-[390px] space-y-7 xl:flex xl:flex-col xl:items-end ${
+            className={`order-3 w-full max-w-[390px] space-y-4 xl:order-none xl:ml-auto xl:space-y-7 xl:flex xl:flex-col xl:items-end ${
               isAssigning && hoverSide === "red"
                 ? "rounded-[24px] outline-2 outline-dashed outline-[#e84545]"
                 : ""
             }`}
           >
+            {/* Mobile-only: header do time vermelho antes dos cards (centralizado) */}
+            <div className="mb-[32px] flex justify-center xl:hidden">
+              <TeamHeader label={resolveTeamLabel(redLeader)} leader={redLeader} side="red" align="center" hideAvatar />
+            </div>
             {isAssigning && redSlots
               ? redSlots.map((p, i) =>
                   p ? (
@@ -985,6 +1064,93 @@ function EmptySlot({ side, index }: { side: "blue" | "red"; index: number }) {
   );
 }
 
+/**
+ * Versão mobile do pool/connect card: vira um handle fixo no rodapé que
+ * desliza pra cima ao tocar, revelando o card completo. Spacer ocupa
+ * espaço no layout pra os times não ficarem cobertos pelo handle.
+ */
+function MobilePoolBottomSheet({
+  isAssigning,
+  poolPlayers,
+  total,
+  isHover,
+  onRandomize,
+  onChipPointerDown,
+  teamsFull,
+  onConfirm,
+}: {
+  isAssigning: boolean;
+  poolPlayers: InhousePlayer[];
+  total: number;
+  isHover: boolean;
+  onRandomize: () => void;
+  onChipPointerDown: (e: ReactPointerEvent, id: string) => void;
+  teamsFull: boolean;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const handleLabel = "Controles";
+
+  return (
+    <>
+      {/* Spacer pra reservar espaço pro handle fixo (não ficar atrás do conteúdo) */}
+      <div className="h-[80px]" />
+
+      {/* Sheet único: quando fechado, apenas o handle (64px) fica visível no
+          rodapé. Quando aberto, ele DESLIZA pra cima revelando o conteúdo.
+          Sem backdrop — permite arrastar players pros times atrás. */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 rounded-t-[24px] bg-[#ededed] shadow-[0_-12px_50px_rgba(0,0,0,0.18)] transition-transform duration-300 ease-out"
+        style={{
+          maxHeight: "85vh",
+          transform: open ? "translateY(0)" : "translateY(calc(100% - 64px))",
+        }}
+      >
+        {/* Handle — clica pra alternar abrir/fechar */}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex h-[64px] w-full flex-col items-center justify-center gap-[6px] px-[20px] text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-90"
+        >
+          <span className="h-[4px] w-[44px] rounded-full bg-[#d4d4d4]" />
+          <span>{handleLabel}</span>
+        </button>
+
+        {/* Conteúdo do sheet — só fica visível quando aberto (sheet sobe) */}
+        <div className="max-h-[calc(85vh-64px)] overflow-y-auto px-[16px] pb-[20px]">
+          {isAssigning ? (
+            <AssignmentPoolCard
+              players={poolPlayers}
+              total={total}
+              isHover={isHover}
+              onRandomize={onRandomize}
+              onChipPointerDown={onChipPointerDown}
+              teamsFull={teamsFull}
+              onConfirm={() => {
+                onConfirm();
+                setOpen(false);
+              }}
+            />
+          ) : (
+            <InhouseConnectCard />
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function AssignmentPoolCard({
   players,
   total,
@@ -1007,7 +1173,7 @@ function AssignmentPoolCard({
       data-drop-side="pool"
       className={`mx-auto w-full max-w-[380px] rounded-[26px] p-[20px] transition-colors ${
         isHover ? "bg-[#fff4ef]" : "bg-[#ededed]"
-      } shadow-[0_18px_60px_rgba(0,0,0,0.08)]`}
+      } xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]`}
     >
       <div className="mb-3 flex items-center justify-between px-1">
         <p className="text-[12px] font-semibold text-[#8d8d8d]">

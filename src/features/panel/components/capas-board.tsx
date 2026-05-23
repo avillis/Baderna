@@ -153,13 +153,21 @@ function formatToken(value: string): string {
 const ROULETTE_LENGTH = 42;
 const WIN_INDEX = 34; // The card that lands under the indicator
 // Splash art native aspect ≈ 1215:717 (landscape rectangle)
-const CARD_HEIGHT = 200;
-const CARD_WIDTH = 340; // ≈ 1215/717 * 200
+const CARD_ASPECT = 1215 / 717;
+const CARD_HEIGHT_DESKTOP = 200;
+const CARD_HEIGHT_MOBILE = 110;
 const CARD_GAP = 12;
 const SPIN_DURATION_MS = 4500;
 const SPIN_DURATION_FAST_MS = 1200;
 const WINNER_SCALE = 1.12;
-const WINNER_SIDE_MARGIN = (CARD_WIDTH * (WINNER_SCALE - 1)) / 2;
+const MOBILE_BREAKPOINT = 640;
+
+function getCardHeight(isMobile: boolean) {
+  return isMobile ? CARD_HEIGHT_MOBILE : CARD_HEIGHT_DESKTOP;
+}
+function getCardWidth(isMobile: boolean) {
+  return Math.round(getCardHeight(isMobile) * CARD_ASPECT);
+}
 
 type CapasBoardProps = {
   pool: string[];
@@ -257,6 +265,20 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     idx: number;
     rarity: BannerRarity;
   } | null>(null);
+
+  // Card dims responsivos: cards menores em mobile pra caber ~3 no viewport.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    function check() {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    }
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  const CARD_WIDTH = getCardWidth(isMobile);
+  const CARD_HEIGHT = getCardHeight(isMobile);
+  const WINNER_SIDE_MARGIN = (CARD_WIDTH * (WINNER_SCALE - 1)) / 2;
 
   // Build a set of particle configs whenever a new burst is triggered.
   // Physics: explode upward in an arc, then fall down under gravity and fade.
@@ -401,7 +423,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", center);
     };
-  }, [spinning, mounted, rouletteItems.length, tab]);
+  }, [spinning, mounted, rouletteItems.length, tab, isMobile]);
 
   const coins = getCoinsFor(COINS_KEY, 0);
 
@@ -740,8 +762,8 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       <div className="flex flex-col items-center pt-[28px]">
       {/* Roulette — extends edge-to-edge of the viewport on xl. The indicator
           stays aligned with the main column center (where the action button is). */}
-      <section className="relative z-0 w-full overflow-hidden xl:-mr-[45px] xl:w-[calc(100%+45px)]">
-        <div className="relative h-[240px] overflow-hidden">
+      <section className="relative z-0 -mx-[16px] w-[calc(100%+32px)] overflow-hidden sm:-mx-[24px] sm:w-[calc(100%+48px)] xl:mx-0 xl:-mr-[45px] xl:w-[calc(100%+45px)]">
+        <div className="relative h-[150px] overflow-hidden sm:h-[240px]">
           <div
             ref={stripRef}
             className="absolute inset-y-0 flex items-center"
@@ -831,7 +853,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                     <div className="absolute inset-0 z-10 flex items-center justify-center px-[16px] text-center">
                       <StyledName
                         styleId={id}
-                        className="text-[18px] font-medium leading-[1.15] tracking-[-0.02em]"
+                        className="text-[13px] font-medium leading-[1.15] tracking-[-0.02em] sm:text-[18px]"
                       >
                         {NAME_BY_ID[id]?.label ?? id}
                       </StyledName>
@@ -878,40 +900,77 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
 
       {/* Action */}
       <div className="mt-6 flex w-full flex-col items-center gap-[18px]">
-        <div className="relative w-full">
-          <div className="absolute left-0 top-1/2 flex -translate-y-1/2 items-center gap-[10px]">
-            <button
-              type="button"
-              onClick={() => setHistoryOpen(true)}
-              aria-label="Histórico"
-              title="Histórico"
-              className="flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
-            >
-              <History className="h-[18px] w-[18px]" strokeWidth={2.2} />
-            </button>
-            <p className="whitespace-nowrap text-[12px] font-semibold tracking-[-0.02em] text-[#7c7c7c]">
-              {activeConfig.ownedCount}
-              <span className="mx-[2px] text-[#bdbdbd]">/</span>
-              {activeConfig.totalCount} liberad
-              {tab === "capas" ? "as" : "os"}
-            </p>
+        {/* Mobile: stack vertical. md+: layout absoluto original. */}
+        <div className="flex w-full flex-col gap-[12px] md:relative md:block">
+          {/* Linha de cima no mobile: contador + histórico + reset + fast */}
+          <div className="flex items-center justify-between gap-[10px] md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 md:gap-[10px]">
+            <div className="flex items-center gap-[10px]">
+              <button
+                type="button"
+                onClick={() => setHistoryOpen(true)}
+                aria-label="Histórico"
+                title="Histórico"
+                className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-[14px] bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] md:h-[50px] md:w-[50px] md:rounded-[18px]"
+              >
+                <History className="h-[18px] w-[18px]" strokeWidth={2.2} />
+              </button>
+              <p className="whitespace-nowrap text-[12px] font-semibold tracking-[-0.02em] text-[#7c7c7c]">
+                {activeConfig.ownedCount}
+                <span className="mx-[2px] text-[#bdbdbd]">/</span>
+                {activeConfig.totalCount} liberad
+                {tab === "capas" ? "as" : "os"}
+              </p>
+            </div>
+
+            {/* Reset + fast — visíveis no mobile aqui, escondidos no md+ (renderizados absoluto à direita). */}
+            <div className="flex items-center gap-[10px] md:hidden">
+              <button
+                type="button"
+                onClick={resetRoulette}
+                disabled={spinning}
+                aria-label="Resetar roleta"
+                title="Resetar roleta"
+                className="flex h-[44px] w-[44px] items-center justify-center rounded-[14px] bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <RotateCcw className="h-[18px] w-[18px]" strokeWidth={2.2} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setFastMode((v) => !v)}
+                aria-label={fastMode ? "Desativar modo rápido" : "Ativar modo rápido"}
+                title={fastMode ? "Modo rápido ativado" : "Acelerar animação"}
+                aria-pressed={fastMode}
+                className={`flex h-[44px] w-[44px] items-center justify-center rounded-[14px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
+                  fastMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
+                }`}
+              >
+                <Zap className="h-[18px] w-[18px]" strokeWidth={2.2} fill="currentColor" />
+              </button>
+            </div>
           </div>
-          <div className="pointer-events-none absolute right-[calc(50%+202px)] top-1/2 flex -translate-y-1/2 items-center gap-[6px] whitespace-nowrap text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-            <Image
-              src="/images/coin/Coin_icon2.png"
-              alt=""
-              width={18}
-              height={18}
-              className="inline-block"
-            />
+
+          {/* Preço — no mobile, mostra na própria linha do "Girar roleta" (à esquerda do botão). No md+ vira absoluto. */}
+          <div className="pointer-events-none hidden whitespace-nowrap text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] md:absolute md:right-[calc(50%+202px)] md:top-1/2 md:flex md:-translate-y-1/2 md:items-center md:gap-[6px]">
+            <Image src="/images/coin/Coin_icon2.png" alt="" width={18} height={18} className="inline-block" />
             <span>{activeConfig.cost}</span>
           </div>
+
+          {/* Botão principal — full width no mobile, fixo 380px no md+ */}
           <button
             type="button"
             onClick={openCase}
             disabled={!canOpen}
-            className="mx-auto flex h-[50px] w-[380px] items-center justify-center gap-[10px] rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mx-auto flex h-[50px] w-full items-center justify-center gap-[10px] rounded-[16px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-70 md:w-[380px] md:rounded-[18px]"
           >
+            <Image
+              src="/images/coin/Coin_icon2.png"
+              alt=""
+              width={16}
+              height={16}
+              className="inline-block md:hidden"
+            />
+            <span className="md:hidden">{activeConfig.cost}</span>
+            <span className="hidden h-[14px] w-px bg-white/40 md:hidden" />
             {spinning ? (
               <>
                 Girando roleta
@@ -923,7 +982,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
               <>Girar roleta</>
             )}
           </button>
-          <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-[10px]">
+
+          {/* Reset + fast no desktop (absoluto à direita) */}
+          <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-[10px] md:flex">
             <button
               type="button"
               onClick={resetRoulette}
@@ -944,11 +1005,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 fastMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
               }`}
             >
-              <Zap
-                className="h-[18px] w-[18px]"
-                strokeWidth={2.2}
-                fill="currentColor"
-              />
+              <Zap className="h-[18px] w-[18px]" strokeWidth={2.2} fill="currentColor" />
             </button>
           </div>
         </div>

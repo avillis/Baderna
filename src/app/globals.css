@@ -1142,3 +1142,21 @@ button {
     animation: none;
   }
 }
+
+@keyframes mobile-menu-item-in {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes mobile-menu-item-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-20px); }
+}
+
+.mobile-menu-item-in {
+  animation: mobile-menu-item-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.mobile-menu-item-out {
+  animation: mobile-menu-item-out 0.3s cubic-bezier(0.4, 0, 0.6, 1) both;
+}

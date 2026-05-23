@@ -58,7 +58,7 @@ export function SiteFooter() {
             <Link
               href="/"
               aria-label="Baderna"
-              className="inline-flex text-[#0f0f0f] transition-colors duration-200 hover:text-[#ff4100]"
+              className="flex w-fit -ml-[12px] text-[#0f0f0f] transition-colors duration-200 hover:text-[#ff4100] sm:-ml-[12px] xl:ml-0"
             >
               <span
                 className="block h-[44px] w-[64px] bg-current"
@@ -81,12 +81,12 @@ export function SiteFooter() {
             {TEXT_SECTIONS.map((section) => (
               <div
                 key={section.label}
-                className="grid grid-cols-1 gap-y-[14px] border-b border-[#ececec] py-[32px] first:pt-0 md:grid-cols-[140px_1fr] md:gap-x-[40px]"
+                className="grid grid-cols-1 gap-y-[22px] md:gap-y-[14px] border-b border-[#ececec] py-[32px] first:pt-0 md:grid-cols-[140px_1fr] md:gap-x-[40px]"
               >
                 <span className="text-[14px] font-medium text-[#9c9c9c]">
                   {section.label}
                 </span>
-                <div className="grid grid-cols-2 gap-x-[24px] gap-y-[10px] sm:grid-cols-3 md:grid-cols-5">
+                <div className="grid grid-cols-2 gap-x-[24px] gap-y-[24px] sm:grid-cols-3 sm:gap-y-[10px] md:grid-cols-5">
                   {section.items.map((item) => (
                     <Link
                       key={item.label}
@@ -101,7 +101,7 @@ export function SiteFooter() {
             ))}
 
             {/* Connect cards */}
-            <div className="grid grid-cols-1 gap-y-[14px] py-[32px] md:grid-cols-[140px_1fr] md:gap-x-[40px]">
+            <div className="grid grid-cols-1 gap-y-[22px] md:gap-y-[14px] py-[32px] md:grid-cols-[140px_1fr] md:gap-x-[40px]">
               <span className="text-[14px] font-medium text-[#9c9c9c]">
                 Conecte-se
               </span>
