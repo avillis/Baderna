@@ -8,6 +8,8 @@ import { Eye, EyeOff, X } from "lucide-react";
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
+import { NameStyleModal } from "@/features/panel/components/name-style-modal";
+import { TitleModal } from "@/features/panel/components/title-modal";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { NAME_BY_ID } from "@/features/panel/names-data";
 import { panelProfile } from "@/features/panel/panel-data";
@@ -106,6 +108,10 @@ function BasicInfoCard({
   ownerId: string;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [namesOpen, setNamesOpen] = useState(false);
+  const [titlesOpen, setTitlesOpen] = useState(false);
+  const { unlocked: unlockedTitleIds } = useMemberUnlockedTitles(ownerId, ["aprendiz"]);
+  const { unlocked: unlockedNameIds } = useMemberUnlockedNames(ownerId);
   return (
     <section className="rounded-[25px] bg-white px-[20px] py-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] sm:px-[36px] sm:py-[32px]">
       <SectionTitle>Informações básicas</SectionTitle>
@@ -136,6 +142,56 @@ function BasicInfoCard({
             currentSrc={avatarSrc}
             ownerId={ownerId}
             onSelect={onChangeAvatar}
+          />
+
+          {/* Atalhos pros modais de personalização */}
+          <div className="flex w-full max-w-[220px] flex-col gap-[10px] pt-[8px] sm:max-w-none">
+            <button
+              type="button"
+              onClick={() => setNamesOpen(true)}
+              className="w-full rounded-[18px] bg-[#ededed] py-[14px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
+            >
+              Editar nome
+            </button>
+            <button
+              type="button"
+              onClick={() => setTitlesOpen(true)}
+              className="w-full rounded-[18px] bg-[#ededed] py-[14px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
+            >
+              Editar títulos
+            </button>
+          </div>
+
+          <NameStyleModal
+            open={namesOpen}
+            onClose={() => setNamesOpen(false)}
+            activeNameId={account.activeNameId ?? "preto"}
+            onSelect={(id) => {
+              updateField("activeNameId", id);
+              setNamesOpen(false);
+            }}
+            unlockedIds={unlockedNameIds}
+          />
+
+          <TitleModal
+            open={titlesOpen}
+            onClose={() => setTitlesOpen(false)}
+            activeTitleIds={account.activeTitleSlugs ?? ["aprendiz"]}
+            onToggle={(id) => {
+              const prev = account.activeTitleSlugs ?? ["aprendiz"];
+              let next: string[];
+              if (prev.includes(id)) {
+                if (prev.length === 1) return;
+                next = prev.filter((t) => t !== id);
+              } else if (prev.length >= 2) {
+                next = [...prev.slice(1), id];
+              } else {
+                next = [...prev, id];
+              }
+              updateField("activeTitleSlugs", next);
+            }}
+            unlockedTitleIds={unlockedTitleIds}
+            maxActive={2}
           />
         </div>
 

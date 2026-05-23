@@ -711,7 +711,7 @@ export function InhouseCreatorModal() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="flex h-[50px] w-full items-center justify-center rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#ff4100]"
+        className="flex h-[50px] w-full items-center justify-center rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
       >
         Criar Inhouse
       </button>
