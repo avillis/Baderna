@@ -15,7 +15,7 @@ class PostController extends Controller
         $userId = $request->user()->id;
 
         $q = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src'])
-            ->withCount('likes')
+            ->withCount(['likes', 'comments'])
             ->orderByDesc('id')
             ->limit(5);
 
@@ -40,7 +40,7 @@ class PostController extends Controller
     {
         $userId = $request->user()->id;
         $post = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src'])
-            ->withCount('likes')
+            ->withCount(['likes', 'comments'])
             ->find($id);
         if (!$post) {
             return response()->json(['error' => 'Post não encontrado.'], 404);
@@ -77,7 +77,7 @@ class PostController extends Controller
         ]);
 
         $post->load('user:id,name,display_name,summoner_name,tagLine,avatar_src');
-        $post->loadCount('likes');
+        $post->loadCount(['likes', 'comments']);
 
         return response()->json(['post' => $this->serialize($post, [])], 201);
     }
@@ -161,6 +161,7 @@ class PostController extends Controller
             'gifUrl'     => $post->gif_url,
             'createdAt'  => $post->created_at?->toIso8601String(),
             'likesCount' => $post->likes_count ?? 0,
+            'commentsCount' => $post->comments_count ?? 0,
             'liked'      => in_array($post->id, $likedIds, true),
             'author'     => [
                 'id'        => $u?->id,

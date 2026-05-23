@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\PostCommentsController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AppSettingsController;
@@ -64,6 +65,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/error-logs', [ErrorLogsController::class, 'store']);
     Route::delete('/posts/{id}', [PostController::class, 'destroy'])->whereNumber('id');
     Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->whereNumber('id');
+
+    // Comentários em posts (mesma shape do MemberCommentsController)
+    Route::get('/posts/{id}/comments', [PostCommentsController::class, 'index'])->whereNumber('id');
+    Route::post('/posts/{id}/comments', [PostCommentsController::class, 'store'])->whereNumber('id');
+    Route::delete('/posts/{id}/comments/{commentId}', [PostCommentsController::class, 'destroy'])->whereNumber('id');
 
     // Perfil (Profile)
     Route::get('/users/{user}', [ProfileController::class, 'show']);

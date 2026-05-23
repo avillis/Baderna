@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/components/toast";
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { PostCard } from "@/features/panel/components/post-card";
+import { PostCommentsSection } from "@/features/panel/components/post-comments-section";
 import {
   apiDeletePost,
   apiToggleLike,
@@ -119,12 +120,21 @@ export default function PostPage() {
         )}
 
         {post && (
-          <PostCard
-            post={post}
-            onLike={handleLike}
-            onDelete={handleDelete}
-            expanded
-          />
+          <>
+            <PostCard
+              post={post}
+              onLike={handleLike}
+              onDelete={handleDelete}
+              expanded
+            />
+            <PostCommentsSection
+              postId={post.id}
+              postOwnerId={post.author.id}
+              onCountChange={(count) =>
+                setPost((prev) => (prev ? { ...prev, commentsCount: count } : prev))
+              }
+            />
+          </>
         )}
       </section>
     </PanelShell>

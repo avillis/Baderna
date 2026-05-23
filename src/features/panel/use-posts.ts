@@ -14,6 +14,7 @@ export type FeedPost = {
   gifUrl: string | null;
   createdAt: string;
   likesCount: number;
+  commentsCount: number;
   liked: boolean;
   author: {
     id: number | null;
