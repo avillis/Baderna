@@ -13,6 +13,8 @@ export type FeedPost = {
   imageUrl: string | null;
   gifUrl: string | null;
   createdAt: string;
+  likesCount: number;
+  liked: boolean;
   author: {
     id: number | null;
     name: string | null;
@@ -24,20 +26,30 @@ export type FeedPost = {
 type ApiList = { posts: FeedPost[] };
 type ApiOne = { post: FeedPost };
 
+function authHeaders(): Record<string, string> {
+  const token = authToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function fetchPosts(before?: number): Promise<FeedPost[]> {
   const url = before
     ? `${API_BASE}/posts?before=${before}`
     : `${API_BASE}/posts`;
-  const token = authToken();
   const res = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { Accept: "application/json", ...authHeaders() },
   });
   if (!res.ok) return [];
   const data = (await res.json()) as ApiList;
   return data.posts ?? [];
+}
+
+export async function fetchPost(id: number): Promise<FeedPost | null> {
+  const res = await fetch(`${API_BASE}/posts/${id}`, {
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as ApiOne;
+  return data.post ?? null;
 }
 
 async function postCreate(payload: {
@@ -45,14 +57,12 @@ async function postCreate(payload: {
   imageUrl?: string | null;
   gifUrl?: string | null;
 }): Promise<FeedPost | null> {
-  const token = authToken();
-  if (!token) return null;
   const res = await fetch(`${API_BASE}/posts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+      ...authHeaders(),
     },
     body: JSON.stringify({
       content: payload.content,
@@ -72,10 +82,7 @@ export async function uploadPostImage(file: File): Promise<string | null> {
   form.append("file", file);
   const res = await fetch(`${API_BASE}/posts/image`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-    },
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     body: form,
   });
   if (!res.ok) return null;
@@ -83,9 +90,32 @@ export async function uploadPostImage(file: File): Promise<string | null> {
   return data.url ?? null;
 }
 
+async function apiToggleLike(
+  id: number,
+): Promise<{ liked: boolean; likesCount: number } | null> {
+  const res = await fetch(`${API_BASE}/posts/${id}/like`, {
+    method: "POST",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as { liked: boolean; likesCount: number };
+}
+
+async function apiDeletePost(id: number): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/posts/${id}`, {
+    method: "DELETE",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+  return res.ok;
+}
+
+const PAGE_SIZE = 5;
+
 export function usePosts() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,6 +123,8 @@ export function usePosts() {
       .then((fresh) => {
         if (cancelled) return;
         setPosts(fresh);
+        // Se a primeira página já veio com menos que o limite, não tem mais.
+        if (fresh.length < PAGE_SIZE) setHasMore(false);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -101,6 +133,24 @@ export function usePosts() {
       cancelled = true;
     };
   }, []);
+
+  /**
+   * Carrega a próxima página (cursor-based: usa o id do último post como
+   * `before`). Idempotente: já chamadas duplicadas durante o fetch viram no-op.
+   */
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || loading) return;
+    setLoadingMore(true);
+    try {
+      const lastId = posts[posts.length - 1]?.id;
+      if (!lastId) return;
+      const more = await fetchPosts(lastId);
+      setPosts((curr) => [...curr, ...more]);
+      if (more.length < PAGE_SIZE) setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [posts, loadingMore, hasMore, loading]);
 
   const createPost = useCallback(
     async (input: {
@@ -116,7 +166,62 @@ export function usePosts() {
     [],
   );
 
-  return { posts, loading, createPost };
+  const toggleLike = useCallback(async (id: number) => {
+    // Update otimista
+    setPosts((curr) =>
+      curr.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              liked: !p.liked,
+              likesCount: p.likesCount + (p.liked ? -1 : 1),
+            }
+          : p,
+      ),
+    );
+    const result = await apiToggleLike(id);
+    if (!result) {
+      // Rollback se falhou
+      setPosts((curr) =>
+        curr.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                liked: !p.liked,
+                likesCount: p.likesCount + (p.liked ? -1 : 1),
+              }
+            : p,
+        ),
+      );
+      return;
+    }
+    // Sincroniza com o server (caso de race condition)
+    setPosts((curr) =>
+      curr.map((p) =>
+        p.id === id
+          ? { ...p, liked: result.liked, likesCount: result.likesCount }
+          : p,
+      ),
+    );
+  }, []);
+
+  const deletePost = useCallback(async (id: number) => {
+    const ok = await apiDeletePost(id);
+    if (!ok) return false;
+    setPosts((curr) => curr.filter((p) => p.id !== id));
+    return true;
+  }, []);
+
+  return {
+    posts,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    createPost,
+    toggleLike,
+    deletePost,
+  };
 }
 
 export function formatPostDate(iso: string): string {
@@ -132,3 +237,6 @@ export function formatPostDate(iso: string): string {
   if (d < 7) return `${d}d`;
   return new Date(ts).toLocaleDateString("pt-BR");
 }
+
+// Exporta o toggle/delete pra páginas individuais (post detail) usarem.
+export { apiToggleLike, apiDeletePost };

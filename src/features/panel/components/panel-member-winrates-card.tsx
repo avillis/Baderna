@@ -1,9 +1,11 @@
 "use client";
 
-import { useGameMode } from "@/features/panel/game-mode-context";
+import { RotateCw } from "lucide-react";
+
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { StyledName } from "@/features/panel/components/styled-name";
-import { panelMemberWinrates } from "@/features/panel/panel-data";
+import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+import { useWinratesWithMembers } from "@/features/panel/use-winrates-with-members";
 
 function getWinRateColor(winRate: number) {
   if (winRate > 51) return "text-[#2fb481]";
@@ -11,9 +13,18 @@ function getWinRateColor(winRate: number) {
   return "text-[#d55c5c]";
 }
 
-function MemberAvatar({ avatarSrc, id, nickname }: { avatarSrc?: string; id: string; nickname: string }) {
+function MemberAvatar({
+  avatarSrc,
+  id,
+  nickname,
+}: {
+  avatarSrc?: string | null;
+  id: string;
+  nickname: string;
+}) {
   const src = avatarSrc || getChampionAvatarSrc(id);
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt={nickname}
@@ -23,56 +34,99 @@ function MemberAvatar({ avatarSrc, id, nickname }: { avatarSrc?: string; id: str
 }
 
 export function PanelMemberWinratesCard() {
-  const { mode } = useGameMode();
+  const { rows, loading, refreshing, refresh } = useWinratesWithMembers();
+  const members = useBadernaMembers();
+
+  // Resolve activeNameId/slug via lista global de membros (pra StyledName).
+  const styleByMemberId = new Map<number, string | undefined>();
+  for (const m of members) {
+    if (m.userId) styleByMemberId.set(m.userId, m.activeNameId);
+  }
 
   return (
     <section className="flex h-full flex-col rounded-[var(--panel-radius-card)] bg-white px-[28px] py-[34px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-      <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-        Winrate com Membros
-      </h2>
-      <p className="mt-[4px] text-[15px] font-medium tracking-[-0.03em] text-[#cccccc]">
-        Jogos em equipe na temporada.
-      </p>
+      <div className="flex items-start justify-between gap-[12px]">
+        <div>
+          <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+            Winrate com Membros
+          </h2>
+          <p className="mt-[4px] text-[15px] font-medium tracking-[-0.03em] text-[#cccccc]">
+            Flex queue · season atual.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={refresh}
+          disabled={refreshing || loading}
+          aria-label="Atualizar"
+          title="Atualizar"
+          className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:opacity-50"
+        >
+          <RotateCw
+            className={`h-[14px] w-[14px] ${refreshing ? "animate-spin" : ""}`}
+            strokeWidth={2.2}
+          />
+        </button>
+      </div>
 
       <div className="mt-[28px] flex min-h-[330px] flex-1 flex-col border-t border-[#efebe8] pt-[10px]">
-        {panelMemberWinrates.length === 0 && (
+        {loading && (
+          <div className="my-auto flex flex-col items-center gap-[10px]">
+            <svg
+              className="capas-spinner h-[28px] w-[28px] [&_circle]:stroke-[#ff4100]"
+              viewBox="25 25 50 50"
+            >
+              <circle r="20" cy="50" cx="50" />
+            </svg>
+            <p className="text-center text-[12px] text-[#b0a09a]">
+              Calculando winrates da season...
+              <br />
+              <span className="text-[11px]">Pode demorar uns segundos.</span>
+            </p>
+          </div>
+        )}
+
+        {!loading && rows.length === 0 && (
           <p className="my-auto text-center text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
-            Nenhum dado encontrado...
+            Você não jogou Flex com nenhum membro da Baderna nessa season.
           </p>
         )}
-        {panelMemberWinrates.map((member) => {
-          const stats = mode === "Flex" ? member.flex : mode === "Inhouse" ? member.inhouse : { wins: member.flex.wins + member.inhouse.wins, losses: member.flex.losses + member.inhouse.losses };
-          const games = stats.wins + stats.losses;
-          const winRate = Math.round((stats.wins / games) * 100);
 
-          return (
-            <article
-              key={member.id}
-              className="flex items-center gap-[14px] py-[11px]"
-            >
-              <MemberAvatar avatarSrc={member.avatarSrc} id={member.id} nickname={member.nickname} />
-
-              {/* Info */}
-              <div className="min-w-0 flex-1">
-                <h3 className="truncate text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                  <StyledName styleId={member.activeNameId}>
-                    {member.nickname}
-                  </StyledName>
-                </h3>
-                <p className="mt-[2px] text-[13px] font-semibold tracking-[-0.02em] text-[#b0a09a]">
-                  {stats.wins}v {stats.losses}d
-                  <span className="mx-[5px] opacity-40">·</span>
-                  {games} {games === 1 ? "jogo" : "jogos"}
-                </p>
-              </div>
-
-              {/* Winrate */}
-              <div className={`shrink-0 text-[14px] font-bold tracking-[-0.02em] ${getWinRateColor(winRate)}`}>
-                {winRate}%
-              </div>
-            </article>
-          );
-        })}
+        {!loading &&
+          rows.map((row) => {
+            const games = row.wins + row.losses;
+            const winRate = games > 0 ? Math.round((row.wins / games) * 100) : 0;
+            const styleId = styleByMemberId.get(row.memberId);
+            return (
+              <article
+                key={row.memberId}
+                className="flex items-center gap-[14px] py-[11px]"
+              >
+                <MemberAvatar
+                  avatarSrc={row.avatarSrc}
+                  id={String(row.memberId)}
+                  nickname={row.summonerName ?? row.name}
+                />
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                    <StyledName styleId={styleId}>
+                      {row.summonerName ?? row.name}
+                    </StyledName>
+                  </h3>
+                  <p className="mt-[2px] text-[13px] font-semibold tracking-[-0.02em] text-[#b0a09a]">
+                    {row.wins}v {row.losses}d
+                    <span className="mx-[5px] opacity-40">·</span>
+                    {games} {games === 1 ? "jogo" : "jogos"}
+                  </p>
+                </div>
+                <div
+                  className={`shrink-0 text-[14px] font-bold tracking-[-0.02em] ${getWinRateColor(winRate)}`}
+                >
+                  {winRate}%
+                </div>
+              </article>
+            );
+          })}
       </div>
     </section>
   );

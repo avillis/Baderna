@@ -32,7 +32,7 @@ export default function ErrorPage({
 
   return (
     <PanelShell showBanner={false}>
-      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px] xl:pr-[45px]">
+      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/gifs/sad-riot.gif"

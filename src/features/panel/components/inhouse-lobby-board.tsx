@@ -561,7 +561,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
         </div>
       </div>
 
-      <div className="relative z-10 flex min-h-[860px] w-full flex-col gap-4 justify-center pt-[62px] xl:pr-[45px]">
+      <div className="relative z-10 flex min-h-[860px] w-full flex-col gap-4 justify-center pt-[62px]">
         <InhouseMatchHeader blueLeader={blueLeader} redLeader={redLeader} mode={inhouse.mode} />
 
         <div className="mt-[40px] grid w-full items-start gap-4 xl:grid-cols-[minmax(0,0.84fr)_minmax(340px,0.7fr)_minmax(0,0.88fr)] xl:gap-5">
@@ -842,7 +842,7 @@ export function InhouseLobbyBoard() {
 
   if (inhouses.length === 0) {
     return (
-      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px] xl:pr-[45px]">
+      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/gifs/skeleton.gif"
@@ -860,7 +860,7 @@ export function InhouseLobbyBoard() {
   }
 
   return (
-    <section className="relative w-full pt-[6vh] xl:pr-[45px]">
+    <section className="relative w-full pt-[6vh]">
       <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-3">
         {inhouses.map((inhouse) => (
           <InhouseListCard

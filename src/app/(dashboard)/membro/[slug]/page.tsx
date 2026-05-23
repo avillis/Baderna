@@ -233,7 +233,7 @@ export default async function MembroPage({ params }: MembroPageProps) {
 
         <div className="hidden 2xl:block">
           <div>
-            <div className="grid grid-cols-[1.67fr_repeat(4,minmax(0,1fr))] gap-x-[clamp(16px,2vw,39px)] items-start">
+            <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="pl-0">
                 <PanelProfileSummary
                   avatarSrc={profile.avatarSrc}
@@ -274,12 +274,12 @@ export default async function MembroPage({ params }: MembroPageProps) {
               />
             </div>
 
-            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_repeat(4,minmax(0,1fr))] gap-x-[clamp(16px,2vw,39px)]">
+            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)]">
               <div className="col-start-4 col-span-2 flex justify-end">
                 <PanelGameModeToggle />
               </div>
             </div>
-            <div className="grid grid-cols-[1.67fr_repeat(4,minmax(0,1fr))] gap-x-[clamp(16px,2vw,39px)] items-start">
+            <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="col-start-1 col-span-1">
                 <PanelMemberWinratesCard />
               </div>

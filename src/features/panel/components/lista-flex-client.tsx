@@ -291,7 +291,7 @@ export function ListaFlexClient() {
 
   if (members.length === 0) {
     return (
-      <div className="flex flex-col gap-4 pt-[6vh] xl:pr-[45px]">
+      <div className="flex flex-col gap-4 pt-[6vh]">
         <div className="rounded-[var(--panel-radius-card)] bg-white px-6 py-10 text-center text-[13px] font-medium text-[#8d8d8d] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
           Nenhum membro cadastrado ainda.
         </div>
@@ -300,7 +300,7 @@ export function ListaFlexClient() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pt-[6vh] xl:pr-[45px]">
+    <div className="flex flex-col gap-4 pt-[6vh]">
       {members.map((m, index) => {
         // m.id é o slug do nick. Pra montar o riotId precisamos do nick+tag.
         // useBadernaMembers já incorpora o nick em m.nickname; pra tag,

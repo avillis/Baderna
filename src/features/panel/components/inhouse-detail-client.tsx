@@ -87,7 +87,7 @@ export function InhouseDetailClient({ matchId }: { matchId: string }) {
 
   if (loading && !inhouse) {
     return (
-      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px] xl:pr-[45px]">
+      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px]">
         <svg className="capas-spinner h-[40px] w-[40px] text-[#ff4100]" viewBox="25 25 50 50">
           <circle r="20" cy="50" cx="50" />
         </svg>
@@ -97,7 +97,7 @@ export function InhouseDetailClient({ matchId }: { matchId: string }) {
 
   if (!inhouse) {
     return (
-      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px] xl:pr-[45px]">
+      <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/gifs/sad-riot.gif"

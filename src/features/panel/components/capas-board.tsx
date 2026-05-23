@@ -153,8 +153,8 @@ function formatToken(value: string): string {
 const ROULETTE_LENGTH = 42;
 const WIN_INDEX = 34; // The card that lands under the indicator
 // Splash art native aspect ≈ 1215:717 (landscape rectangle)
-const CARD_HEIGHT = 170;
-const CARD_WIDTH = 288; // ≈ 1215/717 * 170
+const CARD_HEIGHT = 200;
+const CARD_WIDTH = 340; // ≈ 1215/717 * 200
 const CARD_GAP = 12;
 const SPIN_DURATION_MS = 4500;
 const SPIN_DURATION_FAST_MS = 1200;
@@ -740,7 +740,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       {/* Roulette — extends edge-to-edge of the viewport on xl. The indicator
           stays aligned with the main column center (where the action button is). */}
       <section className="relative z-0 w-full overflow-hidden xl:-mr-[45px] xl:w-[calc(100%+45px)]">
-        <div className="relative h-[210px] overflow-hidden">
+        <div className="relative h-[240px] overflow-hidden">
           <div
             ref={stripRef}
             className="absolute inset-y-0 flex items-center"

@@ -8,6 +8,7 @@ use App\Models\Comment;
 class Post extends Model
 {
     protected $fillable = [
+        'user_id',
         'content',
         'image_url',
         'gif_url',
@@ -21,5 +22,10 @@ class Post extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(PostLike::class);
     }
 }

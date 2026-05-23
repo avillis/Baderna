@@ -154,26 +154,28 @@ export function useMemberCoins() {
   const setCoinsFor = useCallback(
     (memberId: string, coins: number) => {
       const sanitized = Math.max(0, Math.floor(coins));
-      // Próprio usuário: apenas atualiza local. Débito real só vem via
-      // backend (/account/unlocks debita atomicamente na compra). Self
-      // adjust endpoint foi removido pra fechar self-credit ilimitado.
+      const id = Number(memberId);
+      if (Number.isNaN(id)) return;
+
+      // Update otimista local (atualiza UI imediato)
       if (memberId === userId) {
         setBalance(sanitized);
         writeSelfCache(userId, sanitized);
-        return;
       }
-      // Outro membro — admin set
-      const id = Number(memberId);
-      if (Number.isNaN(id)) return;
       const newMap = { ...adminMap, [memberId]: sanitized };
       setAdminMap(newMap);
       const cached = readAdminCache().map((r) =>
         r.id === id ? { ...r, balance: sanitized } : r,
       );
       writeAdminCache(cached);
+
+      // Persiste via endpoint admin (válido pra qualquer user, incluindo
+      // self quando o caller é admin). Non-admins recebem 403 e a UI
+      // segue mostrando o valor otimista — não é problema porque o caller
+      // é sempre o modal admin (UI só renderiza pra is_admin=true).
       void adminSetBalance(id, sanitized);
     },
-    [userId, adminMap, balance],
+    [userId, adminMap],
   );
 
   const getCoinsFor = useCallback(

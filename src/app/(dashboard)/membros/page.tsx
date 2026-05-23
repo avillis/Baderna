@@ -63,7 +63,7 @@ export default function MembrosPage() {
 
   return (
     <PanelShell showBanner={false}>
-      <div className="grid gap-6 grid-cols-2 pt-[6vh] md:grid-cols-3 xl:grid-cols-5 xl:pr-[45px]">
+      <div className="grid gap-6 grid-cols-2 pt-[6vh] md:grid-cols-3 xl:grid-cols-5">
         {visibleMembers.map((member, index) => {
           const badernaRank = index + 1;
           const rankEffect = getRankEffect(badernaRank);

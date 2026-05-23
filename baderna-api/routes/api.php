@@ -8,10 +8,12 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AppSettingsController;
 use App\Http\Controllers\Api\AvatarUploadController;
+use App\Http\Controllers\Api\ErrorLogsController;
 use App\Http\Controllers\Api\InhousesController;
 use App\Http\Controllers\Api\MemberCoinsController;
 use App\Http\Controllers\Api\MemberCommentsController;
 use App\Http\Controllers\Api\MemberRanksController;
+use App\Http\Controllers\Api\MemberWinratesController;
 use App\Http\Controllers\Api\MembersController;
 use App\Http\Controllers\Api\MemberUnlocksController;
 use App\Http\Controllers\Api\RiotProfileController;
@@ -25,31 +27,41 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// ── Públicos ───────────────────────────────────────────────────────────
+// ── Públicos (mínimo necessário pré-login) ─────────────────────────────
+// Riot profile lookup é usado no registro (verifica se Riot ID existe).
 Route::get(
     '/riot-profile/{gameName}/{tagLine}',
     [RiotProfileController::class, 'show']
 )->where('tagLine', '[A-Za-z0-9]+');
 
-// Configs públicas (todos os usuários precisam ler os valores correntes).
+// Configs também: feed público pode mostrar coin rewards ou regras.
 Route::get('/coin-rewards', [AppSettingsController::class, 'showCoinRewards']);
 Route::get('/inhouse-points', [AppSettingsController::class, 'showInhousePoints']);
 Route::get('/titles', [TitlesController::class, 'index']);
-Route::get('/members', [MembersController::class, 'index']);
-Route::get('/members/ranks', [MemberRanksController::class, 'index']);
-Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
-Route::get('/inhouses', [InhousesController::class, 'index']);
-Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
 
 // ── Autenticados ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // Listagens da comunidade — fechadas atrás de auth pra evitar slug
+    // enumeration e scraping da membership por terceiros.
+    Route::get('/members', [MembersController::class, 'index']);
+    Route::get('/members/ranks', [MemberRanksController::class, 'index']);
+    Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
+    Route::get('/inhouses', [InhousesController::class, 'index']);
+    Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
+
     // Feed (Posts)
     Route::get('/posts', [PostController::class, 'index']);
+    Route::get('/posts/{id}', [PostController::class, 'show'])->whereNumber('id');
     Route::post('/posts', [PostController::class, 'store']);
     Route::post('/posts/image', [PostController::class, 'uploadImage']);
+
+    // Frontend pode reportar erros JS (window.onerror) aqui — autenticado.
+    Route::post('/error-logs', [ErrorLogsController::class, 'store']);
+    Route::delete('/posts/{id}', [PostController::class, 'destroy'])->whereNumber('id');
+    Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->whereNumber('id');
 
     // Perfil (Profile)
     Route::get('/users/{user}', [ProfileController::class, 'show']);
@@ -65,6 +77,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Saldo do próprio usuário + unlocks
     Route::get('/account/coins', [MemberCoinsController::class, 'me']);
+    Route::get('/account/winrates-with-members', [MemberWinratesController::class, 'index']);
+    Route::post('/account/winrates-with-members/refresh', [MemberWinratesController::class, 'refresh']);
     // ATENÇÃO: /account/coins/adjust foi REMOVIDA — permitia self-credit
     // ilimitado. Débito agora é feito atomicamente dentro do unlocks/store.
     Route::get('/account/unlocks', [MemberUnlocksController::class, 'index']);
@@ -97,5 +111,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/members/{user}', [MembersController::class, 'softDelete']);
         Route::post('/members/{user}/restore', [MembersController::class, 'restore']);
         Route::put('/members/{user}/role', [MembersController::class, 'setRole']);
+        // Logs do site (admin-only)
+        Route::get('/error-logs', [ErrorLogsController::class, 'index']);
+        Route::delete('/error-logs/all', [ErrorLogsController::class, 'destroyAll']);
+        Route::delete('/error-logs/{id}', [ErrorLogsController::class, 'destroy'])->whereNumber('id');
     });
 });

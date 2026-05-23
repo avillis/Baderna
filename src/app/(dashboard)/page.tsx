@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 import { FeedHistoryWidget } from "@/features/panel/components/feed-history-widget";
 import { FeedInhousesWidget } from "@/features/panel/components/feed-inhouses-widget";
 import { FeedMembersWidget } from "@/features/panel/components/feed-members-widget";
@@ -9,11 +11,40 @@ import { PostComposer } from "@/features/panel/components/post-composer";
 import { usePosts } from "@/features/panel/use-posts";
 
 export default function FeedPage() {
-  const { posts, loading, createPost } = usePosts();
+  const {
+    posts,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    createPost,
+    toggleLike,
+    deletePost,
+  } = usePosts();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll: observa um elemento sentinel no fim da lista. Quando
+  // aparece na viewport, dispara loadMore. IntersectionObserver é muito mais
+  // barato que escutar scroll event.
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    if (!hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadMore]);
 
   return (
     <PanelShell showBanner={false}>
-      <section className="grid gap-[20px] pb-[80px] pt-[10px] xl:grid-cols-[minmax(0,1fr)_320px] xl:pr-[45px]">
+      <section className="grid gap-[20px] pb-[80px] pt-[6vh] xl:grid-cols-[minmax(0,1fr)_320px]">
         {/* Coluna esquerda: composer + feed */}
         <div className="flex min-w-0 flex-col gap-[14px]">
           <PostComposer onCreate={createPost} />
@@ -47,8 +78,27 @@ export default function FeedPage() {
           )}
 
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard
+              key={post.id}
+              post={post}
+              onLike={toggleLike}
+              onDelete={deletePost}
+            />
           ))}
+
+          {/* Sentinel: visível dispara loadMore via IntersectionObserver */}
+          {hasMore && <div ref={sentinelRef} className="h-[1px] w-full" />}
+
+          {loadingMore && (
+            <div className="flex items-center justify-center py-[20px]">
+              <svg
+                className="capas-spinner h-[24px] w-[24px] [&_circle]:stroke-[#ff4100]"
+                viewBox="25 25 50 50"
+              >
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+            </div>
+          )}
         </div>
 
         {/* Coluna direita: histórico + inhouses + membros */}

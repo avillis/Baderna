@@ -299,6 +299,31 @@ button {
   animation: capas-spinner-dash 1.5s ease-in-out infinite;
 }
 
+/* Heart like animation (Uiverse-inspired, adaptado pra cor laranja do site) */
+@keyframes heart-pop {
+  0%   { transform: scale(0); }
+  25%  { transform: scale(1.25); }
+  50%  { transform: scale(0.95); filter: brightness(1.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes heart-celebrate {
+  0%   { transform: scale(0); opacity: 1; }
+  50%  { opacity: 1; filter: brightness(1.4); }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.heart-pop {
+  animation: heart-pop 0.6s ease-out;
+  transform-origin: center;
+}
+
+.heart-celebrate {
+  pointer-events: none;
+  animation: heart-celebrate 0.55s ease-out forwards;
+  transform-origin: center;
+}
+
 /* Colored smoke that drifts inside the rank card — color via --smoke */
 @keyframes rank-smoke-drift-a {
   0%, 100% {
@@ -730,12 +755,286 @@ button {
   animation: name-diamante-shift 3s linear infinite;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Extra batch — extension das opções da loja (raridade vai com complexidade) */
+
+/* Raro — gradients 2-cor */
+.name-gradient-citrico {
+  background: linear-gradient(90deg, #fde047 0%, #f97316 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-blueberry {
+  background: linear-gradient(90deg, #6366f1 0%, #4338ca 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-hortela {
+  background: linear-gradient(90deg, #5eead4 0%, #10b981 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-peridot {
+  background: linear-gradient(90deg, #bef264 0%, #65a30d 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-safira {
+  background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-ametista {
+  background: linear-gradient(90deg, #c084fc 0%, #6b21a8 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-topazio {
+  background: linear-gradient(90deg, #fcd34d 0%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-rubi {
+  background: linear-gradient(90deg, #fb7185 0%, #9f1239 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* Épico — multi-cor */
+.name-gradient-vaporwave {
+  background: linear-gradient(90deg, #ff71ce 0%, #b967ff 50%, #01cdfe 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-nebulosa {
+  background: linear-gradient(135deg, #0f172a 0%, #6b21a8 35%, #ec4899 70%, #0f172a 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-mar-egeu {
+  background: linear-gradient(180deg, #0c4a6e 0%, #0284c7 40%, #38bdf8 70%, #e0f2fe 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-savana {
+  background: linear-gradient(90deg, #facc15 0%, #c2410c 50%, #166534 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-magma {
+  background: linear-gradient(180deg, #18181b 0%, #991b1b 40%, #f97316 80%, #facc15 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-crepusculo {
+  background: linear-gradient(180deg, #1e1b4b 0%, #7c3aed 40%, #fb923c 80%, #fef3c7 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-carnaval {
+  background: linear-gradient(90deg, #fde047 0%, #22c55e 25%, #06b6d4 50%, #ec4899 75%, #f97316 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-natal {
+  background: linear-gradient(90deg, #dc2626 0%, #fbbf24 50%, #166534 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-vinho-tinto {
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 50%, #dc2626 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.name-gradient-mosaico {
+  background: conic-gradient(from 0deg, #ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6, #ef4444);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* Exclusivo — neons com glow */
+.name-neon-amarelo {
+  color: #fde047;
+  text-shadow: 0 0 6px #fde047, 0 0 14px rgba(253, 224, 71, 0.55);
+}
+.name-neon-laranja {
+  color: #fb923c;
+  text-shadow: 0 0 6px #fb923c, 0 0 14px rgba(251, 146, 60, 0.55);
+}
+.name-neon-vermelho {
+  color: #ef4444;
+  text-shadow: 0 0 6px #ef4444, 0 0 14px rgba(239, 68, 68, 0.55);
+}
+.name-neon-azul {
+  color: #3b82f6;
+  text-shadow: 0 0 6px #3b82f6, 0 0 14px rgba(59, 130, 246, 0.55);
+}
+.name-neon-branco {
+  color: #f8fafc;
+  text-shadow: 0 0 8px #f8fafc, 0 0 18px rgba(248, 250, 252, 0.7),
+    0 0 30px rgba(255, 255, 255, 0.4);
+}
+.name-eletric {
+  color: #38bdf8;
+  text-shadow: 0 0 4px #ffffff, 0 0 8px #38bdf8, 0 0 16px #1d4ed8;
+}
+.name-toxic {
+  color: #84cc16;
+  text-shadow: 0 0 6px #84cc16, 0 0 12px rgba(132, 204, 22, 0.7),
+    0 0 20px rgba(63, 109, 0, 0.5);
+}
+.name-radioativo {
+  color: #4ade80;
+  text-shadow: 0 0 4px #fef9c3, 0 0 10px #4ade80, 0 0 20px #16a34a;
+}
+.name-led {
+  color: #e0f2fe;
+  text-shadow: 0 0 2px #ffffff, 0 0 6px #38bdf8, 0 0 12px #0ea5e9;
+}
+
+/* Exclusivo — glitch (cyan + magenta offset) */
+.name-glitch {
+  color: #f8fafc;
+  text-shadow:
+    1px 0 0 #ec4899,
+    -1px 0 0 #06b6d4,
+    2px 1px 0 rgba(236, 72, 153, 0.5),
+    -2px -1px 0 rgba(6, 182, 212, 0.5);
+}
+
+/* Lendária — animados */
+@keyframes name-phoenix-burn {
+  0%   { background-position: 0% 100%; }
+  100% { background-position: 0% 0%; }
+}
+.name-phoenix {
+  background: linear-gradient(180deg, #fef3c7, #fbbf24, #f97316, #dc2626, #7f1d1d);
+  background-size: 100% 250%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-phoenix-burn 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes name-tide-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.name-tide {
+  background: linear-gradient(
+    90deg,
+    #0c4a6e 0%, #0284c7 25%, #06b6d4 50%, #0284c7 75%, #0c4a6e 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-tide-flow 5s linear infinite;
+}
+
+@keyframes name-thunder-pulse {
+  0%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 8px #38bdf8; }
+  50%      { text-shadow: 0 0 8px #ffffff, 0 0 24px #38bdf8, 0 0 40px #1e40af; }
+}
+.name-thunder {
+  color: #e0f2fe;
+  animation: name-thunder-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes name-zen-cycle {
+  0%   { color: #06b6d4; }
+  33%  { color: #a78bfa; }
+  66%  { color: #f472b6; }
+  100% { color: #06b6d4; }
+}
+.name-zen {
+  animation: name-zen-cycle 6s ease-in-out infinite;
+}
+
+@keyframes name-nebula-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.name-nebula {
+  background: linear-gradient(
+    90deg,
+    #1e1b4b, #6b21a8, #ec4899, #f59e0b, #ec4899, #6b21a8, #1e1b4b
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-nebula-flow 6s linear infinite;
+}
+
+@keyframes name-prismatic-rotate {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+.name-prismatic {
+  background: linear-gradient(90deg, #ff0080, #ff8c00, #ffd700, #00ff80, #00bfff, #8a2be2);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-prismatic-rotate 3s linear infinite;
+}
+
+/* Limitado — efeitos complexos (admin grant only) */
+@keyframes name-chrome-shift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.name-chrome {
+  background: linear-gradient(
+    90deg,
+    #475569, #94a3b8, #f8fafc, #cbd5e1, #475569, #1e293b,
+    #475569, #94a3b8, #f8fafc, #cbd5e1, #475569
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-chrome-shift 4s linear infinite;
+  -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes name-liquid-gold-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.name-liquid-gold {
+  background: linear-gradient(
+    90deg,
+    #78350f, #f59e0b, #fef3c7, #facc15, #b45309, #78350f,
+    #f59e0b, #fef3c7, #facc15, #b45309
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-liquid-gold-flow 3.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4));
+}
+
+@keyframes name-void-pulse {
+  0%, 100% { text-shadow: 0 0 12px #a78bfa, 0 0 24px #6b21a8; }
+  50%      { text-shadow: 0 0 4px #c084fc, 0 0 16px #4c1d95; }
+}
+.name-void {
+  color: #0f0f0f;
+  -webkit-text-stroke: 0.5px #c084fc;
+  animation: name-void-pulse 3s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .name-rainbow,
   .name-shimmer-gold,
   .name-holographic,
   .name-aurora,
-  .name-diamante {
+  .name-diamante,
+  .name-phoenix,
+  .name-tide,
+  .name-thunder,
+  .name-zen,
+  .name-nebula,
+  .name-prismatic,
+  .name-chrome,
+  .name-liquid-gold,
+  .name-void {
     animation: none;
   }
 }

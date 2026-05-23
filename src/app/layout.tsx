@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ReloadThrottle } from "@/features/panel/components/reload-throttle";
+import { ToastProvider } from "@/components/toast";
+import { FrontendErrorReporter } from "@/features/panel/components/frontend-error-reporter";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,7 +30,8 @@ export default function RootLayout({
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans min-h-screen bg-background text-foreground antialiased">
         <ReloadThrottle />
-        {children}
+        <FrontendErrorReporter />
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

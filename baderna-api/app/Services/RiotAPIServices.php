@@ -173,6 +173,52 @@ class RiotAPIServices
     }
 
     /**
+     * Start timestamp (Unix segundos) da season ranqueada atual.
+     * ATUALIZAR a cada nova season da Riot — sem isso o filtro fica errado.
+     * 2026 Split 1 começou 8 jan 2026.
+     */
+    public function getSeasonStartTimestamp(): int
+    {
+        return strtotime('2026-01-08 00:00:00 UTC');
+    }
+
+    /**
+     * Identificador legível da season — usado pra montar cache key, e zerar
+     * automaticamente quando a season trocar (basta atualizar a string).
+     */
+    public function getCurrentSeasonId(): string
+    {
+        return '2026-s1';
+    }
+
+    /**
+     * Match IDs da SEASON atual pro user, filtrado por fila. Pagina pelo
+     * endpoint /by-puuid/{puuid}/ids (limite 100 por chamada). Coleta até
+     * `maxMatches` no total ou para quando a Riot não devolver mais.
+     */
+    public function getSeasonMatchIds(string $puuid, int $queue, int $maxMatches = 100): array
+    {
+        $startTime = $this->getSeasonStartTimestamp();
+        $all = [];
+        $start = 0;
+        $pageSize = min(100, $maxMatches);
+        while (count($all) < $maxMatches) {
+            $url = "{$this->americasBaseUrl}/lol/match/v5/matches/by-puuid/{$puuid}/ids"
+                . "?startTime={$startTime}&start={$start}&count={$pageSize}&queue={$queue}";
+            try {
+                $ids = $this->request($url);
+            } catch (Exception) {
+                break;
+            }
+            if (!is_array($ids) || count($ids) === 0) break;
+            $all = array_merge($all, $ids);
+            if (count($ids) < $pageSize) break;
+            $start += count($ids);
+        }
+        return array_slice($all, 0, $maxMatches);
+    }
+
+    /**
      * Returns a map of championId => championName built from Data Dragon.
      * Cached 24h since Riot rarely updates this file.
      */
