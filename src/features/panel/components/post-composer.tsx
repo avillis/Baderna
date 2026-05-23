@@ -7,7 +7,12 @@ import { useRef, useState } from "react";
 import { useToast } from "@/components/toast";
 import { GiphyPickerInline } from "@/features/panel/components/giphy-picker-modal";
 import { useAccount } from "@/features/panel/use-account";
-import { uploadPostImage, type FeedPost } from "@/features/panel/use-posts";
+import {
+  MAX_VIDEO_SIZE_BYTES,
+  uploadPostImage,
+  uploadPostVideo,
+  type FeedPost,
+} from "@/features/panel/use-posts";
 
 export function PostComposer({
   onCreate,
@@ -16,6 +21,7 @@ export function PostComposer({
     content: string;
     imageUrl?: string | null;
     gifUrl?: string | null;
+    videoUrl?: string | null;
   }) => Promise<FeedPost | null>;
 }) {
   const { account } = useAccount();
@@ -23,12 +29,14 @@ export function PostComposer({
   const [text, setText] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [giphyOpen, setGiphyOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const videoInput = useRef<HTMLInputElement>(null);
 
-  const canPost = text.trim().length > 0 || imageUrl || gifUrl;
+  const canPost = text.trim().length > 0 || imageUrl || gifUrl || videoUrl;
 
   async function handleFile(file: File) {
     setUploading(true);
@@ -36,7 +44,27 @@ export function PostComposer({
       const url = await uploadPostImage(file);
       if (!url) throw new Error("Falha no upload.");
       setImageUrl(url);
-      // Imagem e GIF são mutuamente exclusivos pra simplificar layout.
+      // Mídia mutuamente exclusiva pra simplificar layout.
+      setGifUrl(null);
+      setVideoUrl(null);
+    } catch (err) {
+      toast.show(err instanceof Error ? err.message : "Falha no upload.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleVideoFile(file: File) {
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      toast.show("Vídeo até 20MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const url = await uploadPostVideo(file);
+      if (!url) throw new Error("Falha no upload do vídeo.");
+      setVideoUrl(url);
+      setImageUrl(null);
       setGifUrl(null);
     } catch (err) {
       toast.show(err instanceof Error ? err.message : "Falha no upload.");
@@ -53,6 +81,7 @@ export function PostComposer({
         content: text.trim(),
         imageUrl,
         gifUrl,
+        videoUrl,
       });
       if (!created) {
         toast.show("Não foi possível postar. Tenta de novo.");
@@ -61,12 +90,14 @@ export function PostComposer({
       setText("");
       setImageUrl(null);
       setGifUrl(null);
+      setVideoUrl(null);
     } finally {
       setPosting(false);
     }
   }
 
   const mediaUrl = imageUrl ?? gifUrl;
+  const isVideoMedia = !!videoUrl && !mediaUrl;
 
   return (
     <div className="rounded-[18px] bg-white p-[14px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] sm:rounded-[20px] sm:p-[20px]">
@@ -114,6 +145,25 @@ export function PostComposer({
                     setGifUrl(null);
                   }}
                   aria-label="Remover mídia"
+                  className="absolute right-[6px] top-[6px] flex h-[24px] w-[24px] items-center justify-center rounded-full bg-black/60 text-white transition-opacity hover:opacity-85"
+                >
+                  <X className="h-[12px] w-[12px]" strokeWidth={2.4} />
+                </button>
+              </div>
+            )}
+
+            {isVideoMedia && (
+              <div className="relative h-fit w-[200px] flex-shrink-0 overflow-hidden rounded-[16px] bg-black">
+                <video
+                  src={videoUrl ?? undefined}
+                  className="aspect-video w-full object-cover"
+                  controls
+                  preload="metadata"
+                />
+                <button
+                  type="button"
+                  onClick={() => setVideoUrl(null)}
+                  aria-label="Remover vídeo"
                   className="absolute right-[6px] top-[6px] flex h-[24px] w-[24px] items-center justify-center rounded-full bg-black/60 text-white transition-opacity hover:opacity-85"
                 >
                   <X className="h-[12px] w-[12px]" strokeWidth={2.4} />
@@ -194,13 +244,24 @@ export function PostComposer({
               >
                 GIF
               </button>
-              {/* Vídeo: placeholder visual, ainda sem handler. */}
+              <input
+                ref={videoInput}
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleVideoFile(f);
+                  if (videoInput.current) videoInput.current.value = "";
+                }}
+              />
               <button
                 type="button"
-                disabled
-                aria-label="Adicionar vídeo (em breve)"
-                title="Em breve"
-                className="flex h-[32px] w-[32px] items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:cursor-not-allowed"
+                onClick={() => videoInput.current?.click()}
+                disabled={uploading}
+                aria-label="Adicionar vídeo (até 20MB)"
+                title="Adicionar vídeo (até 20MB)"
+                className="flex h-[32px] w-[32px] items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <svg
                   className="h-[26px] w-[26px]"
@@ -228,7 +289,13 @@ export function PostComposer({
                 </svg>
               </button>
               {uploading && (
-                <span className="text-[12px] text-[#8d8d8d]">Enviando...</span>
+                <svg
+                  className="capas-spinner [&_circle]:stroke-[#ff4100]"
+                  viewBox="25 25 50 50"
+                  style={{ width: 12, height: 12 }}
+                >
+                  <circle r="20" cy="50" cx="50" />
+                </svg>
               )}
             </div>
 

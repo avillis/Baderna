@@ -12,6 +12,7 @@ export type FeedPost = {
   content: string;
   imageUrl: string | null;
   gifUrl: string | null;
+  videoUrl: string | null;
   createdAt: string;
   likesCount: number;
   commentsCount: number;
@@ -57,6 +58,7 @@ async function postCreate(payload: {
   content: string;
   imageUrl?: string | null;
   gifUrl?: string | null;
+  videoUrl?: string | null;
 }): Promise<FeedPost | null> {
   const res = await fetch(`${API_BASE}/posts`, {
     method: "POST",
@@ -69,6 +71,7 @@ async function postCreate(payload: {
       content: payload.content,
       image_url: payload.imageUrl ?? null,
       gif_url: payload.gifUrl ?? null,
+      video_url: payload.videoUrl ?? null,
     }),
   });
   if (!res.ok) return null;
@@ -82,6 +85,24 @@ export async function uploadPostImage(file: File): Promise<string | null> {
   const form = new FormData();
   form.append("file", file);
   const res = await fetch(`${API_BASE}/posts/image`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    body: form,
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { url?: string };
+  return data.url ?? null;
+}
+
+export const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024;
+
+export async function uploadPostVideo(file: File): Promise<string | null> {
+  const token = authToken();
+  if (!token) return null;
+  if (file.size > MAX_VIDEO_SIZE_BYTES) return null;
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_BASE}/posts/video`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     body: form,
@@ -158,6 +179,7 @@ export function usePosts() {
       content: string;
       imageUrl?: string | null;
       gifUrl?: string | null;
+      videoUrl?: string | null;
     }) => {
       const created = await postCreate(input);
       if (!created) return null;

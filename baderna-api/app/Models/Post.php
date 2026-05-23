@@ -12,6 +12,7 @@ class Post extends Model
         'content',
         'image_url',
         'gif_url',
+        'video_url',
     ];
 
     public function comments()

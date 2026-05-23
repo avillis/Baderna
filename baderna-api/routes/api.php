@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/posts/{id}', [PostController::class, 'show'])->whereNumber('id');
     Route::post('/posts', [PostController::class, 'store']);
     Route::post('/posts/image', [PostController::class, 'uploadImage']);
+    Route::post('/posts/video', [PostController::class, 'uploadVideo']);
 
     // Frontend pode reportar erros JS (window.onerror) aqui — autenticado.
     Route::post('/error-logs', [ErrorLogsController::class, 'store']);

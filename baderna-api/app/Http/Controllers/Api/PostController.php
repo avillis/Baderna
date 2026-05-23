@@ -57,15 +57,17 @@ class PostController extends Controller
             'content'   => 'nullable|string|max:2000',
             'image_url' => 'nullable|string|max:1000',
             'gif_url'   => 'nullable|string|max:1000',
+            'video_url' => 'nullable|string|max:1000',
         ]);
 
-        // Precisa de pelo menos UM dos três (não dá pra postar nada vazio).
+        // Precisa de pelo menos UM dos quatro (não dá pra postar nada vazio).
         $content = trim((string)($data['content'] ?? ''));
         $imageUrl = $data['image_url'] ?? null;
         $gifUrl = $data['gif_url'] ?? null;
-        if ($content === '' && !$imageUrl && !$gifUrl) {
+        $videoUrl = $data['video_url'] ?? null;
+        if ($content === '' && !$imageUrl && !$gifUrl && !$videoUrl) {
             return response()->json([
-                'errors' => ['content' => ['Adicione um texto, imagem ou GIF.']],
+                'errors' => ['content' => ['Adicione um texto, imagem, GIF ou vídeo.']],
             ], 422);
         }
 
@@ -74,6 +76,7 @@ class PostController extends Controller
             'content'   => $content,
             'image_url' => $imageUrl,
             'gif_url'   => $gifUrl,
+            'video_url' => $videoUrl,
         ]);
 
         $post->load('user:id,name,display_name,summoner_name,tagLine,avatar_src');
@@ -148,6 +151,33 @@ class PostController extends Controller
         ]);
     }
 
+    public function uploadVideo(Request $request)
+    {
+        // Limite de 20MB (20480 KB). MP4/WebM/MOV cobrem o que browsers
+        // conseguem reproduzir nativamente.
+        $request->validate([
+            'file' => 'required|file|mimes:mp4,webm,mov,m4v|max:20480',
+        ]);
+
+        $user = $request->user();
+        $file = $request->file('file');
+
+        $owner = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($user->summoner_name ?? 'user'));
+        $owner = substr($owner, 0, 32) ?: 'user';
+        $ext = match ($file->getMimeType()) {
+            'video/webm'      => 'webm',
+            'video/quicktime' => 'mov',
+            default           => 'mp4',
+        };
+        $filename = $owner . '-' . time() . '-' . bin2hex(random_bytes(3)) . '.' . $ext;
+
+        $path = $file->storeAs('posts', $filename, 'public');
+
+        return response()->json([
+            'url' => url(Storage::url($path)),
+        ]);
+    }
+
     private function serialize(Post $post, array $likedIds): array
     {
         $u = $post->user;
@@ -159,6 +189,7 @@ class PostController extends Controller
             'content'    => $post->content,
             'imageUrl'   => $post->image_url,
             'gifUrl'     => $post->gif_url,
+            'videoUrl'   => $post->video_url,
             'createdAt'  => $post->created_at?->toIso8601String(),
             'likesCount' => $post->likes_count ?? 0,
             'commentsCount' => $post->comments_count ?? 0,

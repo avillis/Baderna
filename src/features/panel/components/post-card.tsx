@@ -193,6 +193,28 @@ export function PostCard({
             </div>
           )}
 
+          {post.videoUrl && !media && (
+            <div
+              className="mt-[12px] overflow-hidden rounded-[16px] bg-black"
+              onClick={(e) => {
+                // Não navega pro permalink ao interagir com o player.
+                e.stopPropagation();
+              }}
+            >
+              <video
+                src={post.videoUrl}
+                className={
+                  expanded
+                    ? "h-auto max-h-[80vh] w-full"
+                    : "max-h-[520px] w-full"
+                }
+                controls
+                preload="metadata"
+                playsInline
+              />
+            </div>
+          )}
+
           {/* Linha de ações: like + comentários */}
           <div className="mt-[18px] flex items-center gap-[16px]">
             <LikeButton
