@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { getMemberSlug } from "@/features/panel/members-data";
+import { StyledName } from "@/features/panel/components/styled-name";
 import { VideoPlayer } from "@/features/panel/components/video-player";
 import { useAuth } from "@/features/panel/use-auth";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
@@ -38,14 +39,23 @@ export function PostCard({
     ? getMemberSlug({ nickname: post.author.gameNick.split("#")[0] })
     : "";
 
-  // Pega o nome ATUAL do autor (caso ele tenha mudado depois de postar).
-  // O backend salva snapshot no payload do post; aqui sobrescreve com a
-  // versão fresh da lista de membros, vinculada por user_id.
+  // Pega o membro ATUAL pra puxar nickname/name/estilo de nome. O backend
+  // salva snapshot no payload do post; aqui sobrescreve com a versão fresh
+  // da lista de membros (vinculada por user_id).
+  //  - m.nickname = summoner_name (exibido em cima, com estilo)
+  //  - m.name     = display_name (nome real, exibido embaixo em cinza)
+  //  - m.activeNameId = estilo escolhido pelo autor (StyledName)
   const members = useBadernaMembers();
-  const liveAuthorName = post.author.id
-    ? members.find((m) => m.userId === post.author.id)?.nickname
+  const liveMember = post.author.id
+    ? members.find((m) => m.userId === post.author.id)
     : undefined;
-  const authorName = liveAuthorName ?? post.author.name ?? "Anônimo";
+  const fallbackNick = post.author.gameNick
+    ? post.author.gameNick.split("#")[0]
+    : post.author.name;
+  const authorNick =
+    liveMember?.nickname ?? fallbackNick ?? "Anônimo";
+  const authorRealName = liveMember?.name ?? post.author.name ?? "";
+  const authorStyleId = liveMember?.activeNameId ?? undefined;
 
   // Click no card → permalink do post. Buttons/links internos param
   // propagação pra não disparar duas navegações.
@@ -123,38 +133,40 @@ export function PostCard({
                   href={`/membro/${authorSlug}`}
                   className="block truncate text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-80 sm:text-[15px]"
                 >
-                  {authorName}
+                  <StyledName styleId={authorStyleId}>{authorNick}</StyledName>
                 </Link>
               ) : (
                 <span className="block truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                  {authorName}
+                  <StyledName styleId={authorStyleId}>{authorNick}</StyledName>
                 </span>
               )}
-              {/* Expanded: slug embaixo do nome (estilo Twitter).
-                  Compact (feed): inline com @ ao lado. */}
+              {/* Expanded: nome real embaixo do nick (estilo Twitter).
+                  Compact (feed): inline com nome real + tempo. */}
               {expanded ? (
-                post.author.gameNick && authorSlug ? (
+                authorRealName && authorSlug ? (
                   <Link
                     href={`/membro/${authorSlug}`}
                     className="mt-[2px] block truncate text-[12px] text-[#8d8d8d] transition-opacity hover:opacity-80 sm:text-[13px]"
                   >
-                    {post.author.gameNick.split("#")[0]}
+                    {authorRealName}
                   </Link>
+                ) : authorRealName ? (
+                  <span className="mt-[2px] block truncate text-[12px] text-[#8d8d8d] sm:text-[13px]">
+                    {authorRealName}
+                  </span>
                 ) : null
               ) : (
                 <div className="mt-[2px] flex items-baseline gap-[6px] text-[12px] text-[#8d8d8d] sm:text-[13px]">
-                  {post.author.gameNick && authorSlug ? (
+                  {authorRealName && authorSlug ? (
                     <Link
                       href={`/membro/${authorSlug}`}
                       className="truncate transition-opacity hover:opacity-80"
                     >
-                      {post.author.gameNick.split("#")[0]}
+                      {authorRealName}
                     </Link>
                   ) : (
-                    post.author.gameNick && (
-                      <span className="truncate">
-                        {post.author.gameNick.split("#")[0]}
-                      </span>
+                    authorRealName && (
+                      <span className="truncate">{authorRealName}</span>
                     )
                   )}
                   <span>·</span>
