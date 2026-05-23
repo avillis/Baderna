@@ -21,13 +21,19 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL'),
+        'https://bdrn.com.br',
+        'https://www.bdrn.com.br',
         'http://localhost:3000',
         'http://localhost:8000',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:8000',
     ],
 
-    'allowed_origins_patterns' => [],
+    // Aceita qualquer preview do Vercel (PRs e branches geram subdomínios
+    // do tipo baderna-xxx-avillis.vercel.app).
+    'allowed_origins_patterns' => [
+        '#^https://.*\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 

@@ -166,19 +166,14 @@ export function AdminEmailsCard() {
           <div className="flex min-w-0 flex-col gap-4">
             {selected && (
               <div className="rounded-[14px] bg-[#f7f7f7] p-[16px]">
-                <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8d8d8d]">
-                      Enviar teste
-                    </p>
-                    <input
-                      type="email"
-                      value={testEmail}
-                      onChange={(e) => setTestEmail(e.target.value)}
-                      placeholder="Email do admin por padrão"
-                      className="mt-[6px] w-full rounded-full border-none bg-white px-5 py-3 text-[13px] text-[#0f0f0f] outline-none placeholder:text-[#a4a4a4] focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
-                    />
-                  </div>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-2">
+                  <input
+                    type="email"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    placeholder="Email do admin por padrão"
+                    className="min-w-0 flex-1 rounded-full border-none bg-white px-5 py-3 text-[13px] text-[#0f0f0f] outline-none placeholder:text-[#a4a4a4] focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+                  />
                   <button
                     type="button"
                     onClick={handleSendTest}
