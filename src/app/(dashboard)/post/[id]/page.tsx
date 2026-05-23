@@ -6,6 +6,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useToast } from "@/components/toast";
+import { FeedHistoryWidget } from "@/features/panel/components/feed-history-widget";
+import { FeedInhousesWidget } from "@/features/panel/components/feed-inhouses-widget";
+import { FeedMembersWidget } from "@/features/panel/components/feed-members-widget";
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { PostCard } from "@/features/panel/components/post-card";
 import { PostCommentsSection } from "@/features/panel/components/post-comments-section";
@@ -82,7 +85,8 @@ export default function PostPage() {
 
   return (
     <PanelShell showBanner={false}>
-      <section className="mx-auto flex w-full max-w-[680px] flex-col gap-[14px] pb-[80px] pt-[6vh]">
+      <section className="grid gap-[20px] pb-[80px] pt-[6vh] xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mx-auto flex w-full min-w-0 max-w-[680px] flex-col gap-[14px]">
         <Link
           href="/"
           className="inline-flex h-[50px] w-fit items-center gap-[6px] rounded-[18px] bg-[#ededed] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
@@ -136,6 +140,13 @@ export default function PostPage() {
             />
           </>
         )}
+        </div>
+
+        <aside className="flex flex-col gap-[14px]">
+          <FeedHistoryWidget />
+          <FeedInhousesWidget />
+          <FeedMembersWidget />
+        </aside>
       </section>
     </PanelShell>
   );

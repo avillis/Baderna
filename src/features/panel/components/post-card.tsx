@@ -119,12 +119,12 @@ export function PostCard({
                 href={`/membro/${authorSlug}`}
                 className="truncate text-[13px] text-[#8d8d8d] transition-opacity hover:opacity-80"
               >
-                @{post.author.gameNick.split("#")[0]}
+                @{post.author.gameNick.split("#")[0].replace(/\s+/g, "_")}
               </Link>
             ) : (
               post.author.gameNick && (
                 <span className="truncate text-[13px] text-[#8d8d8d]">
-                  @{post.author.gameNick.split("#")[0]}
+                  @{post.author.gameNick.split("#")[0].replace(/\s+/g, "_")}
                 </span>
               )
             )}
