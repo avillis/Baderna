@@ -81,7 +81,7 @@ export function GiphyPickerInline({
         />
       </div>
 
-      <div className="grid max-h-[340px] grid-cols-2 gap-[8px] overflow-y-auto p-[12px] sm:grid-cols-3">
+      <div className="grid max-h-[340px] grid-cols-2 gap-[8px] overflow-y-auto p-[12px] sm:grid-cols-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {loading && gifs.length === 0 && (
           <p className="col-span-full py-[28px] text-center text-[13px] text-[#8d8d8d]">
             Carregando GIFs...

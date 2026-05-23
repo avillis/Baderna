@@ -14,10 +14,13 @@ export function PostCard({
   post,
   onLike,
   onDelete,
+  expanded = false,
 }: {
   post: FeedPost;
   onLike?: (id: number) => void;
   onDelete?: (id: number) => void;
+  /** True na página permalink: imagem em resolução completa sem crop. */
+  expanded?: boolean;
 }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -180,7 +183,11 @@ export function PostCard({
               <img
                 src={media}
                 alt=""
-                className="max-h-[520px] w-full object-cover"
+                className={
+                  expanded
+                    ? "h-auto w-full object-contain"
+                    : "max-h-[520px] w-full object-cover"
+                }
                 loading="lazy"
               />
             </div>

@@ -34,7 +34,7 @@ function MemberAvatar({
 }
 
 export function PanelMemberWinratesCard() {
-  const { rows, loading, refreshing, refresh } = useWinratesWithMembers();
+  const { rows, debug, loading, refreshing, refresh } = useWinratesWithMembers();
   const members = useBadernaMembers();
 
   // Resolve activeNameId/slug via lista global de membros (pra StyledName).
@@ -87,9 +87,42 @@ export function PanelMemberWinratesCard() {
         )}
 
         {!loading && rows.length === 0 && (
-          <p className="my-auto text-center text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
-            Você não jogou Flex com nenhum membro da Baderna nessa season.
-          </p>
+          <div className="my-auto flex flex-col items-center gap-[12px] px-[20px] text-center">
+            <p className="text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
+              Você não jogou Flex com nenhum membro da Baderna nessa season.
+            </p>
+            {debug && (
+              <details className="w-full max-w-[420px] rounded-[10px] bg-[#fafafa] p-[10px] text-left text-[11px] text-[#6b7280]">
+                <summary className="cursor-pointer font-semibold text-[#0f0f0f]">
+                  Debug
+                </summary>
+                <ul className="mt-[6px] space-y-[2px]">
+                  {debug.reason && <li>Motivo: <code>{debug.reason}</code></li>}
+                  {debug.season && <li>Season: {debug.season}</li>}
+                  {typeof debug.members_with_puuid === "number" && (
+                    <li>Membros com PUUID: {debug.members_with_puuid}</li>
+                  )}
+                  {typeof debug.matches_found === "number" && (
+                    <li>Partidas encontradas: {debug.matches_found}</li>
+                  )}
+                  {typeof debug.matches_fetched === "number" && (
+                    <li>Partidas baixadas: {debug.matches_fetched}</li>
+                  )}
+                  {typeof debug.matches_failed === "number" && debug.matches_failed > 0 && (
+                    <li>Partidas que falharam: {debug.matches_failed}</li>
+                  )}
+                  {debug.errors && debug.errors.length > 0 && (
+                    <li className="break-all">
+                      Erros:
+                      <ul className="ml-[12px] list-disc">
+                        {debug.errors.map((e, i) => <li key={i}>{e}</li>)}
+                      </ul>
+                    </li>
+                  )}
+                </ul>
+              </details>
+            )}
+          </div>
         )}
 
         {!loading &&

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ErrorLog;
 use App\Models\User;
 use App\Services\RiotAPIServices;
 use Exception;
@@ -27,17 +28,20 @@ class MemberWinratesController extends Controller
     {
         $user = $request->user();
         if (!$user->riot_puuid) {
-            return response()->json(['rows' => []]);
+            return response()->json([
+                'rows' => [],
+                'debug' => ['reason' => 'self_no_puuid'],
+            ]);
         }
 
         $seasonId = $riot->getCurrentSeasonId();
         $cacheKey = "winrates_with_members:{$user->riot_puuid}:{$seasonId}";
 
-        $rows = Cache::remember($cacheKey, now()->addHour(), function () use ($user, $riot) {
+        $result = Cache::remember($cacheKey, now()->addHour(), function () use ($user, $riot) {
             return $this->computeWinrates($user, $riot);
         });
 
-        return response()->json(['rows' => $rows]);
+        return response()->json($result);
     }
 
     /**
@@ -47,18 +51,33 @@ class MemberWinratesController extends Controller
     {
         $user = $request->user();
         if (!$user->riot_puuid) {
-            return response()->json(['rows' => []]);
+            return response()->json([
+                'rows' => [],
+                'debug' => ['reason' => 'self_no_puuid'],
+            ]);
         }
         $seasonId = $riot->getCurrentSeasonId();
         Cache::forget("winrates_with_members:{$user->riot_puuid}:{$seasonId}");
-        $rows = $this->computeWinrates($user, $riot);
-        Cache::put("winrates_with_members:{$user->riot_puuid}:{$seasonId}", $rows, now()->addHour());
-        return response()->json(['rows' => $rows]);
+        $result = $this->computeWinrates($user, $riot);
+        Cache::put("winrates_with_members:{$user->riot_puuid}:{$seasonId}", $result, now()->addHour());
+        return response()->json($result);
     }
 
+    /**
+     * Retorna ['rows' => [...], 'debug' => {meta}]. Debug ajuda admin a
+     * descobrir por que tá vazio (sem PUUID? sem partidas? Riot caiu?).
+     */
     private function computeWinrates(User $user, RiotAPIServices $riot): array
     {
-        // 1. Mapa PUUID → User row pra todos os baderna members (exclui o próprio)
+        $debug = [
+            'season'             => $riot->getCurrentSeasonId(),
+            'matches_found'      => 0,
+            'matches_fetched'    => 0,
+            'matches_failed'     => 0,
+            'members_with_puuid' => 0,
+            'errors'             => [],
+        ];
+
         $members = User::where('is_deleted', false)
             ->whereNotNull('riot_puuid')
             ->where('id', '!=', $user->id)
@@ -68,32 +87,47 @@ class MemberWinratesController extends Controller
         foreach ($members as $m) {
             $byPuuid[$m->riot_puuid] = $m;
         }
+        $debug['members_with_puuid'] = count($byPuuid);
 
-        if (empty($byPuuid)) return [];
+        if (empty($byPuuid)) {
+            $debug['reason'] = 'no_other_members_with_puuid';
+            return ['rows' => [], 'debug' => $debug];
+        }
 
-        // 2. Pega IDs das partidas Flex da season
         try {
             $matchIds = $riot->getSeasonMatchIds(
                 $user->riot_puuid,
                 self::QUEUE_FLEX,
                 self::MAX_MATCHES_PER_SYNC,
             );
-        } catch (Exception) {
-            return [];
+            $debug['matches_found'] = count($matchIds);
+        } catch (Exception $e) {
+            $debug['reason'] = 'match_ids_fetch_failed';
+            $debug['errors'][] = $e->getMessage();
+            $this->logFail('getSeasonMatchIds failed', $e);
+            return ['rows' => [], 'debug' => $debug];
         }
 
-        // 3. Pra cada partida, identifica time do viewer e teammates baderna
-        $tallies = []; // puuid => ['wins' => x, 'losses' => y]
+        if (count($matchIds) === 0) {
+            $debug['reason'] = 'no_flex_matches_in_season';
+            return ['rows' => [], 'debug' => $debug];
+        }
+
+        $tallies = [];
         foreach ($matchIds as $matchId) {
             try {
                 $detail = $riot->getMatchDetail($matchId);
-            } catch (Exception) {
+                $debug['matches_fetched']++;
+            } catch (Exception $e) {
+                $debug['matches_failed']++;
+                if (count($debug['errors']) < 3) {
+                    $debug['errors'][] = "match {$matchId}: " . $e->getMessage();
+                }
                 continue;
             }
             $participants = $detail['info']['participants'] ?? [];
             if (!is_array($participants) || count($participants) === 0) continue;
 
-            // Acha o viewer na lista
             $viewer = null;
             foreach ($participants as $p) {
                 if (($p['puuid'] ?? null) === $user->riot_puuid) {
@@ -104,13 +138,13 @@ class MemberWinratesController extends Controller
             if (!$viewer) continue;
 
             $viewerTeam = $viewer['teamId'] ?? null;
-            $viewerWon = (bool)($viewer['win'] ?? false);
+            $viewerWon  = (bool)($viewer['win'] ?? false);
 
             foreach ($participants as $p) {
                 $pPuuid = $p['puuid'] ?? null;
                 if (!$pPuuid || $pPuuid === $user->riot_puuid) continue;
-                if (!isset($byPuuid[$pPuuid])) continue; // não é da baderna
-                if (($p['teamId'] ?? null) !== $viewerTeam) continue; // não é teammate
+                if (!isset($byPuuid[$pPuuid])) continue;
+                if (($p['teamId'] ?? null) !== $viewerTeam) continue;
 
                 if (!isset($tallies[$pPuuid])) {
                     $tallies[$pPuuid] = ['wins' => 0, 'losses' => 0];
@@ -123,7 +157,10 @@ class MemberWinratesController extends Controller
             }
         }
 
-        // 4. Monta resposta ordenada por total de jogos (desc)
+        if (count($tallies) === 0) {
+            $debug['reason'] = 'no_teammates_found_in_matches';
+        }
+
         $rows = [];
         foreach ($tallies as $puuid => $tally) {
             $m = $byPuuid[$puuid];
@@ -140,6 +177,25 @@ class MemberWinratesController extends Controller
             ($b['wins'] + $b['losses']) - ($a['wins'] + $a['losses'])
         );
 
-        return $rows;
+        return ['rows' => $rows, 'debug' => $debug];
+    }
+
+    /**
+     * Best-effort logging — não quebra se a tabela não existir ainda.
+     */
+    private function logFail(string $message, Exception $e): void
+    {
+        try {
+            ErrorLog::create([
+                'source' => 'error',
+                'level' => 'error',
+                'message' => substr($message . ': ' . $e->getMessage(), 0, 1000),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'stack_trace' => substr($e->getTraceAsString(), 0, 20000),
+                'context' => ['where' => 'MemberWinratesController'],
+                'occurred_at' => now(),
+            ]);
+        } catch (Exception $ignored) {}
     }
 }

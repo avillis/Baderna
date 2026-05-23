@@ -54,16 +54,26 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'content'   => 'required|string|max:2000',
-            'image_url' => 'nullable|string|max:500',
-            'gif_url'   => 'nullable|string|max:500',
+            'content'   => 'nullable|string|max:2000',
+            'image_url' => 'nullable|string|max:1000',
+            'gif_url'   => 'nullable|string|max:1000',
         ]);
+
+        // Precisa de pelo menos UM dos três (não dá pra postar nada vazio).
+        $content = trim((string)($data['content'] ?? ''));
+        $imageUrl = $data['image_url'] ?? null;
+        $gifUrl = $data['gif_url'] ?? null;
+        if ($content === '' && !$imageUrl && !$gifUrl) {
+            return response()->json([
+                'errors' => ['content' => ['Adicione um texto, imagem ou GIF.']],
+            ], 422);
+        }
 
         $post = Post::create([
             'user_id'   => $request->user()->id,
-            'content'   => $data['content'],
-            'image_url' => $data['image_url'] ?? null,
-            'gif_url'   => $data['gif_url'] ?? null,
+            'content'   => $content,
+            'image_url' => $imageUrl,
+            'gif_url'   => $gifUrl,
         ]);
 
         $post->load('user:id,name,display_name,summoner_name,tagLine,avatar_src');

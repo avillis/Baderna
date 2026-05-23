@@ -16,6 +16,16 @@ export type WinrateRow = {
   losses: number;
 };
 
+export type WinrateDebug = {
+  reason?: string;
+  season?: string;
+  matches_found?: number;
+  matches_fetched?: number;
+  matches_failed?: number;
+  members_with_puuid?: number;
+  errors?: string[];
+};
+
 function authHeaders(): Record<string, string> {
   const token = authToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -28,27 +38,33 @@ function authHeaders(): Record<string, string> {
  */
 export function useWinratesWithMembers() {
   const [rows, setRows] = useState<WinrateRow[]>([]);
+  const [debug, setDebug] = useState<WinrateDebug | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchRows = useCallback(async (force: boolean): Promise<WinrateRow[]> => {
-    const url = force
-      ? `${API_BASE}/account/winrates-with-members/refresh`
-      : `${API_BASE}/account/winrates-with-members`;
-    const res = await fetch(url, {
-      method: force ? "POST" : "GET",
-      headers: { Accept: "application/json", ...authHeaders() },
-    });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { rows: WinrateRow[] };
-    return data.rows ?? [];
-  }, []);
+  const fetchData = useCallback(
+    async (force: boolean): Promise<{ rows: WinrateRow[]; debug: WinrateDebug | null }> => {
+      const url = force
+        ? `${API_BASE}/account/winrates-with-members/refresh`
+        : `${API_BASE}/account/winrates-with-members`;
+      const res = await fetch(url, {
+        method: force ? "POST" : "GET",
+        headers: { Accept: "application/json", ...authHeaders() },
+      });
+      if (!res.ok) return { rows: [], debug: null };
+      const data = (await res.json()) as { rows?: WinrateRow[]; debug?: WinrateDebug };
+      return { rows: data.rows ?? [], debug: data.debug ?? null };
+    },
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
-    fetchRows(false)
+    fetchData(false)
       .then((fresh) => {
-        if (!cancelled) setRows(fresh);
+        if (cancelled) return;
+        setRows(fresh.rows);
+        setDebug(fresh.debug);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -56,17 +72,18 @@ export function useWinratesWithMembers() {
     return () => {
       cancelled = true;
     };
-  }, [fetchRows]);
+  }, [fetchData]);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const fresh = await fetchRows(true);
-      setRows(fresh);
+      const fresh = await fetchData(true);
+      setRows(fresh.rows);
+      setDebug(fresh.debug);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchRows]);
+  }, [fetchData]);
 
-  return { rows, loading, refreshing, refresh };
+  return { rows, debug, loading, refreshing, refresh };
 }

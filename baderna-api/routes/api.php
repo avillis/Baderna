@@ -27,30 +27,32 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// ── Públicos (mínimo necessário pré-login) ─────────────────────────────
+// ── Públicos ───────────────────────────────────────────────────────────
 // Riot profile lookup é usado no registro (verifica se Riot ID existe).
 Route::get(
     '/riot-profile/{gameName}/{tagLine}',
     [RiotProfileController::class, 'show']
 )->where('tagLine', '[A-Za-z0-9]+');
 
-// Configs também: feed público pode mostrar coin rewards ou regras.
 Route::get('/coin-rewards', [AppSettingsController::class, 'showCoinRewards']);
 Route::get('/inhouse-points', [AppSettingsController::class, 'showInhousePoints']);
 Route::get('/titles', [TitlesController::class, 'index']);
+
+// Listagens da comunidade — públicas porque o app é SSR e a página
+// /membro/[slug] precisa dessa lista pra resolver o user antes da auth
+// client-side rolar. Email/PUUID/is_admin ficam fora via User::$hidden,
+// então o risco real é só "qualquer um vê a lista de membros" (aceitável
+// num site de comunidade).
+Route::get('/members', [MembersController::class, 'index']);
+Route::get('/members/ranks', [MemberRanksController::class, 'index']);
+Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
+Route::get('/inhouses', [InhousesController::class, 'index']);
+Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
 
 // ── Autenticados ───────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Listagens da comunidade — fechadas atrás de auth pra evitar slug
-    // enumeration e scraping da membership por terceiros.
-    Route::get('/members', [MembersController::class, 'index']);
-    Route::get('/members/ranks', [MemberRanksController::class, 'index']);
-    Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
-    Route::get('/inhouses', [InhousesController::class, 'index']);
-    Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
 
     // Feed (Posts)
     Route::get('/posts', [PostController::class, 'index']);

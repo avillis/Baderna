@@ -121,9 +121,12 @@ export function PostComposer({
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Linha botões */}
-          <div className="flex items-center justify-between">
+      {/* Linha botões — fora da coluna do avatar pra alinhar com a borda
+          esquerda do card, igual o avatar. */}
+      <div className="mt-[14px] flex items-center justify-between">
             <div className="flex items-center gap-[10px]">
               <input
                 ref={fileInput}
@@ -213,9 +216,6 @@ export function PostComposer({
                 "Postar"
               )}
             </button>
-          </div>
-
-        </div>
       </div>
 
       <GiphyPickerInline

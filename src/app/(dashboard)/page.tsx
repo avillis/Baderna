@@ -45,8 +45,8 @@ export default function FeedPage() {
   return (
     <PanelShell showBanner={false}>
       <section className="grid gap-[20px] pb-[80px] pt-[6vh] xl:grid-cols-[minmax(0,1fr)_320px]">
-        {/* Coluna esquerda: composer + feed */}
-        <div className="flex min-w-0 flex-col gap-[14px]">
+        {/* Coluna esquerda: composer + feed (centralizado a 680px dentro da coluna) */}
+        <div className="mx-auto flex w-full min-w-0 max-w-[680px] flex-col gap-[14px]">
           <PostComposer onCreate={createPost} />
 
           {loading && posts.length === 0 && (

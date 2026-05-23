@@ -58,6 +58,9 @@ class MembersController extends Controller
                 'primaryLane'     => $u->primary_lane,
                 'secondaryLane'   => $u->secondary_lane,
                 'activeNameId'    => $u->active_name_id,
+                'cachedRankTier'      => $u->cached_rank_tier,
+                'cachedRankDivision'  => $u->cached_rank_division,
+                'cachedRankLp'        => $u->cached_rank_lp,
             ];
         }));
     }

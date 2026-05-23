@@ -119,7 +119,12 @@ export default function PostPage() {
         )}
 
         {post && (
-          <PostCard post={post} onLike={handleLike} onDelete={handleDelete} />
+          <PostCard
+            post={post}
+            onLike={handleLike}
+            onDelete={handleDelete}
+            expanded
+          />
         )}
       </section>
     </PanelShell>

@@ -73,6 +73,9 @@ type ApiMember = {
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   secondaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   activeNameId: string | null;
+  cachedRankTier: string | null;
+  cachedRankDivision: string | null;
+  cachedRankLp: number | null;
 };
 
 function readCache(): ApiMember[] {
@@ -222,13 +225,28 @@ export function useBadernaMembers(): BadernaMember[] {
     const fromApi: BadernaMember[] = apiMembersPatched.map((m) => {
       const isMe = user && m.userId === user.id;
       const slug = m.id || getMemberSlug({ nickname: m.nickname ?? m.name });
+      // Rank: pro próprio user usa o live (mais fresco), pra outros usa o
+      // rank cacheado que veio do /api/members.
+      let rankName: string;
+      let rankType: RankType;
+      if (isMe) {
+        rankName = selfRankName;
+        rankType = selfRankType;
+      } else if (m.cachedRankTier && m.cachedRankTier !== "Unranked") {
+        rankName = formatRankLabel(m.cachedRankTier, m.cachedRankDivision);
+        rankType =
+          TIER_TO_RANK_TYPE[m.cachedRankTier.toUpperCase()] ?? "gold";
+      } else {
+        rankName = "Sem rank";
+        rankType = "gold";
+      }
       return {
         id: slug,
         userId: m.userId,
         name: m.name,
         nickname: m.nickname ?? m.name,
-        rankName: isMe ? selfRankName : "—",
-        rankType: isMe ? selfRankType : "gold",
+        rankName,
+        rankType,
         preferredRoles: [
           m.primaryLane ? LANE_TO_ROLE[m.primaryLane] : "Mid",
           m.secondaryLane ? LANE_TO_ROLE[m.secondaryLane] : "ADC",
