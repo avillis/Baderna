@@ -29,8 +29,8 @@ import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
 
 const CAPAS_COST = 10;
-const TITULOS_COST = 60;
-const NOMES_COST = 100;
+const TITULOS_COST = 50;
+const NOMES_COST = 80;
 
 // Name pool — limitado excluded (admin grant only) and "preto" excluded
 // (it's the fixed default everyone already has).
@@ -61,11 +61,11 @@ function pickWeightedNameId(): string {
 }
 
 const TITLE_WEIGHTS: Array<[TitleRarity, number]> = [
-  ["lendaria", 0.01],
-  ["exclusivo", 0.05],
-  ["epico", 0.2],
+  ["lendaria", 0.05],
+  ["exclusivo", 0.10],
+  ["epico", 0.25],
   ["raro", 0.35],
-  ["comum", 0.39],
+  ["comum", 0.25],
 ];
 // Sort order for the grid (rarest first). Limitado isn't in the pool.
 const TITLE_RARITY_RANK: Record<TitleRarity, number> = {
@@ -784,7 +784,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 <div
                   key={idx}
                   className={`relative shrink-0 overflow-hidden rounded-[var(--panel-radius-card)] bg-[#0c0c0c] transition-[transform,opacity,filter,margin] duration-300 ease-out ${
-                    tab === "capas" ? "border-[2px]" : ""
+                    tab === "capas" || tab === "nomes" ? "border-[2px]" : ""
                   }`}
                   style={{
                     width: CARD_WIDTH,
@@ -797,7 +797,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                     zIndex: isWinner ? 2 : 1,
                     background: cardBg,
                     borderColor:
-                      tab === "capas" ? RARITY_COLOR[rarity] : undefined,
+                      tab === "capas" || tab === "nomes"
+                        ? RARITY_COLOR[rarity]
+                        : undefined,
                   }}
                 >
                   {tab === "capas" ? (
@@ -1062,9 +1064,11 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 return (
                   <div
                     key={name.id}
-                    className="relative flex aspect-[16/7] items-center justify-center overflow-hidden rounded-[var(--panel-radius-block)] px-[10px] text-center"
+                    className="relative flex aspect-[16/7] items-center justify-center overflow-hidden rounded-[var(--panel-radius-block)] border-2 px-[10px] text-center"
                     style={{
                       background: "#ededed",
+                      borderColor:
+                        RARITY_COLOR[name.rarity as BannerRarity] ?? "#ededed",
                       opacity: owned ? 0.35 : 1,
                     }}
                   >

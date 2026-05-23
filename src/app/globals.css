@@ -869,11 +869,6 @@ button {
   color: #3b82f6;
   text-shadow: 0 0 6px #3b82f6, 0 0 14px rgba(59, 130, 246, 0.55);
 }
-.name-neon-branco {
-  color: #f8fafc;
-  text-shadow: 0 0 8px #f8fafc, 0 0 18px rgba(248, 250, 252, 0.7),
-    0 0 30px rgba(255, 255, 255, 0.4);
-}
 .name-eletric {
   color: #38bdf8;
   text-shadow: 0 0 4px #ffffff, 0 0 8px #38bdf8, 0 0 16px #1d4ed8;
@@ -964,15 +959,96 @@ button {
   animation: name-nebula-flow 6s linear infinite;
 }
 
-@keyframes name-prismatic-rotate {
-  0%   { filter: hue-rotate(0deg); }
-  100% { filter: hue-rotate(360deg); }
+/* Solar — sol que pulsa, amarelo brilhante com glow dourado */
+@keyframes name-solar-pulse {
+  0%, 100% {
+    text-shadow: 0 0 6px #fef3c7, 0 0 14px #facc15, 0 0 22px #f59e0b;
+  }
+  50% {
+    text-shadow: 0 0 12px #ffffff, 0 0 28px #fde047, 0 0 50px #f59e0b;
+  }
 }
-.name-prismatic {
-  background: linear-gradient(90deg, #ff0080, #ff8c00, #ffd700, #00ff80, #00bfff, #8a2be2);
+.name-solar {
+  color: #fef3c7;
+  animation: name-solar-pulse 2.4s ease-in-out infinite;
+}
+
+/* Lunar — luar suave, prata/azul claro, respiração lenta */
+@keyframes name-lunar-glow {
+  0%, 100% {
+    text-shadow: 0 0 4px #e0f2fe, 0 0 10px #bae6fd;
+    color: #f1f5f9;
+  }
+  50% {
+    text-shadow: 0 0 10px #ffffff, 0 0 24px #93c5fd, 0 0 40px #60a5fa;
+    color: #ffffff;
+  }
+}
+.name-lunar {
+  animation: name-lunar-glow 4s ease-in-out infinite;
+}
+
+/* Ember — brasa que cintila entre laranja escuro e quente */
+@keyframes name-ember-flicker {
+  0%   { color: #7f1d1d; text-shadow: 0 0 4px #dc2626; }
+  20%  { color: #f97316; text-shadow: 0 0 10px #facc15, 0 0 20px #ea580c; }
+  40%  { color: #dc2626; text-shadow: 0 0 6px #ef4444; }
+  60%  { color: #fb923c; text-shadow: 0 0 14px #fde047, 0 0 24px #f97316; }
+  80%  { color: #9a3412; text-shadow: 0 0 4px #c2410c; }
+  100% { color: #7f1d1d; text-shadow: 0 0 4px #dc2626; }
+}
+.name-ember {
+  animation: name-ember-flicker 2.2s ease-in-out infinite;
+}
+
+/* Mercury — metal líquido, prata/azulado com fluxo contínuo */
+@keyframes name-mercury-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.name-mercury {
+  background: linear-gradient(
+    90deg,
+    #475569, #64748b, #cbd5e1, #f1f5f9, #93c5fd, #cbd5e1, #64748b, #475569,
+    #64748b, #cbd5e1, #f1f5f9
+  );
+  background-size: 200% 100%;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
-  animation: name-prismatic-rotate 3s linear infinite;
+  animation: name-mercury-flow 4s ease-in-out infinite;
+}
+
+/* Sakura Rain — gradient rosa pastel com drift sutil (sensação de pétalas) */
+@keyframes name-sakura-drift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 100%; }
+}
+.name-sakura-rain {
+  background: linear-gradient(
+    135deg,
+    #ffe4e6, #fda4af, #fb7185, #f472b6, #ffe4e6, #fda4af, #fb7185
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-sakura-drift 5s linear infinite;
+}
+
+/* Magnetic — campo magnético, roxo/rosa pulsando + drift */
+@keyframes name-magnetic-shift {
+  0%   { background-position: 0% 50%; filter: hue-rotate(0deg); }
+  100% { background-position: 200% 50%; filter: hue-rotate(60deg); }
+}
+.name-magnetic {
+  background: linear-gradient(
+    90deg,
+    #4c1d95, #7c3aed, #a78bfa, #ec4899, #a78bfa, #7c3aed, #4c1d95,
+    #7c3aed, #a78bfa, #ec4899, #a78bfa
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: name-magnetic-shift 3.5s ease-in-out infinite alternate;
 }
 
 /* Limitado — efeitos complexos (admin grant only) */
@@ -1031,7 +1107,12 @@ button {
   .name-thunder,
   .name-zen,
   .name-nebula,
-  .name-prismatic,
+  .name-solar,
+  .name-lunar,
+  .name-ember,
+  .name-mercury,
+  .name-sakura-rain,
+  .name-magnetic,
   .name-chrome,
   .name-liquid-gold,
   .name-void {

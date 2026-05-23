@@ -19,8 +19,8 @@ class MemberUnlocksController extends Controller
      */
     private const SPIN_COST = [
         'capa'  => 10,
-        'title' => 60,
-        'name'  => 100,
+        'title' => 50,
+        'name'  => 80,
     ];
 
     /**
