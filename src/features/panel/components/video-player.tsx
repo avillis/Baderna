@@ -26,6 +26,18 @@ export function VideoPlayer({
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [scrubbing, setScrubbing] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+
+  // Sincroniza estado de fullscreen com a API do browser (Esc também sai).
+  useEffect(() => {
+    function onChange() {
+      setIsFullscreen(document.fullscreenElement === wrapperRef.current);
+    }
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -68,6 +80,23 @@ export function VideoPlayer({
     setMuted(v.muted);
   }
 
+  function onVolume(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = videoRef.current;
+    if (!v) return;
+    const val = Number(e.target.value);
+    setVolume(val);
+    v.volume = val;
+    // Mexer no slider auto-desmuta.
+    if (val > 0 && v.muted) {
+      v.muted = false;
+      setMuted(false);
+    }
+    if (val === 0 && !v.muted) {
+      v.muted = true;
+      setMuted(true);
+    }
+  }
+
   function onSeek(e: React.ChangeEvent<HTMLInputElement>) {
     const v = videoRef.current;
     if (!v) return;
@@ -91,16 +120,22 @@ export function VideoPlayer({
   return (
     <div
       ref={wrapperRef}
-      className="group relative overflow-hidden rounded-[16px] bg-black"
+      className={`group relative overflow-hidden bg-black ${
+        isFullscreen
+          ? "flex h-screen w-screen items-center justify-center rounded-none"
+          : "rounded-[16px]"
+      }`}
       onClick={(e) => e.stopPropagation()}
     >
       <video
         ref={videoRef}
         src={src}
         className={
-          expanded
-            ? "h-auto max-h-[80vh] w-full"
-            : "max-h-[520px] w-full"
+          isFullscreen
+            ? "h-full w-full object-contain"
+            : expanded
+              ? "h-auto max-h-[80vh] w-full"
+              : "max-h-[520px] w-full"
         }
         playsInline
         preload="metadata"
@@ -116,7 +151,7 @@ export function VideoPlayer({
           className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/30"
         >
           <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white/95 text-[#0f0f0f] shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-transform hover:scale-105">
-            <Play className="ml-[3px] h-[24px] w-[24px]" fill="currentColor" />
+            <Play className="h-[24px] w-[24px]" fill="currentColor" />
           </span>
         </button>
       )}
@@ -168,18 +203,46 @@ export function VideoPlayer({
           </span>
 
           <div className="ml-auto flex items-center gap-[6px]">
-            <button
-              type="button"
-              onClick={toggleMute}
-              aria-label={muted ? "Desmutar" : "Mutar"}
-              className="flex h-[28px] w-[28px] items-center justify-center rounded-full transition-opacity hover:opacity-80"
+            {/* Volume: hover na área expande o slider à direita do ícone */}
+            <div
+              className="flex items-center"
+              onMouseEnter={() => setVolumeOpen(true)}
+              onMouseLeave={() => setVolumeOpen(false)}
             >
-              {muted ? (
-                <VolumeX className="h-[16px] w-[16px]" />
-              ) : (
-                <Volume2 className="h-[16px] w-[16px]" />
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={toggleMute}
+                aria-label={muted ? "Desmutar" : "Mutar"}
+                className="flex h-[28px] w-[28px] items-center justify-center rounded-full transition-opacity hover:opacity-80"
+              >
+                {muted || volume === 0 ? (
+                  <VolumeX className="h-[16px] w-[16px]" />
+                ) : (
+                  <Volume2 className="h-[16px] w-[16px]" />
+                )}
+              </button>
+              <div
+                className={`overflow-hidden transition-[width] duration-200 ease-out ${
+                  volumeOpen ? "w-[80px]" : "w-0"
+                }`}
+              >
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={muted ? 0 : volume}
+                  onChange={onVolume}
+                  aria-label="Volume"
+                  className="h-[16px] w-[76px] cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-[12px] [&::-moz-range-thumb]:w-[12px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-moz-range-track]:h-[3px] [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-white/30 [&::-webkit-slider-runnable-track]:h-[3px] [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-white/30 [&::-webkit-slider-thumb]:mt-[-4.5px] [&::-webkit-slider-thumb]:h-[12px] [&::-webkit-slider-thumb]:w-[12px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                  style={{
+                    background: `linear-gradient(to right, white 0%, white ${
+                      (muted ? 0 : volume) * 100
+                    }%, transparent ${(muted ? 0 : volume) * 100}%)`,
+                  }}
+                />
+              </div>
+            </div>
             <button
               type="button"
               onClick={toggleFullscreen}
