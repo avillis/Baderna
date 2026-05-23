@@ -171,16 +171,16 @@ function PlayerRow({
         <div className="order-2 min-w-0 flex-1 text-left xl:text-right">
           <div className="flex items-center justify-start gap-2 xl:justify-end">
             {isLeader ? (
-              <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff1ea] px-2.5 py-1 text-[10px] font-bold tracking-[0em] text-[#ff4100]">
+              <span className="order-3 inline-flex shrink-0 items-center rounded-full bg-[#fff1ea] px-2.5 py-1 text-[10px] font-bold tracking-[0em] text-[#ff4100] xl:order-1">
                 Lider
               </span>
             ) : null}
             {badernaRank ? (
-              <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
+              <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
                 #{String(badernaRank).padStart(2, "0")}
               </span>
             ) : null}
-            <p className="truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111]">
+            <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
               {player.nickname}
             </p>
           </div>
@@ -1008,19 +1008,19 @@ function DraggablePlayerRow({
           </>
         ) : (
           <>
-            <div className="min-w-0 flex-1 text-right">
-              <div className="flex items-center justify-end gap-2">
+            <div className="order-2 min-w-0 flex-1 text-left xl:order-1 xl:text-right">
+              <div className="flex items-center justify-start gap-2 xl:justify-end">
                 {isLeader ? (
-                  <span className="inline-flex shrink-0 items-center rounded-full bg-[#fff1ea] px-2.5 py-1 text-[10px] font-bold tracking-[0em] text-[#ff4100]">
+                  <span className="order-3 inline-flex shrink-0 items-center rounded-full bg-[#fff1ea] px-2.5 py-1 text-[10px] font-bold tracking-[0em] text-[#ff4100] xl:order-1">
                     Lider
                   </span>
                 ) : null}
                 {badernaRank ? (
-                  <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
+                  <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
                     #{String(badernaRank).padStart(2, "0")}
                   </span>
                 ) : null}
-                <p className="truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111]">
+                <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
                   {player.nickname}
                 </p>
               </div>
@@ -1028,7 +1028,9 @@ function DraggablePlayerRow({
                 {player.name}
               </p>
             </div>
-            <PlayerAvatar player={player} />
+            <div className="order-1 xl:order-2">
+              <PlayerAvatar player={player} />
+            </div>
           </>
         )}
         {!isLeader && (
@@ -1042,7 +1044,7 @@ function DraggablePlayerRow({
               onRemove();
             }}
             aria-label="Mandar pro banco"
-            className={`absolute ${isBlue ? "right-[10px]" : "left-[10px]"} top-[10px] flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/80 text-[#b0a8a4] opacity-0 transition-opacity hover:text-[#c53030] group-hover:opacity-100`}
+            className={`absolute ${isBlue ? "right-[10px]" : "right-[10px] xl:left-[10px] xl:right-auto"} top-[10px] flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/80 text-[#b0a8a4] opacity-0 transition-opacity hover:text-[#c53030] group-hover:opacity-100`}
           >
             <X className="h-[12px] w-[12px]" strokeWidth={2.4} />
           </button>
