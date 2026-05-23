@@ -293,6 +293,91 @@ class RiotAPIServices
     }
 
     /**
+     * Versão incremental do match history. Lê o que já temos persistido na
+     * tabela `cached_match_history`, pede só os IDs novos à Riot, baixa e
+     * persiste os faltantes.
+     *
+     * Por que: a Riot tem rate limit baixo na chave dev — 25 detalhes de
+     * partida por perfil estoura. Com persistência, navegar entre vários
+     * perfis fica praticamente gratis (1 request de IDs por perfil).
+     *
+     * Retorna no MESMO formato de getRecentMatches pra ser drop-in.
+     */
+    public function getRecentMatchesIncremental(string $puuid, int $count = 10, ?int $queue = 440): array
+    {
+        // 1) IDs atuais da Riot (cacheado 5min internamente).
+        $matchIds = $this->getMatchIdsByPUUID($puuid, $count, $queue);
+        if (empty($matchIds)) return [];
+
+        // 2) Quais já temos no DB.
+        $existing = \App\Models\CachedMatchHistory::where('puuid', $puuid)
+            ->whereIn('match_id', $matchIds)
+            ->get(['match_id', 'payload'])
+            ->keyBy('match_id');
+
+        // 3) Pra cada ID, se não temos → baixar e persistir. Se temos →
+        //    usar payload do DB.
+        $details = [];
+        foreach ($matchIds as $mid) {
+            if (isset($existing[$mid])) {
+                $details[$mid] = $existing[$mid]->payload;
+                continue;
+            }
+            try {
+                $payload = $this->getMatchDetail($mid);
+            } catch (Exception) {
+                continue;
+            }
+            $info = $payload['info'] ?? [];
+            // played_at em segundos vira datetime
+            $playedAt = isset($info['gameStartTimestamp'])
+                ? \Carbon\Carbon::createFromTimestampMs($info['gameStartTimestamp'])
+                : null;
+            try {
+                \App\Models\CachedMatchHistory::updateOrCreate(
+                    ['puuid' => $puuid, 'match_id' => $mid],
+                    [
+                        'queue' => $info['queueId'] ?? null,
+                        'played_at' => $playedAt,
+                        'payload' => $payload,
+                    ],
+                );
+            } catch (Exception) {
+                // Race condition em insert duplicado é OK — outra request
+                // pode ter inserido. Segue o jogo.
+            }
+            $details[$mid] = $payload;
+        }
+
+        // 4) Monta o array final no mesmo formato do getRecentMatches.
+        $matches = [];
+        foreach ($matchIds as $mid) {
+            $detail = $details[$mid] ?? null;
+            if (!$detail) continue;
+            $info = $detail['info'] ?? [];
+            $participant = collect($info['participants'] ?? [])
+                ->firstWhere('puuid', $puuid);
+            if (!$participant) continue;
+            $matches[] = [
+                'matchId'      => $mid,
+                'gameStart'    => $info['gameStartTimestamp'] ?? null,
+                'gameDuration' => $info['gameDuration']       ?? null,
+                'queueId'      => $info['queueId']            ?? null,
+                'win'          => (bool)($participant['win'] ?? false),
+                'champion'     => $participant['championName'] ?? null,
+                'championId'   => $participant['championId']   ?? null,
+                'kills'        => $participant['kills']        ?? 0,
+                'deaths'       => $participant['deaths']       ?? 0,
+                'assists'      => $participant['assists']      ?? 0,
+                'cs'           => ($participant['totalMinionsKilled'] ?? 0) +
+                                  ($participant['neutralMinionsKilled'] ?? 0),
+                'position'     => $participant['teamPosition'] ?? $participant['individualPosition'] ?? null,
+            ];
+        }
+        return $matches;
+    }
+
+    /**
      * Fetches recent matches with the info that the profile UI needs.
      * Defaults to Flex queue (440) since that's what the panel surfaces.
      */
@@ -351,7 +436,9 @@ class RiotAPIServices
             'account'   => $account,
             'rank'      => $this->getPlayerDataByPUUID($puuid),
             'summoner'  => $this->getSummonerByPUUID($puuid),
-            'matches'   => $this->getRecentMatches($puuid, 25),
+            // Versão incremental: lê do DB partidas já vistas, só pede à
+            // Riot detalhes que ainda não temos.
+            'matches'   => $this->getRecentMatchesIncremental($puuid, 25),
             'masteries' => $this->getChampionMasteryByPUUID($puuid, 5),
         ];
     }

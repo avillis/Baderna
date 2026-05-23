@@ -8,8 +8,10 @@ import { ArrowUp, X } from "lucide-react";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { panelProfile } from "@/features/panel/panel-data";
+import { StyledName } from "@/features/panel/components/styled-name";
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
+import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatCommentDate, useComments } from "@/features/panel/use-comments";
 
 export function PanelCommentsCard({
@@ -23,10 +25,18 @@ export function PanelCommentsCard({
   const { comments, addComment, removeComment } = useComments(memberId);
   const { user } = useAuth();
   const { account } = useAccount();
+  const members = useBadernaMembers();
   const [draft, setDraft] = useState("");
 
   const isOwnProfile =
     user != null && targetUserId != null && user.id === targetUserId;
+
+  // Mapeia user_id → activeNameId pra renderizar o nome do autor do
+  // comentário com o estilo que ele escolheu no perfil dele.
+  const styleByUserId = new Map<number, string | undefined>();
+  for (const m of members) {
+    if (m.userId) styleByUserId.set(m.userId, m.activeNameId);
+  }
 
   function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -64,6 +74,9 @@ export function PanelCommentsCard({
               <div className="space-y-[18px]">
                 {comments.map((comment) => {
                   const profileHref = `/membro/${getMemberSlug({ nickname: comment.author })}`;
+                  const authorStyleId = comment.authorId
+                    ? styleByUserId.get(comment.authorId)
+                    : undefined;
                   return (
                   <article
                     key={comment.id}
@@ -97,7 +110,9 @@ export function PanelCommentsCard({
                           href={profileHref}
                           className="inline-block max-w-full truncate text-[13px] font-bold tracking-[-0.03em] text-[#0f0f0f] transition-opacity hover:opacity-70"
                         >
-                          {comment.author}
+                          <StyledName styleId={authorStyleId}>
+                            {comment.author}
+                          </StyledName>
                         </Link>
                         <p className="-mt-[1px] text-[11px] font-medium tracking-[-0.03em] text-[#adadad]">
                           {formatCommentDate(comment.createdAt)}

@@ -108,7 +108,9 @@ export function PanelMemberWinratesCard({
         {!loading && visibleRows.length === 0 && (
           <div className="my-auto flex flex-col items-center gap-[12px] px-[20px] text-center">
             <p className="text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
-              Você não jogou Flex com nenhum membro da Baderna nessa season.
+              {targetUserId
+                ? "Sem partidas Flex em comum com outros membros nessa season."
+                : "Você não jogou Flex com nenhum membro da Baderna nessa season."}
             </p>
             {debug && (
               <details className="w-full max-w-[420px] rounded-[10px] bg-[#fafafa] p-[10px] text-left text-[11px] text-[#6b7280]">
@@ -180,7 +182,7 @@ export function PanelMemberWinratesCard({
             return slug ? (
               <Link
                 key={row.memberId}
-                href={`/membros/${slug}`}
+                href={`/membro/${slug}`}
                 className="flex items-center gap-[14px] py-[11px] transition-opacity hover:opacity-70"
               >
                 {content}
