@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ACCOUNT_UPDATED_EVENT, useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
+import { useMemberRanks } from "@/features/panel/use-member-ranks";
 import { useRiotProfile } from "@/features/panel/use-riot-profile";
 import type { RankType } from "@/features/panel/rank-utils";
 import {
@@ -129,6 +130,10 @@ export function useBadernaMembers(): BadernaMember[] {
   const { account } = useAccount();
   const [apiMembers, setApiMembers] = useState<ApiMember[]>(() => readCache());
   const riot = useRiotProfile(user ? account.gameNick : null);
+  // Dispara o refresh do /members/ranks (popula cached_rank no DB pros
+  // próximos requests + serve ranks frescos em tempo real pra qualquer
+  // página que use esse hook, não só /membros).
+  const liveRanks = useMemberRanks();
 
   // Patch otimista: quando o usuário logado muda dados próprios (ex: lane),
   // sobrescreve a row dele em memory na hora, sem esperar refetch.
@@ -230,9 +235,16 @@ export function useBadernaMembers(): BadernaMember[] {
       // rank cacheado que veio do /api/members.
       let rankName: string;
       let rankType: RankType;
+      // Prioridade: self (live) > /members/ranks (live, recém-refrescado) >
+      // cached_rank do /api/members (pode tá stale) > "Sem rank".
+      const liveRank = m.userId != null ? liveRanks[m.userId] : null;
       if (isMe) {
         rankName = selfRankName;
         rankType = selfRankType;
+      } else if (liveRank?.tier && liveRank.tier !== "Unranked") {
+        rankName = formatRankLabel(liveRank.tier, liveRank.division);
+        rankType =
+          TIER_TO_RANK_TYPE[liveRank.tier.toUpperCase()] ?? "gold";
       } else if (m.cachedRankTier && m.cachedRankTier !== "Unranked") {
         rankName = formatRankLabel(m.cachedRankTier, m.cachedRankDivision);
         rankType =
@@ -266,5 +278,5 @@ export function useBadernaMembers(): BadernaMember[] {
     // Combina com a lista estática (que hoje está vazia mas existe pra
     // compat). API vem primeiro.
     return [...fromApi, ...badernaMembers];
-  }, [apiMembersPatched, user, riot]);
+  }, [apiMembersPatched, user, riot, liveRanks]);
 }

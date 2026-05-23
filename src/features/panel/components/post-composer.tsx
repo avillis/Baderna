@@ -194,6 +194,39 @@ export function PostComposer({
               >
                 GIF
               </button>
+              {/* Vídeo: placeholder visual, ainda sem handler. */}
+              <button
+                type="button"
+                disabled
+                aria-label="Adicionar vídeo (em breve)"
+                title="Em breve"
+                className="flex h-[32px] w-[32px] items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:cursor-not-allowed"
+              >
+                <svg
+                  className="h-[26px] w-[26px]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x="3"
+                    y="3"
+                    width="18"
+                    height="18"
+                    rx="5"
+                    ry="5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M10 8.5L16 12L10 15.5V8.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
               {uploading && (
                 <span className="text-[12px] text-[#8d8d8d]">Enviando...</span>
               )}
