@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { ArrowUp, X } from "lucide-react";
 
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
+import { getMemberSlug } from "@/features/panel/members-data";
 import { panelProfile } from "@/features/panel/panel-data";
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
@@ -60,32 +62,43 @@ export function PanelCommentsCard({
               </p>
             ) : (
               <div className="space-y-[18px]">
-                {comments.map((comment) => (
+                {comments.map((comment) => {
+                  const profileHref = `/membro/${getMemberSlug({ nickname: comment.author })}`;
+                  return (
                   <article
                     key={comment.id}
                     className="group relative border-b border-[#f3efec] pb-[16px] last:border-b-0 last:pb-0"
                   >
                     <div className="flex items-start gap-[12px]">
-                      {comment.authorAvatar ? (
-                        <div className="relative h-[42px] w-[42px] shrink-0 overflow-hidden rounded-full bg-[#efeae6]">
-                          <Image
-                            src={comment.authorAvatar}
-                            alt={comment.author}
-                            fill
-                            className="object-cover"
-                            sizes="42px"
-                          />
-                        </div>
-                      ) : (
-                        <div className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#efeae6] text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                          {comment.author.charAt(0)}
-                        </div>
-                      )}
+                      <Link
+                        href={profileHref}
+                        aria-label={`Ver perfil de ${comment.author}`}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                      >
+                        {comment.authorAvatar ? (
+                          <div className="relative h-[42px] w-[42px] overflow-hidden rounded-full bg-[#efeae6]">
+                            <Image
+                              src={comment.authorAvatar}
+                              alt={comment.author}
+                              fill
+                              className="object-cover"
+                              sizes="42px"
+                            />
+                          </div>
+                        ) : (
+                          <div className="relative flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#efeae6] text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                            {comment.author.charAt(0)}
+                          </div>
+                        )}
+                      </Link>
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                        <Link
+                          href={profileHref}
+                          className="inline-block max-w-full truncate text-[13px] font-bold tracking-[-0.03em] text-[#0f0f0f] transition-opacity hover:opacity-70"
+                        >
                           {comment.author}
-                        </p>
+                        </Link>
                         <p className="mt-[2px] text-[11px] font-medium tracking-[-0.03em] text-[#adadad]">
                           {formatCommentDate(comment.createdAt)}
                         </p>
@@ -110,7 +123,8 @@ export function PanelCommentsCard({
                       )}
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

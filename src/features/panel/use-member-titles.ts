@@ -14,6 +14,7 @@ export function useMemberUnlockedTitles(
 ): {
   unlocked: string[];
   setUnlocked: (titles: string[]) => void;
+  unlock: (id: string) => void;
 } {
   const { unlocks, unlock: rawUnlock } = useMemberUnlocks();
 
@@ -32,5 +33,15 @@ export function useMemberUnlockedTitles(
     [rawUnlock, unlocks.title],
   );
 
-  return { unlocked, setUnlocked };
+  // Chamada SEM guard — usada pela loja, onde precisamos que o backend
+  // SEMPRE responda (mesmo em duplicada) pra devolver o saldo otimista
+  // debitado durante o spin. Bypass do guard de setUnlocked.
+  const unlock = useCallback(
+    (id: string) => {
+      void rawUnlock("title", id);
+    },
+    [rawUnlock],
+  );
+
+  return { unlocked, setUnlocked, unlock };
 }

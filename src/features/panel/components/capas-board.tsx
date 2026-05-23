@@ -173,7 +173,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   const { getCoinsFor, setLocalBalance } = useMemberCoins();
   const { unlock: unlockBanner, isUnlocked: isBannerUnlocked, unlocked: unlockedBanners } =
     useUnlockedBanners(LOGGED_USER_ID);
-  const { unlocked: unlockedTitles, setUnlocked: setUnlockedTitles } =
+  const { unlocked: unlockedTitles, setUnlocked: setUnlockedTitles, unlock: unlockTitle } =
     useMemberUnlockedTitles(LOGGED_USER_ID, ["aprendiz"]);
   const { entries: historyEntries, log: logPurchase } =
     useMemberPurchaseHistory(LOGGED_USER_ID);
@@ -434,10 +434,10 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
         totalCount: titlePool.length,
         getRarity: (id: string): BannerRarity =>
           (titleById[id]?.rarity ?? "comum") as BannerRarity,
-        unlock: (id: string) => {
-          if (!unlockedTitles.includes(id))
-            setUnlockedTitles([...unlockedTitles, id]);
-        },
+        // SEM guard — backend é a fonte de verdade: cobra se for novo,
+        // devolve saldo cheio se for duplicada (necessário pra reverter o
+        // débito otimista feito antes do spin animar).
+        unlock: (id: string) => unlockTitle(id),
       };
     }
     // nomes
@@ -461,6 +461,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     unlockBanner,
     unlockedTitles,
     setUnlockedTitles,
+    unlockTitle,
     titlePool,
     titlePoolIds,
     titleById,
