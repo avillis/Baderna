@@ -21,6 +21,8 @@ type PanelBannerProps = {
   alt: string;
   splashGroups?: SplashGroup[];
   defaultBannerFileName?: string;
+  /** Posição vertical (0-100) vinda do servidor — fallback se não houver localStorage. */
+  defaultBannerFocusY?: number;
   isOwnProfile?: boolean;
   /** user_id do dono do perfil — server passa, client compara com useAuth. */
   targetUserId?: number | null;
@@ -31,6 +33,7 @@ export function PanelBanner({
   alt,
   splashGroups = [],
   defaultBannerFileName = "",
+  defaultBannerFocusY,
   isOwnProfile: isOwnProfileProp,
   targetUserId,
 }: PanelBannerProps) {
@@ -41,7 +44,9 @@ export function PanelBanner({
   const bannerRef = useRef<HTMLDivElement>(null);
   const imageLayerRef = useRef<HTMLDivElement>(null);
   const [activeSrc, setActiveSrc] = useState(src);
-  const [activeFocusY, setActiveFocusY] = useState(DEFAULT_BANNER_FOCUS_Y);
+  const [activeFocusY, setActiveFocusY] = useState(
+    clampBannerFocusY(defaultBannerFocusY ?? DEFAULT_BANNER_FOCUS_Y),
+  );
 
   const getStoredFocusY = (fileName: string) => {
     const raw = window.localStorage.getItem(PANEL_BANNER_POSITION_STORAGE_KEY);
@@ -105,7 +110,7 @@ export function PanelBanner({
     // listen to localStorage (that's the logged-in user's own preference).
     if (!isOwnProfile) {
       setActiveSrc(src);
-      setActiveFocusY(DEFAULT_BANNER_FOCUS_Y);
+      setActiveFocusY(clampBannerFocusY(defaultBannerFocusY ?? DEFAULT_BANNER_FOCUS_Y));
       return;
     }
 
@@ -114,12 +119,18 @@ export function PanelBanner({
 
     if (isValid && storedFileName) {
       setActiveSrc(getSplashImageSrc(storedFileName));
-      setActiveFocusY(getStoredFocusY(storedFileName));
+      // Servidor é a fonte de verdade quando disponível (sobrevive a
+      // logout/outro device). Cai pro localStorage como fallback.
+      setActiveFocusY(
+        typeof defaultBannerFocusY === "number"
+          ? clampBannerFocusY(defaultBannerFocusY)
+          : getStoredFocusY(storedFileName),
+      );
     } else {
       // Stored value is from the old naming scheme — clear it so the default banner takes over.
       if (storedFileName) window.localStorage.removeItem(PANEL_BANNER_STORAGE_KEY);
       setActiveSrc(src);
-      setActiveFocusY(DEFAULT_BANNER_FOCUS_Y);
+      setActiveFocusY(clampBannerFocusY(defaultBannerFocusY ?? DEFAULT_BANNER_FOCUS_Y));
     }
 
     const handleBannerChange = (event: Event) => {
@@ -146,7 +157,7 @@ export function PanelBanner({
     return () => {
       window.removeEventListener(PANEL_BANNER_CHANGE_EVENT, handleBannerChange);
     };
-  }, [src, isOwnProfile]);
+  }, [src, isOwnProfile, defaultBannerFocusY]);
 
   return (
     <div

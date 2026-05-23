@@ -67,6 +67,7 @@ type ApiMember = {
   tagLine: string | null;
   avatarSrc: string | null;
   bannerFileName: string | null;
+  bannerFocusY: number | null;
   isAdmin: boolean;
   bio: string | null;
   teamName: string | null;

@@ -10,6 +10,7 @@ export function PanelShell({
   children,
   splashGroups = [],
   defaultBannerFileName = "",
+  defaultBannerFocusY,
   bannerSrc,
   showBanner = true,
   isOwnProfile,
@@ -19,6 +20,7 @@ export function PanelShell({
   children: ReactNode;
   splashGroups?: SplashGroup[];
   defaultBannerFileName?: string;
+  defaultBannerFocusY?: number;
   bannerSrc?: string;
   showBanner?: boolean;
   /** Sobrescreve a comparação automática. Se omitido, deriva de targetUserId. */
@@ -40,6 +42,7 @@ export function PanelShell({
                   alt="Banner do perfil"
                   splashGroups={splashGroups}
                   defaultBannerFileName={defaultBannerFileName}
+                  defaultBannerFocusY={defaultBannerFocusY}
                   isOwnProfile={isOwnProfile}
                   targetUserId={targetUserId}
                 />

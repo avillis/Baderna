@@ -20,6 +20,7 @@ export type Account = {
   teamName: string;
   avatarSrc: string;
   bannerFileName: string;
+  bannerFocusY?: number;
   email: string;
   activeNameId?: string;
   activeTitleSlugs?: string[];
@@ -40,6 +41,7 @@ function buildDefaults(user: AuthUser | null): Account {
     teamName: nickname ? `Time ${nickname}` : "",
     avatarSrc: "",
     bannerFileName: "",
+    bannerFocusY: 16,
     email: user?.email ?? "",
     activeNameId: "preto",
     activeTitleSlugs: ["aprendiz"],
@@ -112,6 +114,7 @@ const FIELD_TO_API: Partial<Record<keyof Account, string>> = {
   teamName: "team_name",
   avatarSrc: "avatar_src",
   bannerFileName: "banner_filename",
+  bannerFocusY: "banner_focus_y",
   email: "email",
   activeNameId: "active_name_id",
   activeTitleSlugs: "active_title_slugs",

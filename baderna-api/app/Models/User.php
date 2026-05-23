@@ -29,6 +29,7 @@ class User extends Authenticatable
         'team_name',
         'avatar_src',
         'banner_filename',
+        'banner_focus_y',
         'active_name_id',
         'active_title_slugs',
         'cached_rank_tier',
@@ -71,6 +72,7 @@ class User extends Authenticatable
             'active_title_slugs' => 'array',
             'cached_rank_at' => 'datetime',
             'cached_rank_lp' => 'integer',
+            'banner_focus_y' => 'integer',
         ];
     }
 

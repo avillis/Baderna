@@ -40,6 +40,7 @@ type ApiMember = {
   tagLine: string | null;
   avatarSrc: string | null;
   bannerFileName: string | null;
+  bannerFocusY: number | null;
   isAdmin: boolean;
   bio: string | null;
   teamName: string | null;
@@ -133,6 +134,8 @@ export default async function MembroPage({ params }: MembroPageProps) {
     rankFrameSrc: `/images/ranks/${member.rankType}.png`,
     bio: member.bio,
     bannerFileName: apiMember?.bannerFileName || DEFAULT_BANNER,
+    bannerFocusY:
+      typeof apiMember?.bannerFocusY === "number" ? apiMember.bannerFocusY : 16,
     bannerSrc: getSplashImageSrc(apiMember?.bannerFileName || DEFAULT_BANNER),
   };
 
@@ -158,6 +161,7 @@ export default async function MembroPage({ params }: MembroPageProps) {
     <PanelShell
       splashGroups={splashGroups}
       defaultBannerFileName={profile.bannerFileName}
+      defaultBannerFocusY={profile.bannerFocusY}
       bannerSrc={profile.bannerSrc}
       targetUserId={targetUserId}
     >

@@ -52,6 +52,7 @@ class MembersController extends Controller
                 'tagLine'         => $u->tagLine,
                 'avatarSrc'       => $u->avatar_src,
                 'bannerFileName'  => $u->banner_filename,
+                'bannerFocusY'    => (int)($u->banner_focus_y ?? 16),
                 'isAdmin'         => (bool)$u->is_admin,
                 'bio'             => $u->bio,
                 'teamName'        => $u->team_name,

@@ -188,6 +188,8 @@ export function PanelBannerPicker({
         },
       }),
     );
+    // Persiste no backend pra posição sobreviver a logout/outro device.
+    updateField("bannerFocusY", clampedFocusY);
   };
 
   const modal =

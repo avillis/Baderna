@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+import { getMemberSlug } from "@/features/panel/members-data";
 
 /**
  * Estilo de nome ativo do membro alvo.
@@ -22,13 +23,17 @@ export function useMemberActiveName(
   // Nick "fresco": preferimos gameNick do account (já normalizado), mas se
   // ainda não carregou caímos no summoner_name do JWT/useAuth. Sem essa
   // fallback, clicks rápidos depois do login viravam no-op (isSelf=false).
-  const accountNick = account.gameNick.split("#")[0]?.toLowerCase() ?? "";
-  const authNick = user?.summoner_name?.toLowerCase() ?? "";
+  const accountNick = account.gameNick.split("#")[0] ?? "";
+  const authNick = user?.summoner_name ?? "";
   const selfNick = accountNick || authNick;
+  // memberId vem como slug (lord-crisp), então comparamos contra o slug
+  // do próprio nick — não contra o nick raw (lord crisp), que falharia
+  // pra qualquer user com espaço/acento.
+  const selfSlug = selfNick ? getMemberSlug({ nickname: selfNick }) : "";
   const selfUserId = user ? String(user.id) : "";
   const isSelf =
     memberId === selfUserId ||
-    (selfNick.length > 0 && memberId.toLowerCase() === selfNick);
+    (selfSlug.length > 0 && memberId.toLowerCase() === selfSlug);
 
   // Pra outros membros, busca a row na lista global.
   const member = isSelf

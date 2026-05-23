@@ -4,6 +4,7 @@ import { useCallback } from "react";
 
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
+import { getMemberSlug } from "@/features/panel/members-data";
 
 /**
  * Títulos equipados pelo usuário logado.
@@ -21,13 +22,16 @@ export function useMemberActiveTitles(
 
   // Mesma lógica do useMemberActiveName: usa gameNick do account, com
   // fallback no summoner_name do JWT quando o account ainda não carregou.
-  const accountNick = account.gameNick.split("#")[0]?.toLowerCase() ?? "";
-  const authNick = user?.summoner_name?.toLowerCase() ?? "";
+  const accountNick = account.gameNick.split("#")[0] ?? "";
+  const authNick = user?.summoner_name ?? "";
   const selfNick = accountNick || authNick;
+  // memberId é slug (lord-crisp), então comparamos contra o slug do
+  // próprio nick — comparar com o raw quebra pra nicks com espaço/acento.
+  const selfSlug = selfNick ? getMemberSlug({ nickname: selfNick }) : "";
   const selfUserId = user ? String(user.id) : "";
   const isSelf =
     memberId === selfUserId ||
-    (selfNick.length > 0 && memberId.toLowerCase() === selfNick);
+    (selfSlug.length > 0 && memberId.toLowerCase() === selfSlug);
 
   const active = isSelf
     ? account.activeTitleSlugs ?? fallback
