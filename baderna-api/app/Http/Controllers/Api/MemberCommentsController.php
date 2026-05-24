@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\NewInteractionNotification;
 use Illuminate\Http\Request;
 
 class MemberCommentsController extends Controller
@@ -64,6 +65,11 @@ class MemberCommentsController extends Controller
 
         $comment->load('author:id,name,summoner_name,display_name,avatar_src');
         $author = $comment->author;
+
+        // Notificar dono do perfil e outros envolvidos.
+        if ($user->id !== $request->user()->id) {
+            $user->notify(new NewInteractionNotification($comment, 'profile', $slug));
+        }
 
         return response()->json([
             'id'           => 'c-' . $comment->id,
