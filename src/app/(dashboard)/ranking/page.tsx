@@ -49,6 +49,14 @@ const PODIUM: Record<number, { ring: string; glow: string }> = {
   3: { ring: "linear-gradient(135deg, #f0c08a, #c98a4f)", glow: "0 0 12px 2px rgba(180,120,60,0.22)" },
 };
 
+// Cor do número do top 3, no mesmo esquema do banner de rank da Baderna:
+// 1º Platina, 2º Ouro, 3º Prata.
+const POSITION_COLOR: Record<number, string> = {
+  1: TIER_COLOR.PLATINUM,
+  2: TIER_COLOR.GOLD,
+  3: TIER_COLOR.SILVER,
+};
+
 function eloScore(rank: MemberRank | undefined): number {
   const tier = rank?.tier?.toUpperCase();
   if (!tier || tier === "UNRANKED") return -1;
@@ -86,7 +94,17 @@ export default function RankingPage() {
         </div>
 
         {/* Toggle Flex / Inhouse */}
-        <div className="mb-5 inline-flex rounded-full bg-[#ededed] p-1">
+        <div className="relative mb-5 flex h-[40px] w-full items-center rounded-[25px] bg-[#ededed] p-[4px]">
+          {/* Sliding pill */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-[4px] bottom-[4px] w-[calc((100%-8px)/2)] rounded-[25px] bg-white"
+            style={{
+              transform: `translateX(${mode === "inhouse" ? "100%" : "0%"})`,
+              transition:
+                "transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+            }}
+          />
           {([
             ["flex", "Flex"],
             ["inhouse", "Inhouse"],
@@ -95,10 +113,10 @@ export default function RankingPage() {
               key={key}
               type="button"
               onClick={() => setMode(key)}
-              className={`rounded-full px-5 py-2 text-[13px] font-bold tracking-[-0.02em] transition-colors ${
+              className={`relative z-[1] flex h-full flex-1 items-center justify-center rounded-[25px] text-[13px] font-semibold transition-colors duration-300 ${
                 mode === key
-                  ? "bg-white text-[#0f0f0f] shadow-[0px_2px_8px_rgba(0,0,0,0.08)]"
-                  : "text-[#8d8d8d] hover:text-[#0f0f0f]"
+                  ? "text-[#0f0f0f]"
+                  : "text-black/40 hover:text-black/70"
               }`}
             >
               {label}
@@ -124,6 +142,7 @@ export default function RankingPage() {
           {sorted.map(({ member, rank, score }, index) => {
             const position = index + 1;
             const podium = score >= 0 ? PODIUM[position] : undefined;
+            const posColor = podium ? POSITION_COLOR[position] : undefined;
             const tier = rank?.tier?.toUpperCase();
             const tierColor = (tier && TIER_COLOR[tier]) || "#b0a8a4";
             const hasRank = score >= 0;
@@ -136,9 +155,8 @@ export default function RankingPage() {
                 className="flex items-center gap-4 border-b border-[#f3ebe8] px-5 py-4 transition-colors last:border-0 hover:bg-[#fdfcfa]"
               >
                 <span
-                  className={`w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em] ${
-                    podium ? "text-[#0f0f0f]" : "text-[#b0a8a4]"
-                  }`}
+                  className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em]"
+                  style={{ color: posColor ?? "#b0a8a4" }}
                 >
                   {position}
                 </span>
