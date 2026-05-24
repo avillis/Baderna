@@ -27,7 +27,15 @@ const RANK_EFFECTS: Record<number, RankEffect> = {
   },
 };
 
-const LANES = ["Top", "Jungle", "Mid", "ADC", "Support"] as const;
+// `value` casa com o que a API manda em preferredRoles (inglês); `label` é o
+// texto em PT mostrado no chip.
+const LANES = [
+  { value: "Top", label: "Top" },
+  { value: "Jungle", label: "Jungle" },
+  { value: "Mid", label: "Meio" },
+  { value: "ADC", label: "Atirador" },
+  { value: "Support", label: "Suporte" },
+] as const;
 
 function getRankEffect(rank: number): RankEffect | null {
   return RANK_EFFECTS[rank] ?? null;
@@ -70,7 +78,7 @@ function normalize(value: string): string {
 export default function MembrosPage() {
   const allMembers = useBadernaMembers();
   const [query, setQuery] = useState("");
-  const [lane, setLane] = useState<(typeof LANES)[number] | null>(null);
+  const [lane, setLane] = useState<(typeof LANES)[number]["value"] | null>(null);
 
   // Guarda o rank original (posição na lista cheia) antes de filtrar, pra o
   // número "#N" continuar fazendo sentido mesmo com busca/filtro ativos.
@@ -109,19 +117,19 @@ export default function MembrosPage() {
 
           <div className="flex flex-wrap gap-2">
             {LANES.map((l) => {
-              const active = lane === l;
+              const active = lane === l.value;
               return (
                 <button
-                  key={l}
+                  key={l.value}
                   type="button"
-                  onClick={() => setLane(active ? null : l)}
+                  onClick={() => setLane(active ? null : l.value)}
                   className={`rounded-full px-3.5 py-2 text-[12px] font-bold tracking-[-0.01em] transition-colors ${
                     active
                       ? "bg-[#ff4100] text-white"
                       : "bg-white text-[#6f6f6f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] hover:bg-[#fff4f4]"
                   }`}
                 >
-                  {l}
+                  {l.label}
                 </button>
               );
             })}
