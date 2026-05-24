@@ -57,6 +57,10 @@ export async function GET(req: Request) {
     ? `${origin}/images/rank-frames/${rankType}.png`
     : "";
 
+  // O splash em tamanho "full" é grande demais e o Satori não rasteriza —
+  // usamos a versão "thumb" (bem menor), que renderiza de boa.
+  const bannerParam = (sp.get("banner") || "").replace("size=full", "size=thumb");
+
   const [fontReg, fontBold, avatar, banner, frame, logo] = await Promise.all([
     fetch(new URL("./Inter-Regular.ttf", import.meta.url)).then((r) =>
       r.arrayBuffer(),
@@ -65,7 +69,7 @@ export async function GET(req: Request) {
       r.arrayBuffer(),
     ),
     resolveImage(sp.get("avatar") || ""),
-    resolveImage(sp.get("banner") || ""),
+    resolveImage(bannerParam),
     resolveImage(frameUrl),
     resolveImage(`${origin}/logo.png`),
   ]);
