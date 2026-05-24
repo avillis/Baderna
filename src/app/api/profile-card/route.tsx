@@ -31,7 +31,9 @@ async function resolveImage(u: string): Promise<string> {
   if (!u) return "";
   try {
     const r = await fetch(u);
-    if (r.ok && (r.headers.get("content-type") || "").startsWith("image")) {
+    const ct = r.headers.get("content-type") || "";
+    // Pula webp — o Satori pode falhar e derrubar o cartão inteiro (500).
+    if (r.ok && ct.startsWith("image") && !ct.includes("webp")) {
       return r.url;
     }
   } catch {
@@ -286,6 +288,9 @@ export async function GET(req: Request) {
         { name: "Inter", data: fontReg, weight: 400, style: "normal" },
         { name: "Inter", data: fontBold, weight: 700, style: "normal" },
       ],
+      // O @vercel/og cacheia 1 ano por padrao — desliga pro cartao sempre
+      // refletir os dados atuais (e nao congelar versoes antigas).
+      headers: { "Cache-Control": "no-store, max-age=0" },
     },
   );
 }
