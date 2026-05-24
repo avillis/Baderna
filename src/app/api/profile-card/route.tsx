@@ -57,8 +57,11 @@ export async function GET(req: Request) {
     ? `${origin}/images/rank-frames/${rankType}.png`
     : "";
 
-  const [font, avatar, banner, frame, logo] = await Promise.all([
-    fetch(new URL("./Geist-Regular.ttf", import.meta.url)).then((r) =>
+  const [fontReg, fontBold, avatar, banner, frame, logo] = await Promise.all([
+    fetch(new URL("./Inter-Regular.ttf", import.meta.url)).then((r) =>
+      r.arrayBuffer(),
+    ),
+    fetch(new URL("./Inter-Bold.ttf", import.meta.url)).then((r) =>
       r.arrayBuffer(),
     ),
     resolveImage(sp.get("avatar") || ""),
@@ -83,7 +86,7 @@ export async function GET(req: Request) {
           justifyContent: "center",
           background: "#f7f7f7",
           padding: 56,
-          fontFamily: "Geist",
+          fontFamily: "Inter",
         }}
       >
         <div
@@ -295,8 +298,8 @@ export async function GET(req: Request) {
       width: W,
       height: H,
       fonts: [
-        { name: "Geist", data: font, weight: 400, style: "normal" },
-        { name: "Geist", data: font, weight: 700, style: "normal" },
+        { name: "Inter", data: fontReg, weight: 400, style: "normal" },
+        { name: "Inter", data: fontBold, weight: 700, style: "normal" },
       ],
     },
   );
