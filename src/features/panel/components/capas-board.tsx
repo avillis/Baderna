@@ -845,7 +845,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                         <RaritySmokeOverlay rarity={itemRarity} />
                       )}
                       <div className="absolute inset-0 z-10 flex items-center justify-center px-[16px] text-center">
-                        <span className="text-[18px] font-medium leading-[1.15] tracking-[-0.02em] text-white">
+                        <span className="text-[13px] font-medium leading-[1.15] tracking-[-0.02em] text-white sm:text-[18px]">
                           {titleById[id]?.label ?? id}
                         </span>
                       </div>
