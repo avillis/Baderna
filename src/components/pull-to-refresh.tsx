@@ -21,6 +21,12 @@ export function PullToRefresh() {
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
       if (refreshing) return;
+      // Algum modal/lightbox abriu e travou o scroll do body — não dispara
+      // o pull-to-refresh por cima dele (senão arrastar a imagem recarrega).
+      if (document.body.style.overflow === "hidden") {
+        startY.current = null;
+        return;
+      }
       if (window.scrollY > 0) {
         startY.current = null;
         return;
