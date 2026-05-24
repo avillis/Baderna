@@ -364,7 +364,7 @@ export function PanelProfileSummary({
             className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
-            {sharing ? "Gerando…" : "Compartilhar"}
+            {sharing ? "Gerando…" : "Compartilhar perfil"}
           </button>
         </div>
       </div>
