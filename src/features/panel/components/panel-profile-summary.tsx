@@ -85,10 +85,10 @@ export function PanelProfileSummary({
   memberId,
   onCompare,
   badernaRank,
-  bannerSrc,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const { account, updateField } = useAccount();
   const { user } = useAuth();
@@ -152,8 +152,8 @@ export function PanelProfileSummary({
     setActiveNameId(next);
   }
 
-  function shareCard() {
-    if (typeof window === "undefined") return;
+  async function shareCard() {
+    if (typeof window === "undefined" || sharing) return;
     const rankObj = riot.status === "ready" ? riot.profile.rank : null;
     const elo =
       rankObj && rankObj.tier && rankObj.tier !== "Unranked"
@@ -176,21 +176,50 @@ export function PanelProfileSummary({
       elo,
       pos: badernaRank ? String(badernaRank) : "",
       avatar: abs(liveAvatarSrc),
-      banner: bannerSrc ? abs(bannerSrc) : "",
       rankType: isUnranked ? "" : liveRankType,
       color: NAME_BY_ID[activeNameId]?.color ?? "#0f0f0f",
       wr,
     });
     const cardUrl = `${window.location.origin}/api/profile-card?${params.toString()}`;
-    const nav = navigator as Navigator & {
-      share?: (data: { title?: string; url?: string }) => Promise<void>;
-    };
-    if (nav.share) {
-      nav
-        .share({ title: `Perfil de ${liveDisplayName} · Baderna`, url: cardUrl })
-        .catch(() => {});
-    } else {
+    const fileName = `baderna-${(liveDisplayName || "perfil")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")}.png`;
+
+    setSharing(true);
+    try {
+      const res = await fetch(cardUrl);
+      if (!res.ok) throw new Error("falha ao gerar o cartão");
+      const blob = await res.blob();
+      const file = new File([blob], fileName, { type: "image/png" });
+      const nav = navigator as Navigator & {
+        canShare?: (data: { files?: File[] }) => boolean;
+      };
+      if (nav.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `Perfil de ${liveDisplayName} · Baderna`,
+          });
+        } catch {
+          /* usuário cancelou o compartilhamento */
+        }
+      } else {
+        // Sem Web Share de arquivo: baixa a imagem.
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch {
+      // Último recurso: abre a imagem numa aba.
       window.open(cardUrl, "_blank");
+    } finally {
+      setSharing(false);
     }
   }
 
@@ -331,10 +360,11 @@ export function PanelProfileSummary({
           <button
             type="button"
             onClick={shareCard}
-            className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
+            disabled={sharing}
+            className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
-            Compartilhar
+            {sharing ? "Gerando…" : "Compartilhar"}
           </button>
         </div>
       </div>
