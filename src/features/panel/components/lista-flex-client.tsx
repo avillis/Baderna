@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
@@ -235,6 +236,10 @@ function MemberFlexCard({
   const state = useRiotProfile(activated ? riotId || null : null);
   const profile = state.status === "ready" ? state.profile : null;
 
+  // No mobile o card abre compacto (só nome/rank) e expande os cards de role
+  // ao tocar. Em sm+ os roles ficam sempre visíveis.
+  const [expanded, setExpanded] = useState(false);
+
   const stats = profile
     ? computeStats(profile.matches)
     : ({
@@ -261,7 +266,11 @@ function MemberFlexCard({
     <article className="flex flex-col gap-4 rounded-[var(--panel-radius-card)] bg-white px-6 py-8 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] lg:flex-row lg:items-center lg:py-5">
       {/* Mobile: medalha em cima, nome/nick/elo centralizados abaixo.
           lg+: lado a lado, alinhado à esquerda. */}
-      <div className="flex w-full shrink-0 flex-col items-center gap-0 text-center lg:w-[220px] lg:flex-row lg:items-center lg:gap-4 lg:text-left">
+      <div
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        className="flex w-full shrink-0 cursor-pointer flex-col items-center gap-0 text-center sm:cursor-default lg:w-[220px] lg:flex-row lg:items-center lg:gap-4 lg:text-left"
+      >
         <RankMedal
           rankType={rank.type}
           unranked={!profile || rank.label === "Sem classificação"}
@@ -277,9 +286,19 @@ function MemberFlexCard({
             {rank.label}
           </p>
         </div>
+        <ChevronDown
+          className={`h-[18px] w-[18px] shrink-0 text-[#b0a8a4] transition-transform sm:hidden ${
+            expanded ? "rotate-180" : ""
+          }`}
+          strokeWidth={2.2}
+        />
       </div>
 
-      <div className="grid flex-1 gap-3 sm:grid-cols-5">
+      <div
+        className={`flex-1 gap-3 sm:grid sm:grid-cols-5 ${
+          expanded ? "grid" : "hidden"
+        }`}
+      >
         {ROLES.map((role) => (
           <RoleCard key={role} role={role} stats={stats[role]} />
         ))}
