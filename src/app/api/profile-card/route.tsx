@@ -322,9 +322,13 @@ export async function GET(req: Request) {
         { name: "Inter", data: fontReg, weight: 400, style: "normal" },
         { name: "Inter", data: fontBold, weight: 700, style: "normal" },
       ],
-      // O @vercel/og cacheia 1 ano por padrao — desliga pro cartao sempre
-      // refletir os dados atuais (e nao congelar versoes antigas).
-      headers: { "Cache-Control": "no-store, max-age=0" },
+      // A URL ja carrega todos os dados (nome, elo, wr, etc.), entao mesma URL
+      // = mesma imagem: cacheamos no CDN (rapido no compartilhar) e revalidamos
+      // em background. Se algum dado muda, a URL muda e gera de novo.
+      headers: {
+        "Cache-Control":
+          "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800",
+      },
     },
   );
 }
