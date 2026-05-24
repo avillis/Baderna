@@ -42,6 +42,16 @@ async function resolveImage(u: string): Promise<string> {
   return "";
 }
 
+function toBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const sp = url.searchParams;
@@ -58,7 +68,10 @@ export async function GET(req: Request) {
     ? `${origin}/images/rank-frames/${rankType}.png`
     : "";
 
-  const [fontReg, fontBold, avatar, frame, logo] = await Promise.all([
+  // A capa "full" é grande demais e o Satori não rasteriza — usa "thumb".
+  const bannerParam = (sp.get("banner") || "").replace("size=full", "size=thumb");
+
+  const [fontReg, fontBold, avatar, banner, frame, logoBuf] = await Promise.all([
     fetch(new URL("./Inter-Regular.ttf", import.meta.url)).then((r) =>
       r.arrayBuffer(),
     ),
@@ -66,9 +79,13 @@ export async function GET(req: Request) {
       r.arrayBuffer(),
     ),
     resolveImage(sp.get("avatar") || ""),
+    resolveImage(bannerParam),
     resolveImage(frameUrl),
-    resolveImage(`${origin}/logo.png`),
+    fetch(new URL("./logo.png", import.meta.url))
+      .then((r) => r.arrayBuffer())
+      .catch(() => null),
   ]);
+  const logo = logoBuf ? `data:image/png;base64,${toBase64(logoBuf)}` : "";
 
   const stats: { label: string; value: string }[] = [];
   if (pos) stats.push({ label: "POSIÇÃO", value: `#${pos}` });
@@ -101,7 +118,28 @@ export async function GET(req: Request) {
             overflow: "hidden",
           }}
         >
-          {/* Logo (branca) no canto superior direito, sobre o header laranja */}
+          {/* Header: capa do perfil se renderizar, senão laranja sólido */}
+          <div
+            style={{
+              display: "flex",
+              width: "100%",
+              height: 360,
+              background: "#ff4100",
+            }}
+          >
+            {banner ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={banner}
+                alt=""
+                width={968}
+                height={360}
+                style={{ width: 968, height: 360, objectFit: "cover" }}
+              />
+            ) : null}
+          </div>
+
+          {/* Logo (branca) no canto superior esquerdo */}
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -112,23 +150,13 @@ export async function GET(req: Request) {
               style={{
                 position: "absolute",
                 top: 36,
-                right: 40,
+                left: 40,
                 width: 84,
                 height: 84,
                 objectFit: "contain",
               }}
             />
           ) : null}
-
-          {/* Header laranja */}
-          <div
-            style={{
-              display: "flex",
-              width: "100%",
-              height: 360,
-              background: "#ff4100",
-            }}
-          />
 
           {/* Conteúdo */}
           <div

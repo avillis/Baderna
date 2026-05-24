@@ -85,6 +85,7 @@ export function PanelProfileSummary({
   memberId,
   onCompare,
   badernaRank,
+  bannerSrc,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
@@ -176,6 +177,7 @@ export function PanelProfileSummary({
       elo,
       pos: badernaRank ? String(badernaRank) : "",
       avatar: abs(liveAvatarSrc),
+      banner: bannerSrc ? abs(bannerSrc) : "",
       rankType: isUnranked ? "" : liveRankType,
       color: NAME_BY_ID[activeNameId]?.color ?? "#0f0f0f",
       wr,
@@ -363,8 +365,17 @@ export function PanelProfileSummary({
             disabled={sharing}
             className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
-            {sharing ? "Gerando…" : "Compartilhar perfil"}
+            {sharing ? (
+              <svg
+                className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
+                viewBox="25 25 50 50"
+              >
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+            ) : (
+              <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
+            )}
+            {sharing ? "Carregando…" : "Compartilhar"}
           </button>
         </div>
       </div>
