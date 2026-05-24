@@ -69,7 +69,7 @@ export function PanelCommentsCard({
       </p>
 
       <div className="mt-[28px] flex flex-1 flex-col border-t border-[#efebe8] pt-[18px]">
-        <div className="relative h-auto overflow-hidden sm:h-[372px]">
+        <div className="relative h-[400px] overflow-hidden sm:h-[372px]">
           <div className="no-scrollbar h-full overflow-y-auto pr-[8px] pb-[24px] overscroll-contain sm:pb-[64px]">
             {comments.length === 0 ? (
               <p className="flex h-full items-center justify-center text-[13px] font-medium tracking-[-0.02em] text-[#b0a8a4]">

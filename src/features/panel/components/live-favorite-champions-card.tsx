@@ -65,7 +65,7 @@ export function LiveFavoriteChampionsCard({
   const state = useRiotProfile(riotId || account.gameNick);
 
   return (
-    <section className="flex min-h-[471px] flex-col overflow-hidden rounded-[var(--panel-radius-card)] bg-white px-[28px] py-[34px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <section className="flex min-h-[471px] flex-col rounded-[var(--panel-radius-card)] bg-white px-[28px] py-[34px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] max-2xl:overflow-hidden">
       <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
         Campeões Favoritos
       </h2>
