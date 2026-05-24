@@ -25,14 +25,15 @@ const RANK_TYPES = new Set([
   "challenger",
 ]);
 
-// Confirma que a URL responde uma imagem (sem ler o corpo, pra não pesar) —
-// se falhar, devolve "" e o cartão usa o fallback em vez de quebrar.
-async function safeImage(u: string): Promise<string> {
+// Resolve a URL final da imagem (seguindo redirects) — nossas rotas de
+// splash/tile fazem 302 pro CDN, e o Satori tropeça no proxy. Devolvendo a
+// URL final (ddragon/hostinger) o Satori busca direto. "" se falhar → fallback.
+async function resolveImage(u: string): Promise<string> {
   if (!u) return "";
   try {
     const r = await fetch(u);
     if (r.ok && (r.headers.get("content-type") || "").startsWith("image")) {
-      return u;
+      return r.url;
     }
   } catch {
     /* ignora */
@@ -60,10 +61,10 @@ export async function GET(req: Request) {
     fetch(new URL("./Geist-Regular.ttf", import.meta.url)).then((r) =>
       r.arrayBuffer(),
     ),
-    safeImage(sp.get("avatar") || ""),
-    safeImage(sp.get("banner") || ""),
-    safeImage(frameUrl),
-    safeImage(`${origin}/logo.png`),
+    resolveImage(sp.get("avatar") || ""),
+    resolveImage(sp.get("banner") || ""),
+    resolveImage(frameUrl),
+    resolveImage(`${origin}/logo.png`),
   ]);
 
   const stats: { label: string; value: string }[] = [];
@@ -97,20 +98,20 @@ export async function GET(req: Request) {
             overflow: "hidden",
           }}
         >
-          {/* Logo no canto superior esquerdo */}
+          {/* Logo (branca) no canto superior direito, sobre o banner */}
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={logo}
               alt=""
-              width={92}
-              height={92}
+              width={84}
+              height={84}
               style={{
                 position: "absolute",
                 top: 36,
-                left: 40,
-                width: 92,
-                height: 92,
+                right: 40,
+                width: 84,
+                height: 84,
                 objectFit: "contain",
               }}
             />
