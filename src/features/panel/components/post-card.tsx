@@ -258,7 +258,7 @@ export function PostCard({
         )}
 
         {/* Linha de ações: like + comentários. Expanded mostra data à direita. */}
-        <div className="mt-[18px] flex flex-wrap items-center gap-x-[16px] gap-y-[10px]">
+        <div className="relative mt-[18px] flex flex-wrap items-center gap-x-[16px] gap-y-[10px]">
           <LikeButton
             liked={post.liked}
             count={post.likesCount}
@@ -377,7 +377,7 @@ function PostReactions() {
   const active = REACTION_EMOJIS.filter((e) => (counts[e] ?? 0) > 0);
 
   return (
-    <div className="relative flex items-center gap-[6px]">
+    <div className="flex items-center gap-[6px]">
       {active.map((emoji) => (
         <button
           key={emoji}
