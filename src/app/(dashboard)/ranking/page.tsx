@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Swords } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { StyledName } from "@/features/panel/components/styled-name";
@@ -61,6 +62,7 @@ function eloScore(rank: MemberRank | undefined): number {
 export default function RankingPage() {
   const members = useBadernaMembers();
   const ranks = useMemberRanks();
+  const [mode, setMode] = useState<"flex" | "inhouse">("flex");
 
   const sorted = useMemo(() => {
     return members
@@ -83,6 +85,41 @@ export default function RankingPage() {
           </p>
         </div>
 
+        {/* Toggle Flex / Inhouse */}
+        <div className="mb-5 inline-flex rounded-full bg-[#ededed] p-1">
+          {([
+            ["flex", "Flex"],
+            ["inhouse", "Inhouse"],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setMode(key)}
+              className={`rounded-full px-5 py-2 text-[13px] font-bold tracking-[-0.02em] transition-colors ${
+                mode === key
+                  ? "bg-white text-[#0f0f0f] shadow-[0px_2px_8px_rgba(0,0,0,0.08)]"
+                  : "text-[#8d8d8d] hover:text-[#0f0f0f]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === "inhouse" ? (
+          <div className="rounded-[25px] bg-white px-6 py-16 text-center shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+            <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#fff1ea] text-[#ff4100]">
+              <Swords className="h-[26px] w-[26px]" strokeWidth={2} />
+            </div>
+            <p className="text-[16px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+              Ranking de Inhouse em breve
+            </p>
+            <p className="mx-auto mt-1 max-w-[320px] text-[13px] font-medium text-[#989898]">
+              Vai ligar quando os resultados das partidas internas começarem a
+              ser registrados.
+            </p>
+          </div>
+        ) : (
         <div className="overflow-hidden rounded-[25px] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
           {sorted.map(({ member, rank, score }, index) => {
             const position = index + 1;
@@ -163,6 +200,7 @@ export default function RankingPage() {
             </p>
           )}
         </div>
+        )}
       </div>
     </PanelShell>
   );
