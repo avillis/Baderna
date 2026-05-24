@@ -80,9 +80,17 @@ export function PendingApprovalsCard() {
           Carregando…
         </p>
       ) : members.length === 0 ? (
-        <p className="py-6 text-center text-[13px] font-medium text-[#8d8d8d]">
-          Nenhuma conta aguardando aprovação.
-        </p>
+        <div className="flex flex-col items-center gap-2 py-10 text-center">
+          <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#eef7f1] text-[#2f855a]">
+            <Check className="h-[22px] w-[22px]" strokeWidth={2.4} />
+          </div>
+          <p className="text-[13px] font-bold tracking-[-0.02em] text-[#6f6f6f]">
+            Nenhuma conta aguardando
+          </p>
+          <p className="text-[12px] font-medium text-[#a59c95]">
+            Cadastros novos vão aparecer aqui pra aprovar.
+          </p>
+        </div>
       ) : (
         <ul className="flex flex-col">
           {members.map((member) => {
