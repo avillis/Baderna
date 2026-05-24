@@ -233,7 +233,7 @@ export function PanelProfileSummary({
           <button
             type="button"
             onClick={onCompare}
-            className="mt-[16px] inline-flex items-center gap-2 rounded-full bg-[#ff4100] px-4 py-2.5 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+            className="mt-[16px] inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-6 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
           >
             <svg
               viewBox="0 0 24 24"

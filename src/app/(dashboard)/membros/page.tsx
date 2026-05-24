@@ -185,10 +185,8 @@ export default function MembrosPage() {
           <button
             type="button"
             onClick={toggleCompareMode}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-bold tracking-[-0.02em] transition-colors ${
-              compareMode
-                ? "bg-[#0f0f0f] text-white"
-                : "bg-white text-[#0f0f0f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] hover:bg-[#fff4f4]"
+            className={`inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] px-6 text-[13px] font-bold tracking-[-0.02em] transition-opacity hover:opacity-90 ${
+              compareMode ? "bg-[#0f0f0f] text-white" : "bg-[#ff4100] text-white"
             }`}
           >
             <svg
