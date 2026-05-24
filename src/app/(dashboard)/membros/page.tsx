@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
-import { getMemberSlug } from "@/features/panel/members-data";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 
 type RankEffect = { gradient: string; glow: string };
@@ -26,6 +26,8 @@ const RANK_EFFECTS: Record<number, RankEffect> = {
     glow: "0 0 14px 3px rgba(140, 140, 140, 0.22)",
   },
 };
+
+const LANES = ["Top", "Jungle", "Mid", "ADC", "Support"] as const;
 
 function getRankEffect(rank: number): RankEffect | null {
   return RANK_EFFECTS[rank] ?? null;
@@ -58,54 +60,128 @@ function MemberAvatar({
   );
 }
 
+function normalize(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
 export default function MembrosPage() {
-  const visibleMembers = useBadernaMembers();
+  const allMembers = useBadernaMembers();
+  const [query, setQuery] = useState("");
+  const [lane, setLane] = useState<(typeof LANES)[number] | null>(null);
+
+  // Guarda o rank original (posição na lista cheia) antes de filtrar, pra o
+  // número "#N" continuar fazendo sentido mesmo com busca/filtro ativos.
+  const ranked = useMemo(
+    () => allMembers.map((member, index) => ({ member, badernaRank: index + 1 })),
+    [allMembers],
+  );
+
+  const filtered = useMemo(() => {
+    const q = normalize(query.trim());
+    return ranked.filter(({ member }) => {
+      if (lane && !member.preferredRoles.includes(lane)) return false;
+      if (!q) return true;
+      const haystack = normalize(
+        `${member.nickname} ${member.name} ${member.summonerName ?? ""}`,
+      );
+      return haystack.includes(q);
+    });
+  }, [ranked, query, lane]);
 
   return (
     <PanelShell showBanner={false}>
-      <div className="grid gap-6 grid-cols-1 pt-[1.5vh] sm:pt-[6vh] sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-        {visibleMembers.map((member, index) => {
-          const badernaRank = index + 1;
-          const rankEffect = getRankEffect(badernaRank);
+      <div className="pt-[1.5vh] sm:pt-[6vh]">
+        {/* Busca + filtros */}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-[360px]">
+            <Search className="pointer-events-none absolute left-[18px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#b0a8a4]" strokeWidth={2} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nick ou nome…"
+              className="w-full rounded-full border-none bg-white py-3.5 pl-[46px] pr-5 text-sm font-medium text-[#0f0f0f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#b0a8a4] focus:ring-2 focus:ring-[#ff4100]/20"
+            />
+          </div>
 
-          return (
-            <Link
-              key={member.id}
-              href={`/membro/${member.id}`}
-              className="flex flex-col items-center rounded-[25px] bg-white px-6 py-10 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:scale-[1.02]"
-            >
-              {/* Avatar */}
-              <div
-                className="rounded-full p-[3px]"
-                style={
-                  rankEffect
-                    ? { background: rankEffect.gradient, boxShadow: rankEffect.glow }
-                    : undefined
-                }
-              >
-                <MemberAvatar
-                  src={member.avatarSrc || getChampionAvatarSrc(member.id)}
-                  alt={member.nickname}
-                />
-              </div>
+          <div className="flex flex-wrap gap-2">
+            {LANES.map((l) => {
+              const active = lane === l;
+              return (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLane(active ? null : l)}
+                  className={`rounded-full px-3.5 py-2 text-[12px] font-bold tracking-[-0.01em] transition-colors ${
+                    active
+                      ? "bg-[#ff4100] text-white"
+                      : "bg-white text-[#6f6f6f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] hover:bg-[#fff4f4]"
+                  }`}
+                >
+                  {l}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-              {/* Name + rank */}
-              <div className="mt-4 text-center">
-                <h2 className="text-[17px] font-bold leading-none tracking-[-0.03em] text-[#0f0f0f]">
-                  <StyledName styleId={member.activeNameId}>
-                    {member.nickname}
-                  </StyledName>
-                  <span className="ml-[5px] text-[12px] font-semibold tracking-normal text-[#aaaaaa]">
-                    #{badernaRank}
-                  </span>
-                </h2>
-                <p className="mt-[6px] text-[13px] font-medium tracking-[-0.01em] text-[#989898]">
-                  {member.name}
-                </p>
-              </div>
-            </Link>
-          );
-        })}
+        {filtered.length === 0 ? (
+          <div className="rounded-[25px] bg-white px-6 py-16 text-center shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+            <p className="text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+              Nenhum membro encontrado
+            </p>
+            <p className="mt-1 text-[13px] font-medium text-[#989898]">
+              Tenta outro nick ou tira o filtro de lane.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+            {filtered.map(({ member, badernaRank }) => {
+              const rankEffect = getRankEffect(badernaRank);
+
+              return (
+                <Link
+                  key={member.id}
+                  href={`/membro/${member.id}`}
+                  className="flex flex-col items-center rounded-[25px] bg-white px-6 py-10 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:scale-[1.02]"
+                >
+                  {/* Avatar */}
+                  <div
+                    className="rounded-full p-[3px]"
+                    style={
+                      rankEffect
+                        ? { background: rankEffect.gradient, boxShadow: rankEffect.glow }
+                        : undefined
+                    }
+                  >
+                    <MemberAvatar
+                      src={member.avatarSrc || getChampionAvatarSrc(member.id)}
+                      alt={member.nickname}
+                    />
+                  </div>
+
+                  {/* Name + rank */}
+                  <div className="mt-4 text-center">
+                    <h2 className="text-[17px] font-bold leading-none tracking-[-0.03em] text-[#0f0f0f]">
+                      <StyledName styleId={member.activeNameId}>
+                        {member.nickname}
+                      </StyledName>
+                      <span className="ml-[5px] text-[12px] font-semibold tracking-normal text-[#aaaaaa]">
+                        #{badernaRank}
+                      </span>
+                    </h2>
+                    <p className="mt-[6px] text-[13px] font-medium tracking-[-0.01em] text-[#989898]">
+                      {member.name}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </PanelShell>
   );
