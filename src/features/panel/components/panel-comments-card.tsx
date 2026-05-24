@@ -133,11 +133,12 @@ export function PanelCommentsCard({
                         </p>
                       </div>
 
-                      {/* Mostra X se: você é dono do perfil OU você é o autor */}
+                      {/* Mostra X se: você é dono do perfil, autor do comentário ou admin */}
                       {(isOwnProfile ||
                         (user != null &&
-                          comment.authorId != null &&
-                          comment.authorId === user.id)) && (
+                          ((comment.authorId != null &&
+                            comment.authorId === user.id) ||
+                            user.is_admin))) && (
                         <button
                           type="button"
                           onClick={() => removeComment(comment.id)}
