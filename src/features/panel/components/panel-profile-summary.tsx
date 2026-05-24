@@ -1,10 +1,11 @@
 "use client";
 
-import { Plus, Share2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
-import { NAME_BY_ID, NAME_STYLES } from "@/features/panel/names-data";
+import { NAME_STYLES } from "@/features/panel/names-data";
 import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
+import { ProfileActions } from "@/features/panel/components/profile-actions";
 import { RankedAvatar } from "@/features/panel/components/ranked-avatar";
 import { RaritySmokeOverlay } from "@/features/panel/components/rarity-smoke-overlay";
 import { StyledName } from "@/features/panel/components/styled-name";
@@ -31,19 +32,6 @@ const TIER_TO_RANK_TYPE: Record<string, RankType> = {
   MASTER: "master",
   GRANDMASTER: "grandmaster",
   CHALLENGER: "challenger",
-};
-
-const TIER_PT: Record<string, string> = {
-  IRON: "Ferro",
-  BRONZE: "Bronze",
-  SILVER: "Prata",
-  GOLD: "Ouro",
-  PLATINUM: "Platina",
-  EMERALD: "Esmeralda",
-  DIAMOND: "Diamante",
-  MASTER: "Mestre",
-  GRANDMASTER: "Grão-Mestre",
-  CHALLENGER: "Desafiante",
 };
 
 const MAX_ACTIVE_TITLES = 2;
@@ -89,7 +77,6 @@ export function PanelProfileSummary({
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
-  const [sharing, setSharing] = useState(false);
 
   const { account, updateField } = useAccount();
   const { user } = useAuth();
@@ -151,86 +138,6 @@ export function PanelProfileSummary({
     const idx = ordered.indexOf(activeNameId);
     const next = ordered[(idx + 1) % ordered.length];
     setActiveNameId(next);
-  }
-
-  async function shareCard() {
-    if (typeof window === "undefined" || sharing) return;
-    const rankObj = riot.status === "ready" ? riot.profile.rank : null;
-    const elo =
-      rankObj && rankObj.tier && rankObj.tier !== "Unranked"
-        ? `${TIER_PT[rankObj.tier.toUpperCase()] ?? rankObj.tier}${
-            rankObj.division ? ` ${rankObj.division}` : ""
-          }`
-        : "Sem classificação";
-    const games = rankObj ? rankObj.wins + rankObj.losses : 0;
-    const wr = games > 0 ? String(Math.round((rankObj!.wins / games) * 100)) : "";
-    const abs = (src: string) => {
-      try {
-        return new URL(src, window.location.origin).toString();
-      } catch {
-        return src;
-      }
-    };
-    const params = new URLSearchParams({
-      name: liveDisplayName,
-      full: liveFullName ?? "",
-      elo,
-      pos: badernaRank ? String(badernaRank) : "",
-      avatar: abs(liveAvatarSrc),
-      banner: bannerSrc ? abs(bannerSrc) : "",
-      rankType: isUnranked ? "" : liveRankType,
-      color: NAME_BY_ID[activeNameId]?.color ?? "#0f0f0f",
-      wr,
-    });
-    const cardUrl = `${window.location.origin}/api/profile-card?${params.toString()}`;
-    const fileName = `baderna-${(liveDisplayName || "perfil")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")}.png`;
-
-    setSharing(true);
-    try {
-      const res = await fetch(cardUrl);
-      if (!res.ok) throw new Error("falha ao gerar o cartão");
-      const blob = await res.blob();
-      const file = new File([blob], fileName, { type: "image/png" });
-      const profileUrl = memberId
-        ? `${window.location.origin}/membro/${memberId}`
-        : window.location.origin;
-      const intro = isOwnProfile
-        ? "Esse é o meu perfil na Baderna!"
-        : `Confira o perfil de ${liveDisplayName} na Baderna!`;
-      const text = `${intro}\n${profileUrl}`;
-      const nav = navigator as Navigator & {
-        canShare?: (data: { files?: File[] }) => boolean;
-      };
-      if (nav.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            text,
-            title: `Perfil de ${liveDisplayName} · Baderna`,
-          });
-        } catch {
-          /* usuário cancelou o compartilhamento */
-        }
-      } else {
-        // Sem Web Share de arquivo: baixa a imagem.
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = objectUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(objectUrl);
-      }
-    } catch {
-      // Último recurso: abre a imagem numa aba.
-      window.open(cardUrl, "_blank");
-    } finally {
-      setSharing(false);
-    }
   }
 
   // Use the full titles list (defaults + custom) so custom titles like "OnlyCrias"
@@ -343,49 +250,19 @@ export function PanelProfileSummary({
           {liveBio}
         </p>
 
-        <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
-          {!isOwnProfile && onCompare && (
-            <button
-              type="button"
-              onClick={onCompare}
-              className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-6 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-[16px] w-[16px]"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Comparar com você
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={shareCard}
-            disabled={sharing}
-            className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {sharing ? (
-              <svg
-                className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
-                viewBox="25 25 50 50"
-              >
-                <circle r="20" cy="50" cx="50" />
-              </svg>
-            ) : (
-              <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
-            )}
-            {sharing ? "Carregando…" : "Compartilhar"}
-          </button>
-        </div>
+        <ProfileActions
+          className="mt-[16px] flex flex-wrap items-center gap-[10px] xl:hidden"
+          displayName={displayName}
+          fullName={fullName}
+          avatarSrc={avatarSrc}
+          rankType={rankType}
+          targetUserId={targetUserId}
+          memberId={memberId}
+          riotId={riotId}
+          badernaRank={badernaRank}
+          bannerSrc={bannerSrc}
+          onCompare={onCompare}
+        />
       </div>
 
       <TitleModal

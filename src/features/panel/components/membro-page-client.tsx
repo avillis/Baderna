@@ -14,6 +14,7 @@ import {
   MemberCompareModal,
   type CompareSide,
 } from "@/features/panel/components/member-compare-modal";
+import { ProfileActions } from "@/features/panel/components/profile-actions";
 import type { BadernaMember } from "@/features/panel/members-data";
 import { LiveFavoriteChampionsCard } from "@/features/panel/components/live-favorite-champions-card";
 import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
@@ -213,6 +214,19 @@ export function MembroPageClient({ slug }: { slug: string }) {
   );
   const handleCompare = canCompare ? () => setShowCompare(true) : undefined;
 
+  const actionProps = {
+    displayName: profile.displayName,
+    fullName: profile.fullName,
+    avatarSrc: profile.avatarSrc,
+    rankType: profile.rankType,
+    targetUserId,
+    memberId: member.id,
+    riotId,
+    badernaRank,
+    bannerSrc: profile.bannerSrc,
+    onCompare: handleCompare,
+  };
+
   return (
     <PanelShell
       splashGroups={splashGroups}
@@ -273,9 +287,11 @@ export function MembroPageClient({ slug }: { slug: string }) {
           </div>
 
           <div className="mt-[20px] xl:mt-[24px]">
-            <div className="mb-6 hidden xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:gap-[32px]">
-              <div />
-              <div />
+            <div className="mb-6 hidden xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-center xl:gap-[32px]">
+              <ProfileActions
+                className="col-span-2 flex flex-wrap items-center gap-[10px]"
+                {...actionProps}
+              />
               <div className="flex justify-end">
                 <PanelGameModeToggle />
               </div>
@@ -340,7 +356,11 @@ export function MembroPageClient({ slug }: { slug: string }) {
               />
             </div>
 
-            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)]">
+            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
+              <ProfileActions
+                className="col-start-1 col-span-3 flex flex-wrap items-center gap-[10px]"
+                {...actionProps}
+              />
               <div className="col-start-4 col-span-2 flex justify-end">
                 <PanelGameModeToggle />
               </div>
