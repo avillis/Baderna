@@ -67,8 +67,15 @@ export async function GET(req: Request) {
     ? `${origin}/images/rank-frames/${rankType}.png`
     : "";
 
-  // A capa "full" é grande demais e o Satori não rasteriza — usa "thumb".
-  const bannerParam = (sp.get("banner") || "").replace("size=full", "size=thumb");
+  // A maioria das capas é .webp e o Satori não decodifica webp (e o splash
+  // full é grande). Passamos pelo proxy weserv.nl, que segue o redirect,
+  // converte pra JPEG e redimensiona — o Satori recebe um JPEG pequeno.
+  const bannerProxy = sp.get("banner") || "";
+  const bannerViaProxy = bannerProxy
+    ? `https://images.weserv.nl/?url=${encodeURIComponent(
+        "ssl:" + bannerProxy.replace(/^https?:\/\//i, ""),
+      )}&w=968&h=360&fit=cover&output=jpg&q=82`
+    : "";
 
   const [fontReg, fontBold, avatar, banner, frame, logoBuf] = await Promise.all([
     fetch(new URL("./Inter-Regular.ttf", import.meta.url)).then((r) =>
@@ -78,7 +85,7 @@ export async function GET(req: Request) {
       r.arrayBuffer(),
     ),
     resolveImage(sp.get("avatar") || ""),
-    resolveImage(bannerParam),
+    resolveImage(bannerViaProxy),
     resolveImage(frameUrl),
     fetch(new URL("./logo.png", import.meta.url))
       .then((r) => r.arrayBuffer())
