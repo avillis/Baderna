@@ -29,7 +29,7 @@ function EntrarPageInner() {
     if (hydrated && token) router.replace(next);
   }, [hydrated, token, next, router]);
 
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [summonerName, setSummonerName] = useState("");
   const [tagLine, setTagLine] = useState("");
