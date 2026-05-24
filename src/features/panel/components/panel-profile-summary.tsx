@@ -1,9 +1,10 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Camera, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { NAME_STYLES } from "@/features/panel/names-data";
+import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
 import { RankedAvatar } from "@/features/panel/components/ranked-avatar";
 import { RaritySmokeOverlay } from "@/features/panel/components/rarity-smoke-overlay";
 import { StyledName } from "@/features/panel/components/styled-name";
@@ -68,8 +69,9 @@ export function PanelProfileSummary({
   onCompare,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
 
-  const { account } = useAccount();
+  const { account, updateField } = useAccount();
   const { user } = useAuth();
 
   // isOwnProfile derivado da comparação user.id com targetUserId. Se o prop
@@ -170,6 +172,21 @@ export function PanelProfileSummary({
             ringClassName="shadow-[0_0_0_4px_#f7f7f7]"
             priority
           />
+          {isOwnProfile && (
+            <button
+              type="button"
+              onClick={() => setAvatarPickerOpen(true)}
+              aria-label="Trocar avatar"
+              className="group absolute inset-0 z-20 cursor-pointer"
+            >
+              <span className="pointer-events-none absolute inset-[21px] flex items-center justify-center rounded-full bg-black/0 text-[11px] font-bold text-white opacity-0 transition-all group-hover:bg-black/45 group-hover:opacity-100">
+                Trocar
+              </span>
+              <span className="pointer-events-none absolute bottom-[8px] right-[8px] flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#ff4100] text-white ring-2 ring-[#f7f7f7]">
+                <Camera className="h-[16px] w-[16px]" strokeWidth={2.2} />
+              </span>
+            </button>
+          )}
         </div>
 
         <div className="relative z-10 flex flex-nowrap items-center gap-x-[10px] sm:gap-x-[14px]">
@@ -263,6 +280,16 @@ export function PanelProfileSummary({
         unlockedTitleIds={effectiveUnlocked}
         maxActive={MAX_ACTIVE_TITLES}
       />
+
+      {isOwnProfile && (
+        <AvatarPickerModal
+          open={avatarPickerOpen}
+          onClose={() => setAvatarPickerOpen(false)}
+          currentSrc={liveAvatarSrc}
+          ownerId={accountNick.toLowerCase() || (user ? String(user.id) : "me")}
+          onSelect={(src) => updateField("avatarSrc", src)}
+        />
+      )}
 
     </section>
   );
