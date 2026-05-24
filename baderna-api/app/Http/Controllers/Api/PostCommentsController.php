@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\User;
+use App\Notifications\NewInteractionNotification;
 use Illuminate\Http\Request;
 
 class PostCommentsController extends Controller
@@ -49,6 +51,23 @@ class PostCommentsController extends Controller
 
         $comment->load('author:id,name,summoner_name,display_name,avatar_src');
         $author = $comment->author;
+
+        // Notificar dono do post e outros envolvidos.
+
+        if ($post->user_id !== $request->user()->id) {
+            $post->user->notify(new NewInteractionNotification($comment, 'post', $post->id));
+        }
+
+        $userToNotify = $post->comments()
+            ->where('user_id', '!=', $request->user()->id)
+            ->where('user_id', '!=', $post->user_id)
+            ->select('user_id')
+            ->distinct()
+            ->pluck('user_id');
+
+        foreach ($userToNotify as $userId) {
+            User::find($userId)?->notify(new NewInteractionNotification($comment, 'interaction', $post->id));
+        }
 
         return response()->json([
             'id'           => 'c-' . $comment->id,
