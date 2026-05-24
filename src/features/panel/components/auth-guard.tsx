@@ -3,7 +3,10 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { useAuth } from "@/features/panel/use-auth";
+import {
+  installSessionExpiryInterceptor,
+  useAuth,
+} from "@/features/panel/use-auth";
 
 /**
  * Wraps protected routes. Once hydrated, if there's no token in localStorage
@@ -13,6 +16,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { token, hydrated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Detecta 401 (sessão expirada no backend) e limpa a sessão local; o redirect
+  // abaixo então leva pro /entrar automaticamente.
+  useEffect(() => {
+    installSessionExpiryInterceptor();
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;

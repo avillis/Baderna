@@ -47,6 +47,46 @@ export function authToken(): string | null {
   return readToken();
 }
 
+/** Limpa a sessão local (sem bater na API). Usado quando o backend rejeita o
+ *  token (401): a UI volta pro estado deslogado e o AuthGuard redireciona. */
+export function clearSession() {
+  writeSession(null, null);
+}
+
+let sessionInterceptorInstalled = false;
+
+/**
+ * Instala (uma única vez) um interceptor no window.fetch que detecta respostas
+ * 401 de requisições autenticadas. Quando a sessão expira no backend o token
+ * vira inválido e toda chamada volta 401 — aqui a gente limpa a sessão local
+ * pra não ficar "logado mas quebrado". Só reage se a requisição mandou header
+ * Authorization (erros de login/registro não têm token, então são ignorados) e
+ * se ainda existe um token salvo (evita disparos repetidos / loop).
+ */
+export function installSessionExpiryInterceptor() {
+  if (typeof window === "undefined" || sessionInterceptorInstalled) return;
+  sessionInterceptorInstalled = true;
+  const originalFetch = window.fetch.bind(window);
+  const wrapped: typeof window.fetch = async (input, init) => {
+    const res = await originalFetch(input, init);
+    if (res.status === 401 && readToken()) {
+      let hadAuth = false;
+      try {
+        const headers = new Headers(
+          init?.headers ??
+            (input instanceof Request ? input.headers : undefined),
+        );
+        hadAuth = headers.has("Authorization");
+      } catch {
+        hadAuth = false;
+      }
+      if (hadAuth) clearSession();
+    }
+    return res;
+  };
+  window.fetch = wrapped;
+}
+
 export function useAuth() {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
