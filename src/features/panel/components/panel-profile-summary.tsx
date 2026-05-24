@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { NAME_STYLES } from "@/features/panel/names-data";
@@ -181,9 +181,6 @@ export function PanelProfileSummary({
             >
               <span className="pointer-events-none absolute inset-[21px] flex items-center justify-center rounded-full bg-black/0 text-[11px] font-bold text-white opacity-0 transition-all group-hover:bg-black/45 group-hover:opacity-100">
                 Trocar
-              </span>
-              <span className="pointer-events-none absolute bottom-[8px] right-[8px] flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#ff4100] text-white ring-2 ring-[#f7f7f7]">
-                <Camera className="h-[16px] w-[16px]" strokeWidth={2.2} />
               </span>
             </button>
           )}
