@@ -128,8 +128,6 @@ export function MemberCompareModal({
 
   const leftElo = eloScore(left.rank);
   const rightElo = eloScore(right.rank);
-  const leftLp = left.rank?.lp;
-  const rightLp = right.rank?.lp;
 
   return (
     <div
@@ -165,13 +163,6 @@ export function MemberCompareModal({
             right={formatRankLabel(right.rank)}
             leftWins={leftElo >= 0 && leftElo > rightElo}
             rightWins={rightElo >= 0 && rightElo > leftElo}
-          />
-          <CompareRow
-            label="PDL"
-            left={leftLp != null ? `${leftLp} PDL` : "—"}
-            right={rightLp != null ? `${rightLp} PDL` : "—"}
-            leftWins={leftLp != null && rightLp != null && leftLp > rightLp}
-            rightWins={leftLp != null && rightLp != null && rightLp > leftLp}
           />
           <CompareRow
             label="Posição na Baderna"

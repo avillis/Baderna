@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowLeftRight, Check, Search } from "lucide-react";
+import { Check, Search } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { StyledName } from "@/features/panel/components/styled-name";
@@ -187,7 +187,20 @@ export default function MembrosPage() {
                 : "bg-white text-[#0f0f0f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] hover:bg-[#fff4f4]"
             }`}
           >
-            <ArrowLeftRight className="h-[16px] w-[16px]" strokeWidth={2.5} />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[16px] w-[16px]"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             {compareMode ? "Cancelar" : "Comparar membros"}
           </button>
           {compareMode && selectedIds.length < 2 && (
