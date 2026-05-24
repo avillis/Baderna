@@ -351,7 +351,7 @@ function CommentButton({ count, href }: { count: number; href: string }) {
   );
 }
 
-const REACTION_EMOJIS = ["👍", "❤️", "🔥", "😂", "😮", "😢"];
+const REACTION_EMOJIS = ["👍", "🔥", "😂", "😮", "😢"];
 
 /**
  * Reações — preview (mock). Estado local apenas; ainda sem persistência.
@@ -418,7 +418,7 @@ function PostReactions() {
               setOpen(false);
             }}
           />
-          <div className="absolute bottom-full left-0 z-20 mb-[8px] flex gap-[2px] rounded-full bg-white p-[6px] shadow-[0px_8px_30px_rgba(0,0,0,0.14)]">
+          <div className="absolute bottom-full right-0 z-20 mb-[8px] flex gap-[2px] rounded-full bg-white p-[6px] shadow-[0px_8px_30px_rgba(0,0,0,0.14)]">
             {REACTION_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
