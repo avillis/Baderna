@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 import { resetPassword } from "@/features/panel/use-auth";
+import { useToast } from "@/components/toast";
 
 export default function RedefinirSenhaPage() {
   return (
@@ -21,27 +22,31 @@ function RedefinirSenhaInner() {
   const token = params.get("token") ?? "";
   const email = params.get("email") ?? "";
 
+  const toast = useToast();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
   const mismatch = password.length > 0 && confirm.length > 0 && password !== confirm;
-  const tooShort = password.length > 0 && password.length < 6;
-  const ok =
-    !!token && !!email && password.length >= 6 && password === confirm && !submitting;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!ok) return;
+    if (submitting) return;
+    if (password.length < 6) {
+      toast.show("Mínimo 6 caracteres.");
+      return;
+    }
+    if (password !== confirm) {
+      toast.show("As senhas não coincidem.");
+      return;
+    }
     setSubmitting(true);
-    setError(null);
     const err = await resetPassword(token, email, password);
     setSubmitting(false);
     if (err) {
-      setError(err);
+      toast.show(err);
       return;
     }
     setDone(true);
@@ -143,25 +148,9 @@ function RedefinirSenhaInner() {
                   }`}
                 />
 
-                {tooShort && (
-                  <p className="text-center text-[12px] font-medium text-[#8d8d8d]">
-                    Mínimo 6 caracteres.
-                  </p>
-                )}
-                {mismatch && (
-                  <p className="text-center text-[12px] font-medium text-[#c53030]">
-                    As senhas não coincidem.
-                  </p>
-                )}
-                {error && (
-                  <p className="text-center text-[13px] font-semibold text-[#c53030]">
-                    {error}
-                  </p>
-                )}
-
                 <button
                   type="submit"
-                  disabled={!ok}
+                  disabled={submitting}
                   className="flex w-full items-center justify-center rounded-full bg-[#ff4100] px-6 py-4 text-sm font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting ? (

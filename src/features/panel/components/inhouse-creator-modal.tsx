@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { X, Plus } from "lucide-react";
 
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
+import { useToast } from "@/components/toast";
 import { LeaderDiceModal } from "@/features/panel/components/leader-dice-modal";
 import { LoadingOverlay } from "@/features/panel/components/loading-overlay";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
@@ -132,6 +133,7 @@ function InhouseCreatorContent({
   const visibleMembers = useBadernaMembers();
   const memberRanks = useMemberRanks();
   const { addInhouse } = useInhouses();
+  const toast = useToast();
   const rankOrder: Record<string, number> = {
     challenger: 9,
     grandmaster: 8,
@@ -155,7 +157,6 @@ function InhouseCreatorContent({
   const [guestLanePrefs, setGuestLanePrefs] = useState<
     Record<string, LanePrefs>
   >({});
-  const [error, setError] = useState<string | null>(null);
   const [diceLeaders, setDiceLeaders] = useState<
     [{ id: string; nickname: string; avatarSrc?: string }, { id: string; nickname: string; avatarSrc?: string }] | null
   >(null);
@@ -173,7 +174,6 @@ function InhouseCreatorContent({
       }
       return next;
     });
-    setError(null);
   }
 
   function addGuest() {
@@ -182,7 +182,6 @@ function InhouseCreatorContent({
     const id = `guest-${Date.now()}`;
     setGuests((prev) => [...prev, { id, nickname: name }]);
     setGuestName("");
-    setError(null);
   }
 
   function removeGuest(id: string) {
@@ -255,7 +254,7 @@ function InhouseCreatorContent({
     // sobrar não joga.
     if (mode === "leader") {
       if (totalSelected < 10) {
-        setError(
+        toast.show(
           `Selecione pelo menos 10 participantes. Faltam ${10 - totalSelected}.`,
         );
         return;
@@ -263,7 +262,7 @@ function InhouseCreatorContent({
       const participants = buildParticipants();
       const eligible = participants.filter((p) => !p.id.startsWith("guest-"));
       if (eligible.length < 2) {
-        setError("Precisa de pelo menos 2 membros (não convidados) pra sortear os líderes.");
+        toast.show("Precisa de pelo menos 2 membros (não convidados) pra sortear os líderes.");
         return;
       }
       const shuffled = [...eligible].sort(() => Math.random() - 0.5);
@@ -276,7 +275,7 @@ function InhouseCreatorContent({
 
     // Modo random: precisa ser exatamente 10.
     if (totalSelected !== 10) {
-      setError(
+      toast.show(
         `Selecione exatamente 10 participantes. Faltam ${remaining > 0 ? remaining : Math.abs(remaining) + " a mais"}.`,
       );
       return;
@@ -313,11 +312,11 @@ function InhouseCreatorContent({
       if (persisted) {
         router.push(`/inhouse/${persisted.shortCode}`);
       } else {
-        setError("Não foi possível salvar o inhouse no servidor.");
+        toast.show("Não foi possível salvar o inhouse no servidor.");
         setCreating(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao criar o inhouse.");
+      toast.show(err instanceof Error ? err.message : "Erro ao criar o inhouse.");
       setCreating(false);
     }
   }
@@ -645,11 +644,6 @@ function InhouseCreatorContent({
             </div>
 
             <div className="flex w-full items-center gap-3 sm:w-auto">
-              {error && (
-                <p className="text-[12px] font-semibold text-[#c53030]">
-                  {error}
-                </p>
-              )}
               <button
                 type="button"
                 onClick={handleCreate}

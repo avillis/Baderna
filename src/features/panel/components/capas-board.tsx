@@ -7,6 +7,7 @@ import { History, RotateCcw, Zap } from "lucide-react";
 
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { PurchaseHistoryModal } from "@/features/panel/components/purchase-history-modal";
+import { useToast } from "@/components/toast";
 import {
   RaritySmokeOverlay,
   rarityHasSmoke,
@@ -250,7 +251,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   const [resetting, setResetting] = useState(false);
   const [rouletteItems, setRouletteItems] = useState<string[]>([]);
   const [translateX, setTranslateX] = useState(0);
-  const [insufficientFunds, setInsufficientFunds] = useState(false);
+  const toast = useToast();
   const [mounted, setMounted] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [previewSeed, setPreviewSeed] = useState(0);
@@ -562,8 +563,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   function openCase() {
     if (!canOpen) {
       if (coins < activeConfig.cost) {
-        setInsufficientFunds(true);
-        setTimeout(() => setInsufficientFunds(false), 2000);
+        toast.show(
+          `Saldo insuficiente. Você precisa de ${activeConfig.cost} moedas.`,
+        );
       }
       return;
     }
@@ -1018,11 +1020,6 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 Próximo grátis em {formatCountdown(freeSpinMsLeft)}
               </span>
             )}
-          </p>
-        )}
-        {insufficientFunds && (
-          <p className="text-[12px] font-semibold text-[#c53030]">
-            Saldo insuficiente. Você precisa de {activeConfig.cost} moedas.
           </p>
         )}
       </div>

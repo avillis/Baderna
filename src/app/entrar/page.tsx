@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 
 import { useAuth } from "@/features/panel/use-auth";
+import { useToast } from "@/components/toast";
 
 // Wrapper com Suspense — useSearchParams() exige isso no Next.js 16+
 export default function EntrarPage() {
@@ -21,6 +22,7 @@ function EntrarPageInner() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
   const { login, register, token, hydrated } = useAuth();
+  const toast = useToast();
 
   // Já está logado? Manda direto pra rota de destino.
   useEffect(() => {
@@ -34,12 +36,10 @@ function EntrarPageInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setSubmitting(true);
     try {
       if (isLogin) {
@@ -55,7 +55,7 @@ function EntrarPageInner() {
       }
       router.push(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro inesperado.");
+      toast.show(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {
       setSubmitting(false);
     }
@@ -173,11 +173,6 @@ function EntrarPageInner() {
                   </a>
                 </div>
               )}
-              {error && (
-                <p className="text-center text-[13px] font-semibold text-[#c53030]">
-                  {error}
-                </p>
-              )}
               <button
                 type="submit"
                 disabled={submitting}
@@ -202,10 +197,7 @@ function EntrarPageInner() {
                 <>
                   Ainda não tem conta?{" "}
                   <button
-                    onClick={() => {
-                      setIsLogin(false);
-                      setError(null);
-                    }}
+                    onClick={() => setIsLogin(false)}
                     className="ml-1 font-medium text-[#ff4100] hover:underline"
                   >
                     Criar conta
@@ -215,10 +207,7 @@ function EntrarPageInner() {
                 <>
                   Já possui uma conta?{" "}
                   <button
-                    onClick={() => {
-                      setIsLogin(true);
-                      setError(null);
-                    }}
+                    onClick={() => setIsLogin(true)}
                     className="ml-1 font-medium text-[#ff4100] hover:underline"
                   >
                     Entrar

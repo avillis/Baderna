@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 import { authToken } from "@/features/panel/use-auth";
+import { useToast } from "@/components/toast";
 
 function PencilIcon({ className }: { className?: string }) {
   return (
@@ -62,7 +63,7 @@ export function AdminIntegrationsCard() {
   const [draft, setDraft] = useState("");
   const [showDraft, setShowDraft] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const toast = useToast();
 
   async function refresh() {
     try {
@@ -86,7 +87,6 @@ export function AdminIntegrationsCard() {
     const key = draft.trim();
     if (!key) return;
     setSaving(true);
-    setSaveError(null);
     try {
       const res = await fetch(`${API_BASE}/admin/riot-key`, {
         method: "PUT",
@@ -107,7 +107,7 @@ export function AdminIntegrationsCard() {
       setEditing(false);
       setDraft("");
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Erro ao salvar.");
+      toast.show(err instanceof Error ? err.message : "Erro ao salvar.");
     } finally {
       setSaving(false);
     }
@@ -147,7 +147,6 @@ export function AdminIntegrationsCard() {
                 type="button"
                 onClick={() => {
                   setDraft("");
-                  setSaveError(null);
                   setEditing(true);
                 }}
                 className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e0e0e0]"
@@ -180,11 +179,6 @@ export function AdminIntegrationsCard() {
                   )}
                 </button>
               </div>
-              {saveError && (
-                <p className="text-[11px] font-semibold text-[#c53030]">
-                  {saveError}
-                </p>
-              )}
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -208,7 +202,6 @@ export function AdminIntegrationsCard() {
                   onClick={() => {
                     setEditing(false);
                     setDraft("");
-                    setSaveError(null);
                   }}
                   disabled={saving}
                   className="h-[50px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e0e0e0] disabled:opacity-40"

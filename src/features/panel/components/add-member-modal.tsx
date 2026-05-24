@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { authToken } from "@/features/panel/use-auth";
+import { useToast } from "@/components/toast";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -16,7 +17,7 @@ export function AddMemberModal() {
   const [nick, setNick] = useState("");
   const [tag, setTag] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => setMounted(true), []);
 
@@ -38,7 +39,6 @@ export function AddMemberModal() {
     setName("");
     setNick("");
     setTag("");
-    setError(null);
     setSubmitting(false);
   }
 
@@ -46,7 +46,6 @@ export function AddMemberModal() {
     e.preventDefault();
     if (!name.trim() || !nick.trim() || !tag.trim()) return;
     setSubmitting(true);
-    setError(null);
     try {
       const token = authToken();
       const res = await fetch(`${API_BASE}/admin/members`, {
@@ -81,7 +80,7 @@ export function AddMemberModal() {
       setOpen(false);
       reset();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao adicionar membro.");
+      toast.show(err instanceof Error ? err.message : "Erro ao adicionar membro.");
     } finally {
       setSubmitting(false);
     }
@@ -178,12 +177,6 @@ export function AddMemberModal() {
                     </div>
                   </label>
                 </div>
-
-                {error && (
-                  <p className="text-[12px] font-semibold text-[#c53030]">
-                    {error}
-                  </p>
-                )}
 
                 <div className="mt-[6px] flex items-center gap-2">
                   <button

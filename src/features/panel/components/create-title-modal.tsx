@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { RARITY_META, RARITY_ORDER, type TitleRarity } from "@/features/panel/titles-data";
 import { RaritySmokeOverlay } from "@/features/panel/components/rarity-smoke-overlay";
 import { useTitles } from "@/features/panel/use-titles";
+import { useToast } from "@/components/toast";
 
 export function CreateTitleModal() {
   const { addTitle, removeTitle, titles, isRemovable } = useTitles();
@@ -14,7 +15,7 @@ export function CreateTitleModal() {
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [rarity, setRarity] = useState<TitleRarity>("comum");
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => setMounted(true), []);
 
@@ -35,13 +36,12 @@ export function CreateTitleModal() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    setError(null);
     try {
       await addTitle(name.trim(), rarity);
       setName("");
       setRarity("comum");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha ao criar título.");
+      toast.show(err instanceof Error ? err.message : "Falha ao criar título.");
     }
   }
 
@@ -148,12 +148,6 @@ export function CreateTitleModal() {
                         </span>
                       </div>
                     </div>
-                  )}
-
-                  {error && (
-                    <p className="text-[12px] font-semibold text-[#c53030]">
-                      {error}
-                    </p>
                   )}
 
                   <button

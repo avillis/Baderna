@@ -17,6 +17,7 @@ import { NAME_BY_ID } from "@/features/panel/names-data";
 import { panelProfile } from "@/features/panel/panel-data";
 import { changePassword, useAccount, useCurrentUserId } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
+import { useToast } from "@/components/toast";
 import { useMemberUnlockedTitles } from "@/features/panel/use-member-titles";
 import { useMemberUnlockedNames } from "@/features/panel/use-member-unlocked-names";
 import { useTitles } from "@/features/panel/use-titles";
@@ -415,23 +416,28 @@ function PasswordFields() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const toast = useToast();
   const mismatch = next.length > 0 && confirm.length > 0 && next !== confirm;
-  const tooShort = next.length > 0 && next.length < 6;
-  const ok =
-    current.length > 0 &&
-    next.length >= 6 &&
-    next === confirm &&
-    !submitting;
 
   async function handleCommit() {
-    if (!ok) return;
+    if (submitting) return;
+    if (!current) {
+      toast.show("Informe sua senha atual.");
+      return;
+    }
+    if (next.length < 6) {
+      toast.show("Mínimo 6 caracteres.");
+      return;
+    }
+    if (next !== confirm) {
+      toast.show("As senhas não coincidem.");
+      return;
+    }
     setSubmitting(true);
-    setApiError(null);
     const err = await changePassword(current, next);
     setSubmitting(false);
     if (err) {
-      setApiError(err);
+      toast.show(err);
       return;
     }
     setCurrent("");
@@ -494,11 +500,6 @@ function PasswordFields() {
             )}
           </button>
         </div>
-        {tooShort && (
-          <span className="text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
-            Mínimo 6 caracteres.
-          </span>
-        )}
       </label>
       <label className="flex flex-col gap-[8px]">
         <div className="flex items-center gap-[8px]">
@@ -529,22 +530,12 @@ function PasswordFields() {
           <button
             type="button"
             onClick={handleCommit}
-            disabled={!ok}
+            disabled={submitting}
             className="flex h-[52px] w-[110px] shrink-0 items-center justify-center rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitting ? "..." : saved ? "Salvo" : "Salvar"}
           </button>
         </div>
-        {mismatch && (
-          <span className="text-[11px] font-medium tracking-[-0.02em] text-[#c53030]">
-            As senhas não coincidem.
-          </span>
-        )}
-        {apiError && (
-          <span className="text-[11px] font-medium tracking-[-0.02em] text-[#c53030]">
-            {apiError}
-          </span>
-        )}
       </label>
     </>
   );

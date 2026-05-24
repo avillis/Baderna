@@ -11,6 +11,7 @@ import {
 } from "@/features/panel/champion-avatar";
 import { useAccount } from "@/features/panel/use-account";
 import { authToken } from "@/features/panel/use-auth";
+import { useToast } from "@/components/toast";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -37,7 +38,7 @@ export function AvatarPickerModal({
   const [tab, setTab] = useState<Tab>(riotIconUrl ? "riot" : "champions");
   const [query, setQuery] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => setMounted(true), []);
@@ -64,7 +65,6 @@ export function AvatarPickerModal({
     : CHAMPION_AVATAR_FILES;
 
   async function handleFile(file: File) {
-    setError(null);
     setUploading(true);
     try {
       const token = authToken();
@@ -93,7 +93,7 @@ export function AvatarPickerModal({
       onClose();
       onSelect(body.url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha no upload.");
+      toast.show(err instanceof Error ? err.message : "Falha no upload.");
     } finally {
       setUploading(false);
     }
@@ -290,9 +290,6 @@ export function AvatarPickerModal({
               PNG, JPG, WEBP ou GIF. Máx. 5 MB. A imagem fica salva no servidor
               e some se você trocar de avatar.
             </p>
-            {error && (
-              <p className="text-[12px] font-semibold text-[#c53030]">{error}</p>
-            )}
           </div>
         )}
       </div>
