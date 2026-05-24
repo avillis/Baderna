@@ -6,12 +6,15 @@ import { X } from "lucide-react";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { formatRankLabel, type MemberRank } from "@/features/panel/use-member-ranks";
+import { useRiotProfile } from "@/features/panel/use-riot-profile";
 import type { BadernaMember } from "@/features/panel/members-data";
 
 export type CompareSide = {
   member: BadernaMember;
   badernaRank: number;
   rank: MemberRank | undefined;
+  /** "Nome#TAG" pra puxar winrate/main ao vivo. Null = sem Riot ID. */
+  riotId?: string | null;
 };
 
 const TIER_ORDER = [
@@ -50,16 +53,41 @@ function laneLabel(side: CompareSide): string {
   return role ? ROLE_PT[role] ?? role : "—";
 }
 
+type ProfileState = ReturnType<typeof useRiotProfile>;
+type Live = {
+  winrate: number | null;
+  wins: number;
+  losses: number;
+  main: string | null;
+};
+
+function deriveLive(state: ProfileState): Live | null {
+  if (state.status !== "ready") return null;
+  const { rank, masteries } = state.profile;
+  const games = rank.wins + rank.losses;
+  const winrate = games > 0 ? Math.round((rank.wins / games) * 100) : null;
+  const main =
+    masteries && masteries.length > 0
+      ? [...masteries].sort((a, b) => b.championPoints - a.championPoints)[0]
+          .championName
+      : null;
+  return { winrate, wins: rank.wins, losses: rank.losses, main };
+}
+
 function CompareRow({
   label,
   left,
   right,
+  leftSub,
+  rightSub,
   leftWins,
   rightWins,
 }: {
   label: string;
   left: string;
   right: string;
+  leftSub?: string;
+  rightSub?: string;
   leftWins?: boolean;
   rightWins?: boolean;
 }) {
@@ -69,20 +97,34 @@ function CompareRow({
         {label}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <span
-          className={`text-center text-[15px] tracking-[-0.02em] ${
-            leftWins ? "font-bold text-[#ff4100]" : "font-semibold text-[#0f0f0f]"
-          }`}
-        >
-          {left}
-        </span>
-        <span
-          className={`text-center text-[15px] tracking-[-0.02em] ${
-            rightWins ? "font-bold text-[#ff4100]" : "font-semibold text-[#0f0f0f]"
-          }`}
-        >
-          {right}
-        </span>
+        <div className="text-center">
+          <div
+            className={`text-[15px] tracking-[-0.02em] ${
+              leftWins ? "font-bold text-[#ff4100]" : "font-semibold text-[#0f0f0f]"
+            }`}
+          >
+            {left}
+          </div>
+          {leftSub && (
+            <div className="mt-0.5 text-[11px] font-medium text-[#b0a8a4]">
+              {leftSub}
+            </div>
+          )}
+        </div>
+        <div className="text-center">
+          <div
+            className={`text-[15px] tracking-[-0.02em] ${
+              rightWins ? "font-bold text-[#ff4100]" : "font-semibold text-[#0f0f0f]"
+            }`}
+          >
+            {right}
+          </div>
+          {rightSub && (
+            <div className="mt-0.5 text-[11px] font-medium text-[#b0a8a4]">
+              {rightSub}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -126,8 +168,40 @@ export function MemberCompareModal({
     };
   }, [onClose]);
 
+  const leftProfile = useRiotProfile(left.riotId);
+  const rightProfile = useRiotProfile(right.riotId);
+  const leftLive = deriveLive(leftProfile);
+  const rightLive = deriveLive(rightProfile);
+
   const leftElo = eloScore(left.rank);
   const rightElo = eloScore(right.rank);
+
+  const winrateText = (
+    side: CompareSide,
+    profile: ProfileState,
+    live: Live | null,
+  ): string => {
+    if (!side.riotId) return "—";
+    if (live) return live.winrate != null ? `${live.winrate}%` : "—";
+    if (profile.status === "loading") return "…";
+    return "—";
+  };
+  const winrateSub = (side: CompareSide, live: Live | null): string | undefined => {
+    if (!side.riotId || !live || live.winrate == null) return undefined;
+    return `${live.wins}V ${live.losses}D`;
+  };
+  const mainText = (
+    side: CompareSide,
+    profile: ProfileState,
+    live: Live | null,
+  ): string => {
+    if (!side.riotId) return "—";
+    if (live) return live.main ?? "—";
+    if (profile.status === "loading") return "…";
+    return "—";
+  };
+
+  const bothWinrate = leftLive?.winrate != null && rightLive?.winrate != null;
 
   return (
     <div
@@ -163,6 +237,24 @@ export function MemberCompareModal({
             right={formatRankLabel(right.rank)}
             leftWins={leftElo >= 0 && leftElo > rightElo}
             rightWins={rightElo >= 0 && rightElo > leftElo}
+          />
+          <CompareRow
+            label="Winrate (ranqueada)"
+            left={winrateText(left, leftProfile, leftLive)}
+            right={winrateText(right, rightProfile, rightLive)}
+            leftSub={winrateSub(left, leftLive)}
+            rightSub={winrateSub(right, rightLive)}
+            leftWins={
+              bothWinrate && leftLive!.winrate! > rightLive!.winrate!
+            }
+            rightWins={
+              bothWinrate && rightLive!.winrate! > leftLive!.winrate!
+            }
+          />
+          <CompareRow
+            label="Campeão principal"
+            left={mainText(left, leftProfile, leftLive)}
+            right={mainText(right, rightProfile, rightLive)}
           />
           <CompareRow
             label="Posição na Baderna"

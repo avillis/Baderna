@@ -7,7 +7,14 @@ import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { GameModeProvider } from "@/features/panel/game-mode-context";
 import { panelProfile, panelStats } from "@/features/panel/panel-data";
 import { getSplashCatalog, type SplashGroup } from "@/features/panel/splash-catalog";
-import { authToken } from "@/features/panel/use-auth";
+import { authToken, useAuth } from "@/features/panel/use-auth";
+import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+import { useMemberRanks } from "@/features/panel/use-member-ranks";
+import {
+  MemberCompareModal,
+  type CompareSide,
+} from "@/features/panel/components/member-compare-modal";
+import type { BadernaMember } from "@/features/panel/members-data";
 import { LiveFavoriteChampionsCard } from "@/features/panel/components/live-favorite-champions-card";
 import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
 import { LiveHistoryCard } from "@/features/panel/components/live-history-card";
@@ -91,6 +98,10 @@ function findMemberInList(
 export function MembroPageClient({ slug }: { slug: string }) {
   const [members, setMembers] = useState<ApiMember[] | null>(null);
   const [splashGroups, setSplashGroups] = useState<SplashGroup[]>([]);
+  const allMembers = useBadernaMembers();
+  const ranks = useMemberRanks();
+  const { user } = useAuth();
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -179,6 +190,29 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const targetUserId = member.userId;
   const riotId = member.riotId;
 
+  const buildSide = (m: BadernaMember): CompareSide => {
+    const idx = allMembers.findIndex((x) => x.id === m.id);
+    return {
+      member: m,
+      badernaRank: idx >= 0 ? idx + 1 : 1,
+      rank: m.userId != null ? ranks[m.userId] : undefined,
+      riotId:
+        m.summonerName && m.tagLine ? `${m.summonerName}#${m.tagLine}` : null,
+    };
+  };
+  const viewedBaderna =
+    targetUserId != null
+      ? allMembers.find((m) => m.userId === targetUserId)
+      : undefined;
+  const meBaderna =
+    user != null ? allMembers.find((m) => m.userId === user.id) : undefined;
+  const viewedSide = viewedBaderna ? buildSide(viewedBaderna) : null;
+  const mySide = meBaderna ? buildSide(meBaderna) : null;
+  const canCompare = Boolean(
+    viewedSide && mySide && viewedSide.member.id !== mySide.member.id,
+  );
+  const handleCompare = canCompare ? () => setShowCompare(true) : undefined;
+
   return (
     <PanelShell
       splashGroups={splashGroups}
@@ -203,6 +237,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 initialTitleIds={["aprendiz"]}
                 unlockedTitleIds={["aprendiz"]}
                 memberId={member.id}
+                onCompare={handleCompare}
               />
             </div>
 
@@ -272,6 +307,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                   initialTitleIds={["aprendiz"]}
                   unlockedTitleIds={["aprendiz"]}
                   memberId={member.id}
+                  onCompare={handleCompare}
                 />
               </div>
 
@@ -322,6 +358,14 @@ export function MembroPageClient({ slug }: { slug: string }) {
           </div>
         </div>
       </GameModeProvider>
+
+      {showCompare && viewedSide && mySide && (
+        <MemberCompareModal
+          left={viewedSide}
+          right={mySide}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
     </PanelShell>
   );
 }

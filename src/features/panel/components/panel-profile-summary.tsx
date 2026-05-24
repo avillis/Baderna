@@ -49,6 +49,8 @@ type PanelProfileSummaryProps = {
   initialTitleIds?: string[];
   unlockedTitleIds?: string[];
   memberId?: string;
+  /** Quando passado (e não é o próprio perfil), mostra "Comparar com você". */
+  onCompare?: () => void;
 };
 
 export function PanelProfileSummary({
@@ -63,6 +65,7 @@ export function PanelProfileSummary({
   initialTitleIds = ["aprendiz"],
   unlockedTitleIds = ["aprendiz"],
   memberId,
+  onCompare,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -225,6 +228,30 @@ export function PanelProfileSummary({
         <p className="mt-[12px] whitespace-pre-wrap text-[13px] font-medium leading-[1.5] tracking-[-0.02em] text-[#989898]">
           {liveBio}
         </p>
+
+        {!isOwnProfile && onCompare && (
+          <button
+            type="button"
+            onClick={onCompare}
+            className="mt-[16px] inline-flex items-center gap-2 rounded-full bg-[#ff4100] px-4 py-2.5 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[16px] w-[16px]"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Comparar com você
+          </button>
+        )}
       </div>
 
       <TitleModal

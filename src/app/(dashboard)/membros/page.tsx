@@ -123,6 +123,10 @@ export default function MembrosPage() {
           member: r.member,
           badernaRank: r.badernaRank,
           rank: r.member.userId != null ? ranks[r.member.userId] : undefined,
+          riotId:
+            r.member.summonerName && r.member.tagLine
+              ? `${r.member.summonerName}#${r.member.tagLine}`
+              : null,
         })),
     [selectedIds, ranked, ranks],
   );
