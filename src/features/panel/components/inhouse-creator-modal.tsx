@@ -595,7 +595,7 @@ function InhouseCreatorContent({
         {/* Footer */}
         <div className="shrink-0 border-t border-[#ece7e2] bg-white px-5 py-4 sm:px-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {mode === "leader" ? (
                 <>
                   <div
@@ -603,15 +603,15 @@ function InhouseCreatorContent({
                       totalSelected >= 10 ? "bg-[#2f855a]" : "bg-[#d97706]"
                     }`}
                   />
-                  <span className="text-[13px] font-bold text-[#0f0f0f]">
+                  <span className="whitespace-nowrap text-[13px] font-bold text-[#0f0f0f]">
                     {totalSelected} participante{totalSelected === 1 ? "" : "s"}
                   </span>
                   {totalSelected < 10 ? (
-                    <span className="text-[12px] font-semibold text-[#8d8d8d]">
+                    <span className="whitespace-nowrap text-[12px] font-semibold text-[#8d8d8d]">
                       · mínimo 10 (faltam {10 - totalSelected})
                     </span>
                   ) : (
-                    <span className="text-[12px] font-semibold text-[#8d8d8d]">
+                    <span className="whitespace-nowrap text-[12px] font-semibold text-[#8d8d8d]">
                       · os líderes escolhem o time depois
                     </span>
                   )}
@@ -627,16 +627,16 @@ function InhouseCreatorContent({
                           : "bg-[#d97706]"
                     }`}
                   />
-                  <span className="text-[13px] font-bold text-[#0f0f0f]">
+                  <span className="whitespace-nowrap text-[13px] font-bold text-[#0f0f0f]">
                     {totalSelected}/10 participantes
                   </span>
                   {remaining > 0 && (
-                    <span className="text-[12px] font-semibold text-[#8d8d8d]">
+                    <span className="whitespace-nowrap text-[12px] font-semibold text-[#8d8d8d]">
                       · faltam {remaining}
                     </span>
                   )}
                   {totalSelected > 10 && (
-                    <span className="text-[12px] font-semibold text-[#c53030]">
+                    <span className="whitespace-nowrap text-[12px] font-semibold text-[#c53030]">
                       · {totalSelected - 10} a mais
                     </span>
                   )}
