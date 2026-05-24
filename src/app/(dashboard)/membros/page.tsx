@@ -115,7 +115,7 @@ export default function MembrosPage() {
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap justify-between gap-2 sm:w-auto sm:justify-normal sm:gap-2">
             {LANES.map((l) => {
               const active = lane === l.value;
               return (
