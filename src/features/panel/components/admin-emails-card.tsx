@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useToast } from "@/components/toast";
 import { authToken } from "@/features/panel/use-auth";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+
+// Largura de design do template (padrão de email) e altura visível do preview.
+const PREVIEW_EMAIL_WIDTH = 600;
+const PREVIEW_BOX_HEIGHT = 640;
 
 type EmailTemplate = {
   id: string;
@@ -42,6 +46,19 @@ export function AdminEmailsCard() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [sending, setSending] = useState(false);
+  const previewBoxRef = useRef<HTMLDivElement>(null);
+  const [previewBoxWidth, setPreviewBoxWidth] = useState(0);
+
+  // Mede a largura disponível do preview pra escalar o template no mobile.
+  useEffect(() => {
+    const el = previewBoxRef.current;
+    if (!el) return;
+    const update = () => setPreviewBoxWidth(el.clientWidth);
+    update();
+    const obs = new ResizeObserver(update);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [templates.length]);
 
   // Lista templates ao montar
   useEffect(() => {
@@ -116,6 +133,13 @@ export function AdminEmailsCard() {
   }
 
   const selected = templates.find((t) => t.id === selectedId);
+
+  // No mobile a largura disponível é menor que o design do template (~600px);
+  // renderiza no tamanho real e escala pra caber, sem cortar. No desktop
+  // (largura >= 600) mantém o iframe full width, como antes.
+  const needsScale =
+    previewBoxWidth > 0 && previewBoxWidth < PREVIEW_EMAIL_WIDTH;
+  const previewScale = needsScale ? previewBoxWidth / PREVIEW_EMAIL_WIDTH : 1;
 
   return (
     <section className="rounded-[var(--panel-radius-card)] bg-white p-6 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
@@ -198,16 +222,33 @@ export function AdminEmailsCard() {
               </div>
             )}
 
-            <div className="overflow-hidden rounded-[14px] border border-[#ececec] bg-white">
+            <div
+              ref={previewBoxRef}
+              className="overflow-hidden rounded-[14px] border border-[#ececec] bg-white"
+              style={{ height: PREVIEW_BOX_HEIGHT }}
+            >
               {loadingPreview ? (
-                <div className="flex h-[500px] items-center justify-center text-[12px] text-[#8d8d8d]">
+                <div className="flex h-full items-center justify-center text-[12px] text-[#8d8d8d]">
                   Carregando…
                 </div>
+              ) : needsScale ? (
+                <iframe
+                  title="Preview do email"
+                  srcDoc={hideScrollbar(previewHtml)}
+                  sandbox=""
+                  style={{
+                    width: PREVIEW_EMAIL_WIDTH,
+                    height: PREVIEW_BOX_HEIGHT / previewScale,
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: "top left",
+                    border: "none",
+                  }}
+                />
               ) : (
                 <iframe
                   title="Preview do email"
                   srcDoc={hideScrollbar(previewHtml)}
-                  className="h-[640px] w-full border-none"
+                  className="h-full w-full border-none"
                   sandbox=""
                 />
               )}
