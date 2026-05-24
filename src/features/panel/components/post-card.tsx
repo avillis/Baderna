@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, SmilePlus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -258,7 +258,7 @@ export function PostCard({
         )}
 
         {/* Linha de ações: like + comentários. Expanded mostra data à direita. */}
-        <div className="mt-[18px] flex items-center gap-[16px]">
+        <div className="mt-[18px] flex flex-wrap items-center gap-x-[16px] gap-y-[10px]">
           <LikeButton
             liked={post.liked}
             count={post.likesCount}
@@ -269,6 +269,7 @@ export function PostCard({
             href={`/post/${post.shortCode || post.id}`}
           />
           <BookmarkButton />
+          <PostReactions />
           {expanded && (
             <span className="ml-auto text-[12px] text-[#8d8d8d]">
               {formatPostDateLong(post.createdAt)}
@@ -347,6 +348,94 @@ function CommentButton({ count, href }: { count: number; href: string }) {
       </span>
       <span>{count > 0 ? count : ""}</span>
     </Link>
+  );
+}
+
+const REACTION_EMOJIS = ["👍", "❤️", "🔥", "😂", "😮", "😢"];
+
+/**
+ * Reações — preview (mock). Estado local apenas; ainda sem persistência.
+ * Backend precisa de: GET/POST /posts/{id}/reactions com { emoji } e retorno
+ * { reactions: { emoji: count }, mine: emoji|null }.
+ */
+function PostReactions() {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [mine, setMine] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+
+  function react(emoji: string) {
+    setCounts((prev) => {
+      const next = { ...prev };
+      if (mine) next[mine] = Math.max(0, (next[mine] ?? 1) - 1);
+      if (mine !== emoji) next[emoji] = (next[emoji] ?? 0) + 1;
+      return next;
+    });
+    setMine((m) => (m === emoji ? null : emoji));
+    setOpen(false);
+  }
+
+  const active = REACTION_EMOJIS.filter((e) => (counts[e] ?? 0) > 0);
+
+  return (
+    <div className="relative flex items-center gap-[6px]">
+      {active.map((emoji) => (
+        <button
+          key={emoji}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            react(emoji);
+          }}
+          className={`flex items-center gap-[4px] rounded-full px-[8px] py-[3px] text-[12px] font-semibold transition-colors ${
+            mine === emoji
+              ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
+              : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
+          }`}
+        >
+          <span className="text-[13px] leading-none">{emoji}</span>
+          <span>{counts[emoji]}</span>
+        </button>
+      ))}
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+        aria-label="Reagir"
+        className="flex h-[22px] w-[22px] items-center justify-center text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
+      >
+        <SmilePlus className="h-[20px] w-[20px]" strokeWidth={2.2} />
+      </button>
+
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+            }}
+          />
+          <div className="absolute bottom-full left-0 z-20 mb-[8px] flex gap-[2px] rounded-full bg-white p-[6px] shadow-[0px_8px_30px_rgba(0,0,0,0.14)]">
+            {REACTION_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  react(emoji);
+                }}
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-[20px] transition-transform hover:scale-125"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
