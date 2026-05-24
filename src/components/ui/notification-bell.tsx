@@ -43,6 +43,13 @@ export default function NotificationBell({
     setIsOpen(false);
   };
 
+  // No header mobile (placement="below") o botão usa o mesmo círculo cinza
+  // 48x48 do menu/foto de perfil; na sidebar do desktop fica enxuto.
+  const buttonClass =
+    placement === "below"
+      ? "relative flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-opacity duration-200 hover:opacity-85"
+      : "relative flex items-center justify-center rounded-full p-2 text-[#313131] transition-colors duration-200 hover:bg-[#fff4f4]";
+
   const panel = (
     <>
       <div className="flex items-center justify-between border-b border-[#f0e9e5] px-[16px] py-[12px]">
@@ -95,7 +102,7 @@ export default function NotificationBell({
       <button
         ref={buttonRef}
         onClick={handleToggle}
-        className="relative flex items-center justify-center rounded-full p-2 text-[#313131] transition-colors duration-200 hover:bg-[#fff4f4]"
+        className={buttonClass}
         title="Notificações"
       >
         <svg
