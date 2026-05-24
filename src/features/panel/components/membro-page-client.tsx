@@ -239,6 +239,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 memberId={member.id}
                 onCompare={handleCompare}
                 badernaRank={badernaRank}
+                bannerSrc={profile.bannerSrc}
               />
             </div>
 
@@ -310,6 +311,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                   memberId={member.id}
                   onCompare={handleCompare}
                   badernaRank={badernaRank}
+                  bannerSrc={profile.bannerSrc}
                 />
               </div>
 

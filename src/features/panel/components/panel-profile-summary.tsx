@@ -67,6 +67,8 @@ type PanelProfileSummaryProps = {
   onCompare?: () => void;
   /** Posição na Baderna (#N) — usada no cartão compartilhável. */
   badernaRank?: number;
+  /** Splash do banner — usado de fundo no cartão compartilhável. */
+  bannerSrc?: string;
 };
 
 export function PanelProfileSummary({
@@ -83,6 +85,7 @@ export function PanelProfileSummary({
   memberId,
   onCompare,
   badernaRank,
+  bannerSrc,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
@@ -160,19 +163,21 @@ export function PanelProfileSummary({
         : "Sem classificação";
     const games = rankObj ? rankObj.wins + rankObj.losses : 0;
     const wr = games > 0 ? String(Math.round((rankObj!.wins / games) * 100)) : "";
-    let avatarAbs = liveAvatarSrc;
-    try {
-      avatarAbs = new URL(liveAvatarSrc, window.location.origin).toString();
-    } catch {
-      /* mantém o valor original */
-    }
+    const abs = (src: string) => {
+      try {
+        return new URL(src, window.location.origin).toString();
+      } catch {
+        return src;
+      }
+    };
     const params = new URLSearchParams({
       name: liveDisplayName,
       full: liveFullName ?? "",
       elo,
       pos: badernaRank ? String(badernaRank) : "",
-      avatar: avatarAbs,
-      color: NAME_BY_ID[activeNameId]?.color ?? "#ffffff",
+      avatar: abs(liveAvatarSrc),
+      banner: bannerSrc ? abs(bannerSrc) : "",
+      color: NAME_BY_ID[activeNameId]?.color ?? "#0f0f0f",
       wr,
     });
     const cardUrl = `${window.location.origin}/api/profile-card?${params.toString()}`;
