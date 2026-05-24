@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ReloadThrottle } from "@/features/panel/components/reload-throttle";
@@ -10,6 +10,15 @@ const inter = Inter({
   display: "swap",
   variable: "--font-inter",
 });
+
+// Trava o zoom em 1x — evita o auto-zoom do iOS Safari ao focar em inputs
+// com fonte menor que 16px.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: "Baderna | Ser bandido is good as fuck",
