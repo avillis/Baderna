@@ -114,6 +114,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/inhouses/{shortCode}', [InhousesController::class, 'update']);
     Route::delete('/inhouses/{shortCode}', [InhousesController::class, 'destroy']);
 
+    // Notificações
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+
     // Admin-only — só rolam com Sanctum válido + is_admin=true
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/riot-key', [SettingsController::class, 'showRiotKey']);
