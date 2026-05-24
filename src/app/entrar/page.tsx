@@ -62,7 +62,7 @@ function EntrarPageInner() {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-white">
+    <div className="flex min-h-screen w-full flex-col bg-white md:flex-row">
       {/* Left side */}
       <div className="relative flex w-full flex-col bg-[#f7f7f7] md:w-1/2">
         <style>{`
@@ -89,7 +89,7 @@ function EntrarPageInner() {
         </div>
 
         {/* Form Container */}
-        <div className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 md:px-24">
+        <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8 sm:px-6 md:px-24 md:pb-0">
           <div className="flex w-full max-w-[320px] flex-col items-center gap-6">
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
               {!isLogin && (
@@ -219,8 +219,8 @@ function EntrarPageInner() {
         </div>
       </div>
 
-      {/* Right side - iframe for Batata Letters */}
-      <div className="hidden flex-1 md:flex">
+      {/* Animação Batata Letters — direita no desktop, abaixo do login no mobile */}
+      <div className="flex min-h-0 flex-1">
         <iframe
           src="/batata-letters.html"
           className="h-full w-full border-none"
