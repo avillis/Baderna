@@ -194,6 +194,13 @@ export function PanelProfileSummary({
       if (!res.ok) throw new Error("falha ao gerar o cartão");
       const blob = await res.blob();
       const file = new File([blob], fileName, { type: "image/png" });
+      const profileUrl = memberId
+        ? `${window.location.origin}/membro/${memberId}`
+        : window.location.origin;
+      const intro = isOwnProfile
+        ? "Esse é o meu perfil na Baderna!"
+        : `Confira o perfil de ${liveDisplayName} na Baderna!`;
+      const text = `${intro}\n${profileUrl}`;
       const nav = navigator as Navigator & {
         canShare?: (data: { files?: File[] }) => boolean;
       };
@@ -201,6 +208,7 @@ export function PanelProfileSummary({
         try {
           await navigator.share({
             files: [file],
+            text,
             title: `Perfil de ${liveDisplayName} · Baderna`,
           });
         } catch {

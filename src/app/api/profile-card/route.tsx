@@ -32,8 +32,7 @@ async function resolveImage(u: string): Promise<string> {
   try {
     const r = await fetch(u);
     const ct = r.headers.get("content-type") || "";
-    // Pula webp — o Satori pode falhar e derrubar o cartão inteiro (500).
-    if (r.ok && ct.startsWith("image") && !ct.includes("webp")) {
+    if (r.ok && ct.startsWith("image")) {
       return r.url;
     }
   } catch {
