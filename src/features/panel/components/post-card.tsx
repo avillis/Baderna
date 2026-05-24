@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { getMemberSlug } from "@/features/panel/members-data";
+import { ImageLightbox } from "@/features/panel/components/image-lightbox";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { VideoPlayer } from "@/features/panel/components/video-player";
 import { useAuth } from "@/features/panel/use-auth";
@@ -29,6 +30,7 @@ export function PostCard({
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const media = post.imageUrl ?? post.gifUrl;
   const canDelete =
@@ -225,7 +227,12 @@ export function PostCard({
         )}
 
         {media && (
-          <div className="mt-[12px] overflow-hidden rounded-[16px] bg-[#ededed]">
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            aria-label="Abrir imagem"
+            className="mt-[12px] block w-full overflow-hidden rounded-[16px] bg-[#ededed]"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={media}
@@ -237,7 +244,11 @@ export function PostCard({
               }
               loading="lazy"
             />
-          </div>
+          </button>
+        )}
+
+        {lightboxOpen && media && (
+          <ImageLightbox src={media} onClose={() => setLightboxOpen(false)} />
         )}
 
         {post.videoUrl && !media && (
