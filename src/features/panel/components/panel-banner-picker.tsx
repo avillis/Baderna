@@ -356,23 +356,21 @@ export function PanelBannerPicker({
                               )}
                             </div>
 
-                            <div className="flex items-center justify-between px-[4px] pb-[2px] pt-[10px]">
-                              <div>
-                                <p
-                                  className={`text-[13px] font-bold tracking-[-0.03em] ${
-                                    locked ? "text-[#9a9a9a]" : "text-[#0f0f0f]"
-                                  }`}
-                                >
-                                  {variant.displaySkin}
-                                </p>
-                              </div>
+                            <div className="flex flex-col gap-[2px] px-[4px] pb-[2px] pt-[10px] sm:flex-row sm:items-center sm:justify-between sm:gap-[8px]">
+                              <p
+                                className={`min-w-0 truncate text-[13px] font-bold tracking-[-0.03em] sm:flex-1 ${
+                                  locked ? "text-[#9a9a9a]" : "text-[#0f0f0f]"
+                                }`}
+                              >
+                                {variant.displaySkin}
+                              </p>
 
                               {isSelected ? (
-                                <span className="text-[11px] font-bold tracking-[-0.02em] text-[#ff4100]">
+                                <span className="shrink-0 text-[11px] font-bold tracking-[-0.02em] text-[#ff4100]">
                                   Ativa
                                 </span>
                               ) : locked ? (
-                                <span className="text-[11px] font-bold tracking-[-0.02em] text-[#9a9a9a]">
+                                <span className="shrink-0 text-[11px] font-bold tracking-[-0.02em] text-[#9a9a9a]">
                                   Bloqueada
                                 </span>
                               ) : null}
