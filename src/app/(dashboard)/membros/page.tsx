@@ -115,7 +115,7 @@ export default function MembrosPage() {
             />
           </div>
 
-          <div className="flex w-full flex-wrap justify-between gap-2 sm:w-auto sm:justify-normal sm:gap-2">
+          <div className="flex w-full gap-2 sm:w-auto">
             {LANES.map((l) => {
               const active = lane === l.value;
               return (
@@ -123,7 +123,7 @@ export default function MembrosPage() {
                   key={l.value}
                   type="button"
                   onClick={() => setLane(active ? null : l.value)}
-                  className={`rounded-full px-3.5 py-2 text-[12px] font-bold tracking-[-0.01em] transition-colors ${
+                  className={`flex-1 whitespace-nowrap rounded-full px-2 py-2 text-center text-[11px] font-bold tracking-[-0.01em] transition-colors sm:flex-none sm:px-3.5 sm:text-[12px] ${
                     active
                       ? "bg-[#ff4100] text-white"
                       : "bg-white text-[#6f6f6f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] hover:bg-[#fff4f4]"
