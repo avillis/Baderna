@@ -101,7 +101,9 @@ function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         styles[toast.type]
       } ${animState}`}
     >
-      <span className="flex-1">{toast.message}</span>
+      {/* Espaçador da largura do X pra centralizar o texto de verdade. */}
+      <span className="h-[20px] w-[20px] flex-shrink-0" aria-hidden="true" />
+      <span className="flex-1 text-center">{toast.message}</span>
       <button
         type="button"
         onClick={onClose}
