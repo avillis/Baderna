@@ -39,6 +39,7 @@ import { useAccount } from "@/features/panel/use-account";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { useMemberCoins } from "@/features/panel/use-member-coins";
 import { cn } from "@/lib/utils";
+import NotificationBell from "@/components/ui/notification-bell";
 
 function MenuItem({
   label,
@@ -380,7 +381,8 @@ export function PanelSidebar() {
                     })()}
                   </Link>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-1">
+                    <NotificationBell />
                     <SidebarIconButton
                       label="Mais opções"
                       onClick={handleToggle}
@@ -535,7 +537,8 @@ function MobileHeader() {
         </Link>
 
         <div className="flex items-center gap-[10px]">
-          {user && (
+          {!open && user && <NotificationBell placement="below" />}
+          {!open && user && (
             <button
               ref={acctBtnRef}
               type="button"
