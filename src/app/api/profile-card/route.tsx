@@ -98,7 +98,7 @@ export async function GET(req: Request) {
             overflow: "hidden",
           }}
         >
-          {/* Logo (branca) no canto superior direito, sobre o banner */}
+          {/* Logo (branca) no canto superior esquerdo, sobre o banner */}
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -109,7 +109,7 @@ export async function GET(req: Request) {
               style={{
                 position: "absolute",
                 top: 36,
-                right: 40,
+                left: 40,
                 width: 84,
                 height: 84,
                 objectFit: "contain",
@@ -215,6 +215,7 @@ export async function GET(req: Request) {
                 marginTop: 24,
                 fontSize: 72,
                 fontWeight: 700,
+                letterSpacing: "-0.03em",
                 color,
                 textAlign: "center",
                 maxWidth: 820,
