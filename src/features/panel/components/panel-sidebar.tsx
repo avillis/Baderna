@@ -537,8 +537,8 @@ function MobileHeader() {
         </Link>
 
         <div className="flex items-center gap-[10px]">
-          {user && <NotificationBell placement="below" />}
-          {user && (
+          {!open && user && <NotificationBell placement="below" />}
+          {!open && user && (
             <button
               ref={acctBtnRef}
               type="button"
