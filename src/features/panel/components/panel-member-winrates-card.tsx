@@ -161,7 +161,7 @@ export function PanelMemberWinratesCard({
                   nickname={row.summonerName ?? row.name}
                 />
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                  <h3 className="truncate-glow text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
                     <StyledName styleId={styleId}>
                       {row.summonerName ?? row.name}
                     </StyledName>

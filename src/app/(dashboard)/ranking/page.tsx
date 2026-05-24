@@ -176,7 +176,7 @@ export default function RankingPage() {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                  <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
                     <StyledName styleId={member.activeNameId}>
                       {member.nickname}
                     </StyledName>

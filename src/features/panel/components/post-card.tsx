@@ -131,12 +131,12 @@ export function PostCard({
               {authorSlug ? (
                 <Link
                   href={`/membro/${authorSlug}`}
-                  className="block truncate text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-80 sm:text-[15px]"
+                  className="block truncate-glow text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-80 sm:text-[15px]"
                 >
                   <StyledName styleId={authorStyleId}>{authorNick}</StyledName>
                 </Link>
               ) : (
-                <span className="block truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+                <span className="block truncate-glow text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
                   <StyledName styleId={authorStyleId}>{authorNick}</StyledName>
                 </span>
               )}

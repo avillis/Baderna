@@ -119,7 +119,7 @@ export function PanelCommentsCard({
                       <div className="min-w-0 flex-1">
                         <Link
                           href={profileHref}
-                          className="inline-block max-w-full truncate text-[13px] font-bold tracking-[-0.03em] text-[#0f0f0f] transition-opacity hover:opacity-70"
+                          className="inline-block max-w-full truncate-glow text-[13px] font-bold tracking-[-0.03em] text-[#0f0f0f] transition-opacity hover:opacity-70"
                         >
                           <StyledName styleId={authorStyleId}>
                             {displayName}

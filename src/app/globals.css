@@ -543,6 +543,18 @@ button {
   color: transparent;
 }
 
+/* Igual ao `truncate` do Tailwind, mas clipa só na horizontal (mantendo o
+   "…") e deixa o brilho dos nomes neon vazar na vertical, em vez de o
+   overflow:hidden recortar o glow num retângulo. Pinta por cima dos vizinhos
+   sem empurrar o layout. */
+.truncate-glow {
+  white-space: nowrap;
+  overflow-x: clip;
+  overflow-y: visible;
+  text-overflow: ellipsis;
+  overflow-clip-margin: 0.3em;
+}
+
 .name-outline-white {
   color: white;
   -webkit-text-stroke: 1.5px #0f0f0f;

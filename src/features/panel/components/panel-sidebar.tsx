@@ -362,7 +362,7 @@ export function PanelSidebar() {
                       return (
                         <span
                           title={account.gameNick || fallback}
-                          className="max-w-[156px] truncate pr-1 text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#0f0f0f]"
+                          className="max-w-[156px] truncate-glow pr-1 text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#0f0f0f]"
                         >
                           {nick ? (
                             <>
