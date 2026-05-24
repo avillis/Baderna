@@ -177,6 +177,7 @@ export function PanelProfileSummary({
       pos: badernaRank ? String(badernaRank) : "",
       avatar: abs(liveAvatarSrc),
       banner: bannerSrc ? abs(bannerSrc) : "",
+      rankType: isUnranked ? "" : liveRankType,
       color: NAME_BY_ID[activeNameId]?.color ?? "#0f0f0f",
       wr,
     });
