@@ -124,8 +124,7 @@ export async function GET(req: Request) {
               display: "flex",
               width: "100%",
               height: 360,
-              background:
-                "linear-gradient(135deg, #ff7a3c 0%, #ff4100 58%, #e03900 100%)",
+              background: "#ff4100",
             }}
           />
 
