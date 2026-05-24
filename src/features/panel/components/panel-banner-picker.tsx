@@ -216,8 +216,8 @@ export function PanelBannerPicker({
               </button>
 
               <div className="grid min-h-0 flex-1 gap-0 overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)]">
-                <aside className="flex min-h-0 max-h-[28vh] flex-col border-b border-[#ece7e2] bg-white px-[14px] lg:max-h-none lg:border-b-0 lg:border-r">
-                  <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pr-[6px] py-[14px] lg:py-[18px]">
+                <aside className="flex min-h-0 max-h-[34vh] flex-col border-b border-[#ece7e2] bg-white px-[14px] lg:max-h-none lg:border-b-0 lg:border-r">
+                  <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pr-[6px] pb-[14px] pt-[64px] lg:py-[18px]">
                     <div className="space-y-[6px] pr-[4px]">
                       {unlockedGroup ? (
                         <>
