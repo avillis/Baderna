@@ -1,5 +1,6 @@
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { MembersTable } from "@/app/(dashboard)/admin/members-table";
+import { PendingApprovalsCard } from "@/features/panel/components/pending-approvals-card";
 import { AdminGuard } from "@/app/(dashboard)/admin/admin-guard";
 import { AdminCoinRewardsCard } from "@/features/panel/components/admin-coin-rewards-card";
 import { AdminEmailsCard } from "@/features/panel/components/admin-emails-card";
@@ -23,6 +24,7 @@ export default function AdminPage() {
 
           {/* Coluna esquerda — membros, emails, logs */}
           <div className="flex min-w-0 flex-1 flex-col gap-6">
+            <PendingApprovalsCard />
             <MembersTable />
             <AdminEmailsCard />
             <AdminErrorLogsCard />
