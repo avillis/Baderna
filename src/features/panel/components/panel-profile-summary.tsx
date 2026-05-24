@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { NAME_STYLES } from "@/features/panel/names-data";
 import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
+import { FeaturedChampions } from "@/features/panel/components/featured-champions";
 import { ProfileActions } from "@/features/panel/components/profile-actions";
 import { RankedAvatar } from "@/features/panel/components/ranked-avatar";
 import { RaritySmokeOverlay } from "@/features/panel/components/rarity-smoke-overlay";
@@ -264,6 +265,8 @@ export function PanelProfileSummary({
           onCompare={onCompare}
         />
       </div>
+
+      <FeaturedChampions memberId={memberId} targetUserId={targetUserId} />
 
       <TitleModal
         open={modalOpen}
