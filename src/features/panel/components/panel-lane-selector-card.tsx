@@ -7,7 +7,7 @@ import { useAuth } from "@/features/panel/use-auth";
 
 const LANES: { key: Lane; label: string; icon: string }[] = [
   { key: "TOP", label: "Topo",     icon: "/images/lanes/Top_icon.png" },
-  { key: "JG",  label: "Selva",    icon: "/images/lanes/Jungle_icon.png" },
+  { key: "JG",  label: "Jungle",   icon: "/images/lanes/Jungle_icon.png" },
   { key: "MID", label: "Meio",     icon: "/images/lanes/Middle_icon.png" },
   { key: "ADC", label: "Atirador", icon: "/images/lanes/Bottom_icon.png" },
   { key: "SUP", label: "Suporte",  icon: "/images/lanes/Support_icon.png" },

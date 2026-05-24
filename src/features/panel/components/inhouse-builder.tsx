@@ -211,7 +211,9 @@ export function InhouseBuilder() {
                       </div>
                       <p className="mt-1 text-sm text-[#767676]">{member.rankName}</p>
                       <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#b08a79]">
-                        {member.preferredRoles.join(" • ")}
+                        {member.preferredRoles
+                          .map((r) => (r === "ADC" ? "Atirador" : r))
+                          .join(" • ")}
                       </p>
                     </div>
                   </button>
@@ -302,7 +304,7 @@ export function InhouseBuilder() {
                     </p>
                     <p className="mt-1 text-sm text-[#7c7c7c]">
                       {participant.type === "member"
-                        ? `${participant.member.rankName} • ${participant.member.preferredRoles.join(" / ")}`
+                        ? `${participant.member.rankName} • ${participant.member.preferredRoles.map((r) => (r === "ADC" ? "Atirador" : r)).join(" / ")}`
                         : "Convidado aleatório • sem estatística"}
                     </p>
                   </div>

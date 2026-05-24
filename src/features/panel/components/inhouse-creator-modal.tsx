@@ -64,7 +64,7 @@ const LANES: { key: Lane; icon: string; label: string }[] = [
   { key: "TOP", icon: "/images/lanes/Top_icon.png", label: "Top" },
   { key: "JG", icon: "/images/lanes/Jungle_icon.png", label: "Jungle" },
   { key: "MID", icon: "/images/lanes/Middle_icon.png", label: "Mid" },
-  { key: "ADC", icon: "/images/lanes/Bottom_icon.png", label: "ADC" },
+  { key: "ADC", icon: "/images/lanes/Bottom_icon.png", label: "Atirador" },
   { key: "SUP", icon: "/images/lanes/Support_icon.png", label: "Suporte" },
 ];
 

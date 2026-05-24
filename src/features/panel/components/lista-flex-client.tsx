@@ -25,7 +25,7 @@ const laneIcon: Record<Role, string> = {
 
 const laneLabel: Record<Role, string> = {
   TOP: "topo",
-  JG: "selva",
+  JG: "jungle",
   MID: "meio",
   ADC: "atirador",
   SUP: "suporte",
