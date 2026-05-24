@@ -93,7 +93,7 @@ function CompareRow({
 }) {
   return (
     <div className="border-t border-[#f3ebe8] py-[14px]">
-      <div className="mb-[10px] text-center text-[11px] font-bold uppercase tracking-[0.04em] text-[#b0a8a4]">
+      <div className="mb-[10px] text-center text-[12px] font-bold text-[#b0a8a4]">
         {label}
       </div>
       <div className="grid grid-cols-2 gap-2">
