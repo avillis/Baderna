@@ -101,10 +101,9 @@ function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         styles[toast.type]
       } ${animState}`}
     >
-      {/* Texto ocupa a largura toda e centraliza; o X fica absoluto à direita
-          pra não puxar o texto pro lado. O px-[24px] simétrico dá folga e
-          evita o texto encostar no botão. */}
-      <span className="block w-full px-[24px] text-center">{toast.message}</span>
+      {/* Texto alinhado à esquerda; o pr-[24px] dá folga pro X (absoluto à
+          direita) pra o texto não encostar nele. */}
+      <span className="block w-full pr-[24px] text-left">{toast.message}</span>
       <button
         type="button"
         onClick={onClose}
