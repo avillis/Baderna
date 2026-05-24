@@ -4,7 +4,6 @@ export const runtime = "edge";
 
 const W = 1080;
 const H = 1080;
-const ORANGE = "#ff4100";
 
 const AVATAR_BOX = 300;
 // Mesma proporção do RankedAvatar (avatarInset 21 / size 156, frameScale 2.72,
@@ -57,11 +56,7 @@ export async function GET(req: Request) {
     ? `${origin}/images/rank-frames/${rankType}.png`
     : "";
 
-  // O splash em tamanho "full" é grande demais e o Satori não rasteriza —
-  // usamos a versão "thumb" (bem menor), que renderiza de boa.
-  const bannerParam = (sp.get("banner") || "").replace("size=full", "size=thumb");
-
-  const [fontReg, fontBold, avatar, banner, frame, logo] = await Promise.all([
+  const [fontReg, fontBold, avatar, frame, logo] = await Promise.all([
     fetch(new URL("./Inter-Regular.ttf", import.meta.url)).then((r) =>
       r.arrayBuffer(),
     ),
@@ -69,7 +64,6 @@ export async function GET(req: Request) {
       r.arrayBuffer(),
     ),
     resolveImage(sp.get("avatar") || ""),
-    resolveImage(bannerParam),
     resolveImage(frameUrl),
     resolveImage(`${origin}/logo.png`),
   ]);
@@ -105,7 +99,7 @@ export async function GET(req: Request) {
             overflow: "hidden",
           }}
         >
-          {/* Logo (branca) no canto superior esquerdo, sobre o banner */}
+          {/* Logo (branca) no canto superior direito, sobre o header laranja */}
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -116,7 +110,7 @@ export async function GET(req: Request) {
               style={{
                 position: "absolute",
                 top: 36,
-                left: 40,
+                right: 40,
                 width: 84,
                 height: 84,
                 objectFit: "contain",
@@ -124,28 +118,16 @@ export async function GET(req: Request) {
             />
           ) : null}
 
-          {/* Banner (splash do campeão) */}
+          {/* Header laranja */}
           <div
             style={{
               display: "flex",
               width: "100%",
               height: 360,
-              background: banner
-                ? "#ededed"
-                : `linear-gradient(135deg, ${ORANGE}, #ff8a4c)`,
+              background:
+                "linear-gradient(135deg, #ff7a3c 0%, #ff4100 58%, #e03900 100%)",
             }}
-          >
-            {banner ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={banner}
-                alt=""
-                width={968}
-                height={360}
-                style={{ width: 968, height: 360, objectFit: "cover" }}
-              />
-            ) : null}
-          </div>
+          />
 
           {/* Conteúdo */}
           <div
@@ -156,7 +138,7 @@ export async function GET(req: Request) {
               padding: "0 56px 56px",
             }}
           >
-            {/* Avatar com moldura de rank, sobrepondo o banner */}
+            {/* Avatar com moldura de rank, sobrepondo o header */}
             <div
               style={{
                 position: "relative",
