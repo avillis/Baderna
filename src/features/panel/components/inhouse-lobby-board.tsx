@@ -1058,7 +1058,7 @@ function EmptySlot({ side, index }: { side: "blue" | "red"; index: number }) {
   return (
     <div
       className={`flex h-[76px] w-full max-w-[390px] items-center rounded-[22px] border-2 border-dashed border-[#d9d4d1] bg-white/40 px-[20px] text-[14px] font-semibold text-[#b0a8a4] ${
-        side === "red" ? "justify-end" : ""
+        side === "red" ? "xl:justify-end" : ""
       }`}
     >
       Jogador {index + 1}
