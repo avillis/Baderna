@@ -62,9 +62,9 @@ function EntrarPageInner() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-white md:flex-row">
+    <div className="flex h-[100dvh] w-full flex-col bg-white md:h-auto md:min-h-screen md:flex-row">
       {/* Left side */}
-      <div className="relative flex w-full flex-col bg-[#f7f7f7] md:w-1/2">
+      <div className="relative flex h-[70%] w-full flex-col overflow-y-auto bg-[#f7f7f7] md:h-auto md:w-1/2 md:overflow-visible">
         <style>{`
           input:-webkit-autofill,
           input:-webkit-autofill:hover,
@@ -220,7 +220,7 @@ function EntrarPageInner() {
       </div>
 
       {/* Animação Batata Letters — direita no desktop, abaixo do login no mobile */}
-      <div className="flex min-h-0 flex-1">
+      <div className="flex h-[30%] md:h-auto md:flex-1">
         <iframe
           src="/batata-letters.html"
           className="h-full w-full border-none"
