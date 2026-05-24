@@ -142,9 +142,9 @@ export function MemberCompareModal({
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute right-4 top-4 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
+          className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
         >
-          <X className="h-[18px] w-[18px]" strokeWidth={2.5} />
+          <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
         </button>
 
         <h2 className="mb-5 text-center text-[18px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
