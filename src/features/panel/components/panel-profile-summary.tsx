@@ -1,9 +1,9 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
 import { useState } from "react";
 
-import { NAME_STYLES } from "@/features/panel/names-data";
+import { NAME_BY_ID, NAME_STYLES } from "@/features/panel/names-data";
 import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
 import { RankedAvatar } from "@/features/panel/components/ranked-avatar";
 import { RaritySmokeOverlay } from "@/features/panel/components/rarity-smoke-overlay";
@@ -33,6 +33,19 @@ const TIER_TO_RANK_TYPE: Record<string, RankType> = {
   CHALLENGER: "challenger",
 };
 
+const TIER_PT: Record<string, string> = {
+  IRON: "Ferro",
+  BRONZE: "Bronze",
+  SILVER: "Prata",
+  GOLD: "Ouro",
+  PLATINUM: "Platina",
+  EMERALD: "Esmeralda",
+  DIAMOND: "Diamante",
+  MASTER: "Mestre",
+  GRANDMASTER: "Grão-Mestre",
+  CHALLENGER: "Desafiante",
+};
+
 const MAX_ACTIVE_TITLES = 2;
 
 type PanelProfileSummaryProps = {
@@ -52,6 +65,8 @@ type PanelProfileSummaryProps = {
   memberId?: string;
   /** Quando passado (e não é o próprio perfil), mostra "Comparar com você". */
   onCompare?: () => void;
+  /** Posição na Baderna (#N) — usada no cartão compartilhável. */
+  badernaRank?: number;
 };
 
 export function PanelProfileSummary({
@@ -67,6 +82,7 @@ export function PanelProfileSummary({
   unlockedTitleIds = ["aprendiz"],
   memberId,
   onCompare,
+  badernaRank,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
@@ -131,6 +147,45 @@ export function PanelProfileSummary({
     const idx = ordered.indexOf(activeNameId);
     const next = ordered[(idx + 1) % ordered.length];
     setActiveNameId(next);
+  }
+
+  function shareCard() {
+    if (typeof window === "undefined") return;
+    const rankObj = riot.status === "ready" ? riot.profile.rank : null;
+    const elo =
+      rankObj && rankObj.tier && rankObj.tier !== "Unranked"
+        ? `${TIER_PT[rankObj.tier.toUpperCase()] ?? rankObj.tier}${
+            rankObj.division ? ` ${rankObj.division}` : ""
+          }`
+        : "Sem classificação";
+    const games = rankObj ? rankObj.wins + rankObj.losses : 0;
+    const wr = games > 0 ? String(Math.round((rankObj!.wins / games) * 100)) : "";
+    let avatarAbs = liveAvatarSrc;
+    try {
+      avatarAbs = new URL(liveAvatarSrc, window.location.origin).toString();
+    } catch {
+      /* mantém o valor original */
+    }
+    const params = new URLSearchParams({
+      name: liveDisplayName,
+      full: liveFullName ?? "",
+      elo,
+      pos: badernaRank ? String(badernaRank) : "",
+      avatar: avatarAbs,
+      color: NAME_BY_ID[activeNameId]?.color ?? "#ffffff",
+      wr,
+    });
+    const cardUrl = `${window.location.origin}/api/profile-card?${params.toString()}`;
+    const nav = navigator as Navigator & {
+      share?: (data: { title?: string; url?: string }) => Promise<void>;
+    };
+    if (nav.share) {
+      nav
+        .share({ title: `Perfil de ${liveDisplayName} · Baderna`, url: cardUrl })
+        .catch(() => {});
+    } else {
+      window.open(cardUrl, "_blank");
+    }
   }
 
   // Use the full titles list (defaults + custom) so custom titles like "OnlyCrias"
@@ -243,29 +298,39 @@ export function PanelProfileSummary({
           {liveBio}
         </p>
 
-        {!isOwnProfile && onCompare && (
+        <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
+          {!isOwnProfile && onCompare && (
+            <button
+              type="button"
+              onClick={onCompare}
+              className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-6 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-[16px] w-[16px]"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Comparar com você
+            </button>
+          )}
           <button
             type="button"
-            onClick={onCompare}
-            className="mt-[16px] inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-6 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+            onClick={shareCard}
+            className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-[16px] w-[16px]"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Comparar com você
+            <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
+            Compartilhar
           </button>
-        )}
+        </div>
       </div>
 
       <TitleModal

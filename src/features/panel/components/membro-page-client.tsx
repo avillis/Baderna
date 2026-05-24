@@ -238,6 +238,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 unlockedTitleIds={["aprendiz"]}
                 memberId={member.id}
                 onCompare={handleCompare}
+                badernaRank={badernaRank}
               />
             </div>
 
@@ -308,6 +309,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                   unlockedTitleIds={["aprendiz"]}
                   memberId={member.id}
                   onCompare={handleCompare}
+                  badernaRank={badernaRank}
                 />
               </div>
 
