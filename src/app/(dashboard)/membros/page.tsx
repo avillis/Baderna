@@ -3,12 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { ArrowLeftRight, Check, Search } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { StyledName } from "@/features/panel/components/styled-name";
+import {
+  MemberCompareModal,
+  type CompareSide,
+} from "@/features/panel/components/member-compare-modal";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+import { useMemberRanks } from "@/features/panel/use-member-ranks";
 
 type RankEffect = { gradient: string; glow: string };
 
@@ -77,14 +82,49 @@ function normalize(value: string): string {
 
 export default function MembrosPage() {
   const allMembers = useBadernaMembers();
+  const ranks = useMemberRanks();
   const [query, setQuery] = useState("");
   const [lane, setLane] = useState<(typeof LANES)[number]["value"] | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showCompare, setShowCompare] = useState(false);
 
   // Guarda o rank original (posição na lista cheia) antes de filtrar, pra o
   // número "#N" continuar fazendo sentido mesmo com busca/filtro ativos.
   const ranked = useMemo(
     () => allMembers.map((member, index) => ({ member, badernaRank: index + 1 })),
     [allMembers],
+  );
+
+  function toggleCompareMode() {
+    setCompareMode((on) => {
+      if (on) {
+        setSelectedIds([]);
+        setShowCompare(false);
+      }
+      return !on;
+    });
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+  }
+
+  const compareSides: CompareSide[] = useMemo(
+    () =>
+      selectedIds
+        .map((id) => ranked.find((r) => r.member.id === id))
+        .filter((r): r is (typeof ranked)[number] => Boolean(r))
+        .map((r) => ({
+          member: r.member,
+          badernaRank: r.badernaRank,
+          rank: r.member.userId != null ? ranks[r.member.userId] : undefined,
+        })),
+    [selectedIds, ranked, ranks],
   );
 
   const filtered = useMemo(() => {
@@ -136,6 +176,27 @@ export default function MembrosPage() {
           </div>
         </div>
 
+        {/* Comparar membros */}
+        <div className="mb-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={toggleCompareMode}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-bold tracking-[-0.02em] transition-colors ${
+              compareMode
+                ? "bg-[#0f0f0f] text-white"
+                : "bg-white text-[#0f0f0f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] hover:bg-[#fff4f4]"
+            }`}
+          >
+            <ArrowLeftRight className="h-[16px] w-[16px]" strokeWidth={2.5} />
+            {compareMode ? "Cancelar" : "Comparar membros"}
+          </button>
+          {compareMode && selectedIds.length < 2 && (
+            <span className="text-[13px] font-medium text-[#989898]">
+              Toque em 2 membros pra comparar.
+            </span>
+          )}
+        </div>
+
         {filtered.length === 0 ? (
           <div className="rounded-[25px] bg-white px-6 py-16 text-center shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
             <p className="text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
@@ -149,13 +210,12 @@ export default function MembrosPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             {filtered.map(({ member, badernaRank }) => {
               const rankEffect = getRankEffect(badernaRank);
+              const isSelected = selectedIds.includes(member.id);
+              const baseClass =
+                "relative flex flex-col items-center rounded-[25px] bg-white px-6 py-10 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-transform duration-200";
 
-              return (
-                <Link
-                  key={member.id}
-                  href={`/membro/${member.id}`}
-                  className="flex flex-col items-center rounded-[25px] bg-white px-6 py-10 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:scale-[1.02]"
-                >
+              const inner = (
+                <>
                   {/* Avatar */}
                   <div
                     className="rounded-full p-[3px]"
@@ -185,12 +245,73 @@ export default function MembrosPage() {
                       {member.name}
                     </p>
                   </div>
+                </>
+              );
+
+              if (compareMode) {
+                return (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => toggleSelect(member.id)}
+                    className={`${baseClass} ${
+                      isSelected ? "scale-[1.02] ring-2 ring-[#ff4100]" : "hover:scale-[1.02]"
+                    }`}
+                  >
+                    <span
+                      className={`absolute right-3 top-3 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 transition-colors ${
+                        isSelected
+                          ? "border-[#ff4100] bg-[#ff4100] text-white"
+                          : "border-[#e3ddd9] bg-white text-transparent"
+                      }`}
+                    >
+                      <Check className="h-[15px] w-[15px]" strokeWidth={3} />
+                    </span>
+                    {inner}
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={member.id}
+                  href={`/membro/${member.id}`}
+                  className={`${baseClass} hover:scale-[1.02]`}
+                >
+                  {inner}
                 </Link>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Barra de comparação */}
+      {compareMode && selectedIds.length > 0 && (
+        <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
+          <div className="flex items-center gap-3 rounded-full bg-[#0f0f0f] py-2.5 pl-5 pr-2.5 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.25)]">
+            <span className="text-[13px] font-semibold text-white">
+              {selectedIds.length}/2 selecionados
+            </span>
+            <button
+              type="button"
+              disabled={selectedIds.length < 2}
+              onClick={() => setShowCompare(true)}
+              className="rounded-full bg-[#ff4100] px-4 py-2 text-[13px] font-bold text-white transition-opacity disabled:opacity-40"
+            >
+              Comparar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showCompare && compareSides.length === 2 && (
+        <MemberCompareModal
+          left={compareSides[0]}
+          right={compareSides[1]}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
     </PanelShell>
   );
 }
