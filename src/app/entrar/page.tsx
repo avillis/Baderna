@@ -62,9 +62,9 @@ function EntrarPageInner() {
   }
 
   return (
-    <div className="flex h-[100dvh] w-full flex-col bg-white md:h-auto md:min-h-screen md:flex-row">
+    <div className="flex min-h-screen w-full bg-white">
       {/* Left side */}
-      <div className="relative flex h-[70%] w-full flex-col overflow-y-auto bg-[#f7f7f7] md:h-auto md:w-1/2 md:overflow-visible">
+      <div className="relative flex w-full flex-col bg-[#f7f7f7] md:w-1/2">
         <style>{`
           input:-webkit-autofill,
           input:-webkit-autofill:hover,
@@ -89,7 +89,7 @@ function EntrarPageInner() {
         </div>
 
         {/* Form Container */}
-        <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8 sm:px-6 md:px-24 md:pb-0">
+        <div className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 md:px-24">
           <div className="flex w-full max-w-[320px] flex-col items-center gap-6">
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
               {!isLogin && (
@@ -219,8 +219,8 @@ function EntrarPageInner() {
         </div>
       </div>
 
-      {/* Animação Batata Letters — direita no desktop, abaixo do login no mobile */}
-      <div className="flex h-[30%] md:h-auto md:flex-1">
+      {/* Right side - iframe for Batata Letters */}
+      <div className="hidden flex-1 md:flex">
         <iframe
           src="/batata-letters.html"
           className="h-full w-full border-none"
