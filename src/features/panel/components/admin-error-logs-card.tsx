@@ -123,7 +123,7 @@ function LogRow({
           )}
           {log.file && (
             <DetailRow label="Arquivo">
-              <code>{log.file}:{log.line}</code>
+              <code className="break-all">{log.file}:{log.line}</code>
             </DetailRow>
           )}
           {log.stackTrace && (
@@ -168,7 +168,7 @@ function DetailRow({
       <div className="mb-[2px] text-[10px] font-bold uppercase tracking-wide text-[#8d8d8d]">
         {label}
       </div>
-      <div className="text-[12px] text-[#0f0f0f]">{children}</div>
+      <div className="text-[12px] text-[#0f0f0f] break-words">{children}</div>
     </div>
   );
 }
