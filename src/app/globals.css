@@ -553,6 +553,12 @@ button {
   overflow-y: visible;
   text-overflow: ellipsis;
   overflow-clip-margin: 0.3em;
+  /* O texto fica colado na borda esquerda, entao o glow nao tem pra onde
+     vazar e e recortado. Damos folga com padding-left + margin negativo:
+     o texto continua na mesma posicao, mas a caixa (e o clip) abre 12px a
+     esquerda pro brilho aparecer. */
+  padding-left: 12px;
+  margin-left: -12px;
 }
 
 .name-outline-white {
