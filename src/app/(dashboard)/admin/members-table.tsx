@@ -11,6 +11,7 @@ import { EditMemberTitlesModal } from "@/features/panel/components/edit-member-t
 import { ConfirmDeleteMemberModal } from "@/features/panel/components/confirm-delete-member-modal";
 import { useAccount } from "@/features/panel/use-account";
 import { authToken } from "@/features/panel/use-auth";
+import { useToast } from "@/components/toast";
 import { useDeletedMembers } from "@/features/panel/use-deleted-members";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 
@@ -30,6 +31,20 @@ async function apiSetRole(userId: number, isAdmin: boolean): Promise<boolean> {
     body: JSON.stringify({ is_admin: isAdmin }),
   });
   return res.ok;
+}
+
+// Relê o estado REAL do servidor pra confirmar se o cargo foi salvo de fato
+// (em vez de confiar só no update otimista). Retorna null se não der pra ler.
+async function apiGetMemberIsAdmin(userId: number): Promise<boolean | null> {
+  const token = authToken();
+  if (!token) return null;
+  const res = await fetch(`${API_BASE}/members`, {
+    headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  const list = (await res.json()) as Array<{ userId: number; isAdmin?: boolean }>;
+  const found = list.find((m) => m.userId === userId);
+  return found ? !!found.isAdmin : null;
 }
 
 type RoleMap = Record<string, "Admin" | "Membro">;
@@ -74,6 +89,7 @@ export function MembersTable() {
     nickname: account.gameNick.split("#")[0] || "",
   });
   const [roles, setRoles] = useState<RoleMap>({});
+  const toast = useToast();
 
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editingNamesMemberId, setEditingNamesMemberId] = useState<string | null>(null);
@@ -86,12 +102,22 @@ export function MembersTable() {
     if (!userId) return;
     const current = roles[id] ?? defaultRoleFor(allMembers.find((m) => m.id === id) ?? { isAdmin: false });
     const nextIsAdmin = current === "Membro";
-    // Update otimista
+    // Update otimista pra feedback imediato.
     setRoles((prev) => ({ ...prev, [id]: nextIsAdmin ? "Admin" : "Membro" }));
     const ok = await apiSetRole(userId, nextIsAdmin);
     if (!ok) {
-      // Reverte em caso de falha
       setRoles((prev) => ({ ...prev, [id]: current }));
+      toast.show("Não foi possível alterar o cargo.");
+      return;
+    }
+    // Confirma com o estado REAL do servidor — não mascara com o otimista.
+    const real = await apiGetMemberIsAdmin(userId);
+    if (real === null) return; // não deu pra confirmar; mantém o otimista
+    setRoles((prev) => ({ ...prev, [id]: real ? "Admin" : "Membro" }));
+    if (real === nextIsAdmin) {
+      toast.show("Cargo atualizado.", "success");
+    } else {
+      toast.show("O servidor aceitou mas não salvou o cargo.");
     }
   }
 
