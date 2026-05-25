@@ -128,6 +128,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/member-unlocks/{user}', [MemberUnlocksController::class, 'adminGrant']);
         Route::delete('/member-unlocks/{user}/{kind}/{slug}', [MemberUnlocksController::class, 'adminRevoke']);
         Route::post('/members', [MembersController::class, 'adminStore']);
+        // Aprovação de cadastros (pendentes/rejeitados)
+        Route::get('/members/pending', [MembersController::class, 'pending']);
+        Route::post('/members/{user}/approve', [MembersController::class, 'approve']);
+        Route::post('/members/{user}/reject', [MembersController::class, 'reject']);
         Route::delete('/members/{user}', [MembersController::class, 'softDelete']);
         Route::post('/members/{user}/restore', [MembersController::class, 'restore']);
         Route::put('/members/{user}/role', [MembersController::class, 'setRole']);

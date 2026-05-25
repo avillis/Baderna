@@ -38,6 +38,7 @@ class MembersController extends Controller
     public function index(Request $request)
     {
         $users = User::where('is_deleted', false)
+            ->where('approval_status', 'approved')
             ->orderBy('id')
             ->get();
 
@@ -107,6 +108,7 @@ class MembersController extends Controller
             'summoner_name'         => $data['summoner_name'],
             'tagLine'               => $data['tagLine'],
             'pending_registration'  => true,
+            'approval_status'       => 'approved',
             'is_admin'              => false,
         ]);
 
@@ -161,5 +163,48 @@ class MembersController extends Controller
     {
         $user->update(['is_deleted' => false]);
         return response()->json(null, 204);
+    }
+
+    /**
+     * Cadastros aguardando decisão do admin (pendentes) + rejeitados (pra
+     * reverter). Consumido pelo card de aprovações no painel admin.
+     */
+    public function pending(Request $request)
+    {
+        $users = User::whereIn('approval_status', ['pending', 'rejected'])
+            ->where('is_deleted', false)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($users->map(fn ($u) => [
+            'userId'         => $u->id,
+            'name'           => $u->display_name ?: $u->name,
+            'nickname'       => $u->summoner_name ?: $u->name,
+            'summonerName'   => $u->summoner_name,
+            'tagLine'        => $u->tagLine,
+            'email'          => $u->email,
+            'avatarSrc'      => $u->avatar_src,
+            'approvalStatus' => $u->approval_status,
+            'createdAt'      => optional($u->created_at)->toIso8601String(),
+        ]));
+    }
+
+    /**
+     * Admin aprova um cadastro pendente — passa a poder logar e aparece na
+     * comunidade.
+     */
+    public function approve(Request $request, User $user)
+    {
+        $user->update(['approval_status' => 'approved']);
+        return response()->json(['message' => 'Conta aprovada.']);
+    }
+
+    /**
+     * Admin rejeita um cadastro — login fica bloqueado.
+     */
+    public function reject(Request $request, User $user)
+    {
+        $user->update(['approval_status' => 'rejected']);
+        return response()->json(['message' => 'Conta rejeitada.']);
     }
 }

@@ -45,13 +45,22 @@ function EntrarPageInner() {
       if (isLogin) {
         await login(email.trim(), password);
       } else {
-        await register({
+        const result = await register({
           name: name.trim(),
           email: email.trim(),
           password,
           summoner_name: summonerName.trim(),
           tag_line: tagLine.trim(),
         });
+        // Cadastro pendente de aprovação — não navega, volta pro login.
+        if (result && "pending" in result) {
+          toast.show(
+            result.message ??
+              "Cadastro recebido! Sua conta está aguardando aprovação de um admin.",
+          );
+          setIsLogin(true);
+          return;
+        }
       }
       router.push(next);
     } catch (err) {
@@ -104,28 +113,31 @@ function EntrarPageInner() {
                       required
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Nome do jogo"
-                      value={summonerName}
-                      onChange={(e) => setSummonerName(e.target.value)}
-                      className="min-w-0 flex-1 rounded-full border-none bg-[#ededed] px-6 py-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
-                      required
-                    />
-                    <div className="relative w-[110px] shrink-0">
-                      <span className="pointer-events-none absolute left-[18px] top-1/2 -translate-y-1/2 text-sm text-gray-400">
-                        #
-                      </span>
+                  <div>
+                    <p className="mb-2 px-2 text-xs font-medium text-gray-400">
+                      Riot ID (opcional) — só se você joga LoL
+                    </p>
+                    <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="BR1"
-                        value={tagLine}
-                        onChange={(e) => setTagLine(e.target.value)}
-                        maxLength={5}
-                        className="w-full rounded-full border-none bg-[#ededed] py-4 pl-[34px] pr-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
-                        required
+                        placeholder="Nome do jogo"
+                        value={summonerName}
+                        onChange={(e) => setSummonerName(e.target.value)}
+                        className="min-w-0 flex-1 rounded-full border-none bg-[#ededed] px-6 py-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
                       />
+                      <div className="relative w-[110px] shrink-0">
+                        <span className="pointer-events-none absolute left-[18px] top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                          #
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="BR1"
+                          value={tagLine}
+                          onChange={(e) => setTagLine(e.target.value)}
+                          maxLength={5}
+                          className="w-full rounded-full border-none bg-[#ededed] py-4 pl-[34px] pr-4 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+                        />
+                      </div>
                     </div>
                   </div>
                 </>

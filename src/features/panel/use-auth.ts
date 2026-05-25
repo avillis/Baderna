@@ -152,6 +152,7 @@ export function useAuth() {
         token?: string;
         user?: AuthUser;
         message?: string;
+        pending?: boolean;
         errors?: Record<string, string[]>;
       };
       if (!res.ok) {
@@ -160,6 +161,10 @@ export function useAuth() {
           ? Object.values(body.errors)[0]?.[0]
           : null;
         throw new Error(firstErr ?? body.message ?? `Erro ${res.status} ao criar conta.`);
+      }
+      // Cadastro aguardando aprovação do admin — não loga.
+      if (body.pending) {
+        return { pending: true as const, message: body.message };
       }
       if (!body.token || !body.user) throw new Error("Resposta inválida da API.");
       writeSession(body.token, body.user);

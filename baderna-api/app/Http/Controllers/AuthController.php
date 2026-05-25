@@ -30,6 +30,18 @@ class AuthController extends Controller
             ]);
         }
 
+        // Gate de aprovação: só contas aprovadas conseguem logar.
+        $status = $user->approval_status ?? 'approved';
+        if ($status !== 'approved') {
+            throw ValidationException::withMessages([
+                'email' => [
+                    $status === 'rejected'
+                        ? 'Seu cadastro não foi aprovado.'
+                        : 'Sua conta está aguardando aprovação de um admin.',
+                ],
+            ]);
+        }
+
         // Invalida tokens antigos pra evitar acúmulo no dev.
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -64,52 +76,61 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
-            'summoner_name' => ['required', 'string'],
-            'tag_line' => ['required', 'string'],
+            // Riot ID é OPCIONAL — tem gente na comunidade que não joga LoL.
+            'summoner_name' => ['nullable', 'string'],
+            'tag_line' => ['nullable', 'string'],
         ]);
 
-        try {
-            $riotAccount = $riotService->getPlayerPUUIDByRiotId(
-                $validated['summoner_name'],
-                $validated['tag_line'],
-            );
-        } catch (\Throwable $e) {
-            throw ValidationException::withMessages([
-                'summoner_name' => ['Não foi possível encontrar essa Riot ID. Confere o nome e a tag.'],
-            ]);
-        }
+        $hasRiot =
+            !empty($validated['summoner_name']) && !empty($validated['tag_line']);
 
-        if (empty($riotAccount['puuid'])) {
-            throw ValidationException::withMessages([
-                'summoner_name' => ['Não foi possível encontrar essa Riot ID. Confere o nome e a tag.'],
-            ]);
-        }
-
-        // PUUID já cadastrado em uma conta NÃO-pendente? Bloqueia.
-        $puuidOwner = User::where('riot_puuid', $riotAccount['puuid'])->first();
-        if ($puuidOwner && !$puuidOwner->pending_registration) {
-            throw ValidationException::withMessages([
-                'summoner_name' => ['Essa Riot ID já está vinculada a outra conta.'],
-            ]);
-        }
-
-        $finalSummoner = $riotAccount['gameName'] ?? $validated['summoner_name'];
-        $finalTag      = $riotAccount['tagLine']  ?? $validated['tag_line'];
-
-        // Tenta puxar o ícone de perfil pra preencher avatar_src automaticamente.
-        // Falha silenciosa: se a Riot recusar, segue sem avatar.
+        $riotAccount = null;
+        $finalSummoner = null;
+        $finalTag = null;
         $avatarUrl = null;
-        $iconId    = null;
-        try {
-            $summoner = $riotService->getSummonerByPUUID($riotAccount['puuid']);
-            $iconId   = $summoner['profileIconId'] ?? null;
-            $avatarUrl = $riotService->profileIconUrl($iconId);
-        } catch (\Throwable $e) {
-            /* segue sem avatar */
+        $iconId = null;
+
+        if ($hasRiot) {
+            try {
+                $riotAccount = $riotService->getPlayerPUUIDByRiotId(
+                    $validated['summoner_name'],
+                    $validated['tag_line'],
+                );
+            } catch (\Throwable $e) {
+                throw ValidationException::withMessages([
+                    'summoner_name' => ['Não foi possível encontrar essa Riot ID. Confere o nome e a tag.'],
+                ]);
+            }
+
+            if (empty($riotAccount['puuid'])) {
+                throw ValidationException::withMessages([
+                    'summoner_name' => ['Não foi possível encontrar essa Riot ID. Confere o nome e a tag.'],
+                ]);
+            }
+
+            // PUUID já cadastrado em uma conta NÃO-pendente? Bloqueia.
+            $puuidOwner = User::where('riot_puuid', $riotAccount['puuid'])->first();
+            if ($puuidOwner && !$puuidOwner->pending_registration) {
+                throw ValidationException::withMessages([
+                    'summoner_name' => ['Essa Riot ID já está vinculada a outra conta.'],
+                ]);
+            }
+
+            $finalSummoner = $riotAccount['gameName'] ?? $validated['summoner_name'];
+            $finalTag      = $riotAccount['tagLine']  ?? $validated['tag_line'];
+
+            // Tenta puxar o ícone de perfil pra preencher avatar_src.
+            try {
+                $summoner = $riotService->getSummonerByPUUID($riotAccount['puuid']);
+                $iconId   = $summoner['profileIconId'] ?? null;
+                $avatarUrl = $riotService->profileIconUrl($iconId);
+            } catch (\Throwable $e) {
+                /* segue sem avatar */
+            }
         }
 
-        // Fallback: se a Riot não retornou nada, escolhe um campeão aleatório
-        // do Data Dragon pra servir como avatar padrão (tile).
+        // Fallback: sem Riot (ou Riot não retornou ícone) → campeão aleatório
+        // do Data Dragon como avatar padrão (tile).
         if (!$avatarUrl) {
             $defaultAvatars = [
                 'Aatrox', 'Ahri', 'Akali', 'Alistar', 'Ashe', 'Azir',
@@ -124,11 +145,16 @@ class AuthController extends Controller
             $avatarUrl = "https://ddragon.leagueoflegends.com/cdn/img/champion/tiles/{$champion}_0.jpg";
         }
 
-        // Existe stub pendente com mesmo summoner+tag? Reivindica em vez de criar.
-        $pending = User::where('pending_registration', true)
-            ->whereRaw('LOWER(summoner_name) = ?', [strtolower($finalSummoner)])
-            ->whereRaw('UPPER(tagLine) = ?', [strtoupper($finalTag)])
-            ->first();
+        // Stub pendente com mesmo summoner+tag (só faz sentido se tem Riot)?
+        // Reivindica em vez de criar — e como foi o admin que criou o stub,
+        // a conta já entra APROVADA.
+        $pending = null;
+        if ($hasRiot) {
+            $pending = User::where('pending_registration', true)
+                ->whereRaw('LOWER(summoner_name) = ?', [strtolower($finalSummoner)])
+                ->whereRaw('UPPER(tagLine) = ?', [strtoupper($finalTag)])
+                ->first();
+        }
 
         if ($pending) {
             $pending->update(array_filter([
@@ -137,23 +163,28 @@ class AuthController extends Controller
                 'password'             => Hash::make($validated['password']),
                 'summoner_name'        => $finalSummoner,
                 'tagLine'              => $finalTag,
-                'riot_puuid'           => $riotAccount['puuid'],
+                'riot_puuid'           => $riotAccount['puuid'] ?? null,
                 'pending_registration' => false,
+                'approval_status'      => 'approved',
                 'profile_icon_id'      => $iconId,
                 'avatar_src'           => $avatarUrl,
             ], fn ($v) => $v !== null));
             $user = $pending->fresh();
+            $needsApproval = false;
         } else {
+            // Cadastro novo entra como PENDENTE — admin precisa aprovar.
             $user = User::create(array_filter([
                 'name'            => $validated['name'],
                 'email'           => $validated['email'],
                 'password'        => Hash::make($validated['password']),
                 'summoner_name'   => $finalSummoner,
                 'tagLine'         => $finalTag,
-                'riot_puuid'      => $riotAccount['puuid'],
+                'riot_puuid'      => $hasRiot ? ($riotAccount['puuid'] ?? null) : null,
                 'profile_icon_id' => $iconId,
                 'avatar_src'      => $avatarUrl,
+                'approval_status' => 'pending',
             ], fn ($v) => $v !== null));
+            $needsApproval = true;
         }
 
         // Libera 5 capas aleatórias pro user (se não tiver nenhuma ainda).
@@ -164,6 +195,14 @@ class AuthController extends Controller
             ['user_id' => $user->id],
             ['balance' => 250],
         );
+
+        // Pendente: não loga (sem token). A UI mostra "aguarde aprovação".
+        if ($needsApproval) {
+            return response()->json([
+                'message' => 'Cadastro recebido! Sua conta está aguardando aprovação de um admin.',
+                'pending' => true,
+            ], 201);
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
