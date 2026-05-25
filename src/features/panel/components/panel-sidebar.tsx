@@ -111,7 +111,7 @@ function AccountDropdown({
    *  viewport (usado no drawer mobile, onde o botão fica embaixo). */
   placement?: "right" | "below" | "above";
 }) {
-  const mobileDrawerDropdownLeft = 28;
+  const mobileDrawerDropdownLeft = 20;
   const positionStyle =
     placement === "right"
       ? {
