@@ -118,13 +118,13 @@ function ModulePicker({
                 {mod.label}
               </span>
               {mod.lol && (
-                <span className={`inline-flex h-[18px] w-[18px] items-center justify-center rounded-full ${active ? "bg-white/20" : "bg-[#fff0ec]"}`}>
+                <span className={`inline-flex h-[28px] w-[28px] items-center justify-center rounded-full ${active ? "bg-white/20" : "bg-[#fff0ec]"}`}>
                   <Image
                     src="/icons/lol_logo.png"
                     alt="League of Legends"
-                    width={10}
-                    height={10}
-                    className="h-[10px] w-[10px] object-contain"
+                    width={18}
+                    height={18}
+                    className="h-[18px] w-[18px] object-contain"
                   />
                 </span>
               )}
@@ -379,9 +379,21 @@ export function ProfileModuleSelectorModal({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex h-[40px] items-center justify-center rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? "Salvando..." : "Salvar"}
+            {saving ? (
+              <>
+                <svg
+                  className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
+                  viewBox="25 25 50 50"
+                >
+                  <circle r="20" cy="50" cx="50" />
+                </svg>
+                Salvando...
+              </>
+            ) : (
+              "Salvar"
+            )}
           </button>
         </div>
       </div>
