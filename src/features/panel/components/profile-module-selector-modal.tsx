@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+
 import { useToast } from "@/components/toast";
 import lolLogo from "../../../../icons/lol_logo.png";
 
@@ -34,7 +35,7 @@ export const MODULE_META: ModuleMeta[] = [
   {
     id: "top-champions",
     label: "Mains",
-    description: "3 champs que você escolhe à mão.",
+    description: "3 campeões escolhidos no próprio card.",
     lol: true,
   },
   {
@@ -67,15 +68,7 @@ export const MODULE_META: ModuleMeta[] = [
     label: "Tempo de casa",
     description: "Há quantos meses você está na Baderna.",
   },
-  {
-    id: "showcase",
-    label: "Mains",
-    description: "3 itens da coleção em destaque.",
-  },
 ];
-
-
-// ── Picker inline (abre dentro do slot) ───────────────────────────────────
 
 function ModulePicker({
   current,
@@ -115,11 +108,19 @@ function ModulePicker({
                     : "hover:bg-[#f5f5f5]"
               }`}
             >
-              <span className={`flex-1 text-[12px] font-bold tracking-[-0.02em] ${active ? "text-white" : "text-[#0f0f0f]"}`}>
+              <span
+                className={`flex-1 text-[12px] font-bold tracking-[-0.02em] ${
+                  active ? "text-white" : "text-[#0f0f0f]"
+                }`}
+              >
                 {mod.label}
               </span>
-              {mod.lol && (
-                <span className={`inline-flex h-[24px] w-[24px] items-center justify-center rounded-full ${active ? "bg-white/20" : "bg-[#fff0ec]"}`}>
+              {mod.lol ? (
+                <span
+                  className={`inline-flex h-[24px] w-[24px] items-center justify-center rounded-full ${
+                    active ? "bg-white/20" : "bg-[#fff0ec]"
+                  }`}
+                >
                   <Image
                     src={lolLogo}
                     alt="League of Legends"
@@ -128,12 +129,12 @@ function ModulePicker({
                     className="h-[15px] w-[15px] object-contain"
                   />
                 </span>
-              )}
-              {taken && (
+              ) : null}
+              {taken ? (
                 <span className="rounded-full bg-[#f0f0f0] px-[7px] py-[2px] text-[10px] font-medium text-[#8d8d8d]">
                   em uso
                 </span>
-              )}
+              ) : null}
             </button>
           );
         })}
@@ -141,8 +142,6 @@ function ModulePicker({
     </div>
   );
 }
-
-// ── Linha de slot ─────────────────────────────────────────────────────────
 
 function SlotRow({
   number,
@@ -170,56 +169,72 @@ function SlotRow({
     <div className="mb-[6px]">
       <div
         className={`flex items-center gap-[12px] rounded-[14px] px-[16px] py-[12px] ${
-          fixed ? "bg-[#f7f7f7]" : "bg-[#f0f0f0] cursor-pointer hover:bg-[#e8e8e8]"
+          fixed ? "bg-[#f7f7f7]" : "cursor-pointer bg-[#f0f0f0] hover:bg-[#e8e8e8]"
         }`}
-        onClick={() => !fixed && setOpen((v) => !v)}
+        onClick={() => !fixed && setOpen((value) => !value)}
       >
-        {/* Número */}
-        <div className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${fixed ? "bg-[#e0e0e0] text-[#8d8d8d]" : "bg-[#0f0f0f] text-white"}`}>
+        <div
+          className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+            fixed ? "bg-[#e0e0e0] text-[#8d8d8d]" : "bg-[#0f0f0f] text-white"
+          }`}
+        >
           {number}
         </div>
 
-        {/* Label */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           {fixed ? (
             <>
               <p className="text-[13px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
                 {fixedLabel}
               </p>
-              {fixedReason && (
+              {fixedReason ? (
                 <p className="mt-[1px] text-[11px] font-medium text-[#c0c0c0]">
                   {fixedReason}
                 </p>
-              )}
+              ) : null}
             </>
           ) : (
             <>
               <p className="text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                {meta?.label ?? "Escolher módulo…"}
+                {meta?.label ?? "Escolher módulo..."}
               </p>
-              {meta && (
+              {meta ? (
                 <p className="mt-[1px] truncate text-[11px] font-medium text-[#8d8d8d]">
                   {meta.description}
                 </p>
-              )}
+              ) : null}
             </>
           )}
         </div>
 
-        {/* Lock / chevron */}
         {fixed ? (
-          <svg viewBox="0 0 24 24" fill="none" className="h-[14px] w-[14px] shrink-0 text-[#c0c0c0]" stroke="currentColor" strokeWidth={2.2}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="h-[14px] w-[14px] shrink-0 text-[#c0c0c0]"
+            stroke="currentColor"
+            strokeWidth={2.2}
+          >
             <rect x="5" y="11" width="14" height="10" rx="2" />
             <path d="M8 11V7a4 4 0 0 1 8 0v4" />
           </svg>
         ) : (
-          <svg viewBox="0 0 24 24" fill="none" className={`h-[14px] w-[14px] shrink-0 text-[#8d8d8d] transition-transform ${open ? "rotate-180" : ""}`} stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className={`h-[14px] w-[14px] shrink-0 text-[#8d8d8d] transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+            stroke="currentColor"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+          >
             <path d="M6 9l6 6 6-6" />
           </svg>
         )}
       </div>
 
-      {open && onSelect && (
+      {open && onSelect ? (
         <ModulePicker
           current={current ?? null}
           hasRiotId={hasRiotId}
@@ -227,12 +242,10 @@ function SlotRow({
           onChange={onSelect}
           onClose={() => setOpen(false)}
         />
-      )}
+      ) : null}
     </div>
   );
 }
-
-// ── Modal principal ───────────────────────────────────────────────────────
 
 type Props = {
   currentOrder: string[];
@@ -249,33 +262,33 @@ export function ProfileModuleSelectorModal({
 }: Props) {
   const toast = useToast();
   const validIds = new Set<string>(ALL_CONFIGURABLE_MODULE_IDS);
-
-  // Para LoL: 2 slots configuráveis (slots 3 e 4)
-  // Para não-LoL: 3 slots configuráveis (slots 1, 3 e 4)
   const slotCount = hasRiotId ? 2 : 3;
+
   const normalizeOrder = (raw: string[]): ProfileModuleId[] => {
-    const filtered = raw.filter((id): id is ProfileModuleId => validIds.has(id));
+    const filtered = raw
+      .map((id) => (id === "showcase" ? "top-champions" : id))
+      .filter((id): id is ProfileModuleId => validIds.has(id));
     return filtered.slice(0, slotCount);
   };
 
   const [selected, setSelected] = useState<(ProfileModuleId | null)[]>(() => {
-    const norm = normalizeOrder(currentOrder);
-    return Array.from({ length: slotCount }, (_, i) => norm[i] ?? null);
+    const normalized = normalizeOrder(currentOrder);
+    return Array.from({ length: slotCount }, (_, index) => normalized[index] ?? null);
   });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  function setSlot(i: number, id: ProfileModuleId) {
-    setSelected((prev) => {
-      const next = [...prev];
-      next[i] = id;
+  function setSlot(index: number, id: ProfileModuleId) {
+    setSelected((previous) => {
+      const next = [...previous];
+      next[index] = id;
       return next;
     });
   }
@@ -301,9 +314,6 @@ export function ProfileModuleSelectorModal({
 
   const allSelected = selected.filter((id): id is ProfileModuleId => id !== null);
 
-  // Monta os 4 slots para exibição:
-  //   LoL:     [FIXO lane] [FIXO baderna] [config[0]] [config[1]]
-  //   não-LoL: [config[0]] [FIXO baderna] [config[1]] [config[2]]
   const slots = hasRiotId
     ? [
         { fixed: true, label: "Posição / Lane", reason: "Fixo para jogadores LoL", configIdx: null },
@@ -321,10 +331,11 @@ export function ProfileModuleSelectorModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
       <div className="relative mx-4 w-full max-w-[440px] overflow-hidden rounded-[28px] bg-white shadow-[0_32px_80px_rgba(0,0,0,0.22)]">
-        {/* Header */}
         <div className="flex items-center justify-between px-[24px] pt-[24px] pb-[16px]">
           <div>
             <p className="text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
@@ -339,19 +350,25 @@ export function ProfileModuleSelectorModal({
             onClick={onClose}
             className="flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-90"
           >
-            <svg viewBox="0 0 24 24" fill="none" className="h-[14px] w-[14px]" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[14px] w-[14px]"
+              stroke="currentColor"
+              strokeWidth={2.4}
+              strokeLinecap="round"
+            >
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Slots */}
         <div className="px-[16px] pb-[8px]">
-          {slots.map((slot, idx) =>
+          {slots.map((slot, index) =>
             slot.fixed ? (
               <SlotRow
-                key={idx}
-                number={idx + 1}
+                key={index}
+                number={index + 1}
                 fixed
                 fixedLabel={slot.label}
                 fixedReason={slot.reason}
@@ -360,8 +377,8 @@ export function ProfileModuleSelectorModal({
               />
             ) : (
               <SlotRow
-                key={idx}
-                number={idx + 1}
+                key={index}
+                number={index + 1}
                 current={slot.configIdx !== null ? selected[slot.configIdx] : null}
                 hasRiotId={hasRiotId}
                 allSelected={allSelected}
@@ -371,7 +388,6 @@ export function ProfileModuleSelectorModal({
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between border-t border-[#f0f0f0] px-[24px] py-[18px]">
           <p className="text-[11px] font-medium text-[#8d8d8d]">
             Clique em um slot para trocar

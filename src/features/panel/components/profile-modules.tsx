@@ -168,6 +168,7 @@ function TopChampionsModuleCard({
   onSave: ((champions: string[]) => Promise<boolean> | boolean) | null;
 }) {
   const toast = useToast();
+  const canEdit = Boolean(onSave);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selected, setSelected] = useState<string[]>(
@@ -219,11 +220,11 @@ function TopChampionsModuleCard({
       <CardShell>
         <button
           type="button"
-          disabled={!isOwnProfile}
+          disabled={!canEdit}
           onClick={() => {
-            if (isOwnProfile) setOpen(true);
+            if (canEdit) setOpen(true);
           }}
-          className={`flex h-full w-full flex-col text-left ${isOwnProfile ? "cursor-pointer" : "cursor-default"}`}
+          className={`flex h-full w-full flex-col text-left ${canEdit ? "cursor-pointer" : "cursor-default"}`}
         >
           <Eyebrow>Mains</Eyebrow>
           <div className="mt-auto flex items-end justify-between gap-[10px]">
@@ -247,7 +248,7 @@ function TopChampionsModuleCard({
               ))
             ) : (
               <p className="text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
-                {isOwnProfile
+                {canEdit
                   ? "Clique para escolher 3 mains"
                   : "Sem mains escolhidos"}
               </p>
@@ -739,7 +740,6 @@ export const ALL_CONFIGURABLE_MODULE_IDS: ProfileModuleId[] = [
   "community-highlight",
   "favorite-game",
   "member-since",
-  "showcase",
 ];
 
 const LOL_DEFAULT_ORDER: ProfileModuleId[] = [
@@ -752,12 +752,11 @@ const LOL_DEFAULT_ORDER: ProfileModuleId[] = [
   "community-highlight",
   "favorite-game",
   "member-since",
-  "showcase",
 ];
 
 const NO_LOL_DEFAULT_ORDER: ProfileModuleId[] = [
   "member-since",
-  "showcase",
+  "top-champions",
   "community-highlight",
   "collection",
   "participation",
@@ -778,9 +777,11 @@ export function resolveTopSlots({
   const slotCount = hasRiotId ? 2 : 3;
   const defaultOrder = hasRiotId ? LOL_DEFAULT_ORDER : NO_LOL_DEFAULT_ORDER;
 
-  const preferred = (profileModuleOrder ?? []).filter((id): id is ProfileModuleId =>
-    ALL_CONFIGURABLE_MODULE_IDS.includes(id as ProfileModuleId),
-  );
+  const preferred = (profileModuleOrder ?? [])
+    .map((id) => (id === "showcase" ? "top-champions" : id))
+    .filter((id): id is ProfileModuleId =>
+      ALL_CONFIGURABLE_MODULE_IDS.includes(id as ProfileModuleId),
+    );
   const merged = [...preferred, ...defaultOrder].filter(
     (id, idx, list) => list.indexOf(id) === idx,
   );
