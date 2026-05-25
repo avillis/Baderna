@@ -367,6 +367,10 @@ function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [mine, setMine] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  // Guarda contra race: se o GET inicial demorar e o user clicar antes,
+  // a resposta do GET (estado antigo) NÃO sobrescreve o estado otimista
+  // que ja foi confirmado pelo POST.
+  const interactedRef = useRef(false);
 
   // Hidrata na montagem. Cancela se o componente desmontar antes da resposta
   // (evita warn de setState em unmounted).
@@ -379,7 +383,7 @@ function PostReactions({ postId }: { postId: number }) {
         const res = await fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
           headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
         });
-        if (!res.ok || cancelled) return;
+        if (!res.ok || cancelled || interactedRef.current) return;
         const body = (await res.json()) as ReactionsState;
         setCounts(body.reactions ?? {});
         setMine(body.mine ?? null);
@@ -393,6 +397,8 @@ function PostReactions({ postId }: { postId: number }) {
   }, [postId]);
 
   function react(emoji: string) {
+    // Marca que o user ja interagiu — bloqueia override do GET tardio.
+    interactedRef.current = true;
     // Optimistic: aplica o toggle/troca antes de bater na API.
     const prevMine = mine;
     setCounts((prev) => {

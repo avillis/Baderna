@@ -16,6 +16,9 @@ export type Comment = {
   author: string;
   authorAvatar?: string;
   body: string;
+  /** Mídia opcional — só existe em comments de posts (perfil não usa). */
+  imageUrl?: string | null;
+  gifUrl?: string | null;
   createdAt: number;
 };
 

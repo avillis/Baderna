@@ -174,11 +174,12 @@ export default function NotificationBell({
         )}
       </button>
 
-      {/* Sidebar do desktop: abre pra cima, ancorado ao botão. */}
+      {/* Sidebar do desktop: abre pra cima, centralizado horizontalmente
+          em relacao ao botao do sino (left-1/2 + -translate-x-1/2). */}
       {isOpen && placement === "up" && (
         <div
           ref={dropdownRef}
-          className="absolute bottom-full left-0 mb-[12px] w-[320px] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] z-[9999]"
+          className="absolute bottom-full left-1/2 mb-[12px] w-[320px] -translate-x-1/2 overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] z-[9999]"
         >
           {panel}
         </div>
