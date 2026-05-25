@@ -12,6 +12,8 @@ export type BadernaMember = {
   laneFocus: string;
   status: "online" | "scrim" | "offline";
   isAdmin?: boolean;
+  /** Dono unico do site. Imune a ban/democao por outros admins. */
+  isOwner?: boolean;
   avatarSrc?: string;
   /** Apelido Riot (sem tag) — usado pra montar gameNick e fazer fetch live. */
   summonerName?: string;

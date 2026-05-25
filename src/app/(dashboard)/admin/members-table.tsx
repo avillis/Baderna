@@ -90,6 +90,10 @@ export function MembersTable() {
   });
   const [roles, setRoles] = useState<RoleMap>({});
   const toast = useToast();
+  // Viewer eh o dono? Usa pra liberar mexer em cargos. Admins normais
+  // veem a tabela inteira mas o toggle de cargo fica disabled.
+  const selfMember = allMembers.find((m) => m.id === selfId);
+  const viewerIsOwner = !!selfMember?.isOwner;
 
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editingNamesMemberId, setEditingNamesMemberId] = useState<string | null>(null);
@@ -164,6 +168,14 @@ export function MembersTable() {
               const role = roles[member.id] ?? defaultRoleFor(member);
               const isAdmin = role === "Admin";
               const isSelf = member.id === selfId;
+              const isOwnerRow = !!member.isOwner;
+              // Toggle de cargo: so o dono pode; nem o dono mexe no proprio
+              // nem no de outro dono (defensivo — so deve existir um).
+              const roleLocked = !viewerIsOwner || isSelf || isOwnerRow;
+              // Apagar: dono nao apaga ngm? apaga sim, exceto outro dono e ele
+              // mesmo. Admin comum tbm pode apagar (poder de moderacao), mas
+              // nao o dono.
+              const deleteLocked = isSelf || isOwnerRow;
               const avatar = member.avatarSrc || getChampionAvatarSrc(member.id);
 
               return (
@@ -192,25 +204,32 @@ export function MembersTable() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (isSelf) return;
+                        if (roleLocked) return;
                         void toggleRole(member.id, member.userId);
                       }}
-                      disabled={isSelf}
+                      disabled={roleLocked}
                       title={
-                        isSelf
-                          ? "Você não pode alterar seu próprio cargo"
-                          : "Clique para alterar o cargo"
+                        isOwnerRow
+                          ? "Master não pode ser despromovido"
+                          : isSelf
+                            ? "Você não pode alterar seu próprio cargo"
+                            : !viewerIsOwner
+                              ? "Apenas o Master pode alterar cargos"
+                              : "Clique para alterar o cargo"
                       }
                       className={
-                        (isAdmin
-                          ? "inline-block rounded-full bg-[#ededed] px-2.5 py-1 text-[11px] font-bold text-[#ff4100] transition-all"
-                          : "inline-block rounded-full bg-[#ededed] px-2.5 py-1 text-[11px] font-bold text-[#6f6f6f] transition-all") +
-                        (isSelf
+                        "inline-block rounded-full bg-[#ededed] px-2.5 py-1 text-[11px] font-bold transition-all " +
+                        (isOwnerRow
+                          ? "text-[#ff4100]"
+                          : isAdmin
+                            ? "text-[#ff4100]"
+                            : "text-[#6f6f6f]") +
+                        (roleLocked
                           ? " cursor-not-allowed opacity-60"
                           : " hover:bg-[#e0e0e0]")
                       }
                     >
-                      {isAdmin ? "Admin" : "Membro"}
+                      {isOwnerRow ? "Master" : isAdmin ? "Admin" : "Membro"}
                     </button>
                   </td>
 
@@ -233,19 +252,21 @@ export function MembersTable() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (isSelf) return;
+                          if (deleteLocked) return;
                           setDeletingMemberId(member.id);
                         }}
-                        disabled={isSelf}
+                        disabled={deleteLocked}
                         aria-label={`Apagar conta de ${member.nickname}`}
                         title={
-                          isSelf
-                            ? "Você não pode apagar a própria conta"
-                            : "Apagar conta"
+                          isOwnerRow
+                            ? "Master não pode ser apagado"
+                            : isSelf
+                              ? "Você não pode apagar a própria conta"
+                              : "Apagar conta"
                         }
                         className={
                           "flex h-[30px] w-[30px] items-center justify-center rounded-full text-[#c53030] transition-opacity " +
-                          (isSelf
+                          (deleteLocked
                             ? "cursor-not-allowed opacity-20"
                             : "opacity-50 hover:opacity-100 hover:bg-[#fff0f0]")
                         }

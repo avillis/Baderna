@@ -229,16 +229,18 @@ export function PostCommentsSection({
               if (fileInput.current) fileInput.current.value = "";
             }}
           />
-          {/* Mesmos icones do post-composer (SVGs identicos), so menores. */}
+          {/* Mesmos icones e proporcoes do post-composer (SVG image 26x26
+              dentro de botao 32x32; GIF pill 18x18 com rounded-[5px] que
+              bate com o rx=5 do rect da imagem). */}
           <button
             type="button"
             onClick={() => fileInput.current?.click()}
             disabled={uploading}
             aria-label="Adicionar imagem"
-            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center transition-opacity hover:opacity-70 disabled:opacity-50"
+            className="flex h-[32px] w-[32px] shrink-0 items-center justify-center transition-opacity hover:opacity-70 disabled:opacity-50"
           >
             <svg
-              className="h-[22px] w-[22px] text-[#0f0f0f]"
+              className="h-[26px] w-[26px] text-[#0f0f0f]"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -276,7 +278,7 @@ export function PostCommentsSection({
             onClick={() => setGiphyOpen((v) => !v)}
             aria-label="Adicionar GIF"
             aria-expanded={giphyOpen}
-            className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[6px] text-[9px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
+            className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] text-[7px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
           >
             GIF
           </button>
