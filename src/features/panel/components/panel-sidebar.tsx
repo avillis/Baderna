@@ -559,7 +559,7 @@ function BurgerIcon({ open }: { open: boolean }) {
       <span
         className={cn(
           "absolute left-0 top-1/2 block h-[2px] -translate-y-1/2 rounded-full bg-current transition-[width,transform] duration-300 ease-out",
-          open ? "w-full" : "w-[70%]",
+          open ? "w-full" : "w-[80%]",
           open ? "rotate-45" : "-translate-y-[5px]",
         )}
       />
