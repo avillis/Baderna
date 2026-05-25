@@ -45,6 +45,14 @@ class AccountController extends Controller
             'active_title_slugs.*' => 'string|max:80',
             'primary_lane'       => 'sometimes|nullable|string|in:TOP,JG,MID,ADC,SUP',
             'secondary_lane'     => 'sometimes|nullable|string|in:TOP,JG,MID,ADC,SUP',
+            'community_highlight' => 'sometimes|nullable|string|max:160',
+            'duo_label'          => 'sometimes|nullable|string|max:120',
+            'profile_module_order' => 'sometimes|nullable|array',
+            'profile_module_order.*' => 'string|max:40',
+            'favorite_champion_slugs' => 'sometimes|nullable|array',
+            'favorite_champion_slugs.*' => 'string|max:80',
+            'favorite_game_title' => 'sometimes|nullable|string|max:120',
+            'favorite_game_cover_url' => 'sometimes|nullable|string|max:255',
         ]);
 
         $user = $request->user();
@@ -146,6 +154,12 @@ class AccountController extends Controller
             'activeTitleSlugs'   => $user->active_title_slugs ?? ['aprendiz'],
             'primaryLane'        => $user->primary_lane,
             'secondaryLane'      => $user->secondary_lane,
+            'communityHighlight' => $user->community_highlight,
+            'duoLabel'           => $user->duo_label,
+            'profileModuleOrder' => $user->profile_module_order ?? [],
+            'favoriteChampionSlugs' => $user->favorite_champion_slugs ?? [],
+            'favoriteGameTitle'  => $user->favorite_game_title,
+            'favoriteGameCoverUrl' => $user->favorite_game_cover_url,
             // URL do ícone Riot atual (Data Dragon). Independente do avatarSrc
             // — assim o user pode voltar a usar o ícone Riot mesmo se trocou
             // pra champion/upload.

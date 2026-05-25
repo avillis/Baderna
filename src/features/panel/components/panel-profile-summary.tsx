@@ -89,11 +89,13 @@ export function PanelProfileSummary({
 
   // Sempre busca o riotId do membro alvo (não do logado).
   const effectiveRiotId = riotId || (isOwnProfile ? account.gameNick : "");
+  const hasRiotId = Boolean(effectiveRiotId);
   const riot = useRiotProfile(effectiveRiotId || null);
   const liveTier =
     riot.status === "ready" ? (riot.profile?.rank?.tier ?? "") : "";
   const isUnranked =
-    riot.status === "ready" && (!liveTier || liveTier === "Unranked");
+    !hasRiotId ||
+    (riot.status === "ready" && (!liveTier || liveTier === "Unranked"));
   const liveRankType =
     riot.status === "ready" && liveTier && liveTier !== "Unranked"
       ? (TIER_TO_RANK_TYPE[liveTier.toUpperCase()] ?? rankType)

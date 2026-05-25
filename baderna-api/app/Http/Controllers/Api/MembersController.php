@@ -39,6 +39,14 @@ class MembersController extends Controller
     {
         $users = User::where('is_deleted', false)
             ->where('approval_status', 'approved')
+            ->withCount([
+                'posts as postsCount',
+                'authoredComments as authoredCommentsCount',
+                'profileComments as profileCommentsCount',
+                'memberUnlocks as unlockedTitlesCount' => fn ($q) => $q->where('kind', 'title'),
+                'memberUnlocks as unlockedBannersCount' => fn ($q) => $q->where('kind', 'capa'),
+                'memberUnlocks as unlockedNamesCount' => fn ($q) => $q->where('kind', 'name'),
+            ])
             ->orderBy('id')
             ->get();
 
@@ -63,10 +71,22 @@ class MembersController extends Controller
                 'teamName'        => $u->team_name,
                 'primaryLane'     => $u->primary_lane,
                 'secondaryLane'   => $u->secondary_lane,
+                'communityHighlight' => $u->community_highlight,
+                'duoLabel'        => $u->duo_label,
+                'profileModuleOrder' => $u->profile_module_order ?? [],
+                'favoriteChampionSlugs' => $u->favorite_champion_slugs ?? [],
+                'favoriteGameTitle' => $u->favorite_game_title,
+                'favoriteGameCoverUrl' => $u->favorite_game_cover_url,
                 'activeNameId'    => $u->active_name_id,
                 'cachedRankTier'      => $u->cached_rank_tier,
                 'cachedRankDivision'  => $u->cached_rank_division,
                 'cachedRankLp'        => $u->cached_rank_lp,
+                'postsCount'      => (int)($u->postsCount ?? 0),
+                'authoredCommentsCount' => (int)($u->authoredCommentsCount ?? 0),
+                'profileCommentsCount' => (int)($u->profileCommentsCount ?? 0),
+                'unlockedTitlesCount' => (int)($u->unlockedTitlesCount ?? 0),
+                'unlockedBannersCount' => (int)($u->unlockedBannersCount ?? 0),
+                'unlockedNamesCount' => (int)($u->unlockedNamesCount ?? 0),
             ];
             if ($viewerIsAdmin) {
                 $row['isAdmin'] = (bool)$u->is_admin;

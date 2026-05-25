@@ -17,9 +17,7 @@ import {
 import { ProfileActions } from "@/features/panel/components/profile-actions";
 import type { BadernaMember } from "@/features/panel/members-data";
 import { LiveFavoriteChampionsCard } from "@/features/panel/components/live-favorite-champions-card";
-import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
 import { LiveHistoryCard } from "@/features/panel/components/live-history-card";
-import { LiveRankCard } from "@/features/panel/components/live-rank-card";
 import { PanelCommentsCard } from "@/features/panel/components/panel-comments-card";
 import { PanelGameModeToggle } from "@/features/panel/components/panel-game-mode-toggle";
 import { PanelLaneSelectorCard } from "@/features/panel/components/panel-lane-selector-card";
@@ -27,7 +25,14 @@ import { PanelMemberWinratesCard } from "@/features/panel/components/panel-membe
 import { PanelProfileSummary } from "@/features/panel/components/panel-profile-summary";
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { PanelStatCard } from "@/features/panel/components/panel-stat-card";
+import {
+  ProfileTopModuleCard,
+  type ProfileTopModuleId,
+  resolveTopModules,
+} from "@/features/panel/components/profile-top-modules";
 import { ProfileLoadingOverlay } from "@/features/panel/components/profile-loading-overlay";
+import { NAME_STYLES } from "@/features/panel/names-data";
+import { useTitles } from "@/features/panel/use-titles";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -51,6 +56,18 @@ type ApiMember = {
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   secondaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   activeTitleSlugs: string[] | null;
+  communityHighlight: string | null;
+  duoLabel: string | null;
+  profileModuleOrder: string[] | null;
+  favoriteChampionSlugs: string[] | null;
+  favoriteGameTitle: string | null;
+  favoriteGameCoverUrl: string | null;
+  postsCount: number;
+  authoredCommentsCount: number;
+  profileCommentsCount: number;
+  unlockedTitlesCount: number;
+  unlockedBannersCount: number;
+  unlockedNamesCount: number;
 };
 
 async function fetchMembersList(): Promise<ApiMember[]> {
@@ -104,6 +121,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const ranks = useMemberRanks();
   const { user } = useAuth();
   const [showCompare, setShowCompare] = useState(false);
+  const { titles: allTitles } = useTitles();
 
   useEffect(() => {
     let cancelled = false;
@@ -191,6 +209,47 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
   const targetUserId = member.userId;
   const riotId = member.riotId;
+  const hasRiotId = Boolean(riotId);
+  const totalBannerCount = splashGroups.reduce(
+    (sum, group) => sum + group.variants.length,
+    0,
+  );
+  const totalTitleCount = allTitles.length;
+  const totalNameCount = NAME_STYLES.length;
+  const topModules = resolveTopModules({
+    hasRiotId,
+    profileModuleOrder: apiMember?.profileModuleOrder,
+    slotCount: hasRiotId ? 2 : 3,
+  });
+  const sharedModuleProps = {
+    riotId,
+    favoriteChampionSlugs: apiMember?.favoriteChampionSlugs ?? [],
+    favoriteGameTitle: apiMember?.favoriteGameTitle,
+    favoriteGameCoverUrl: apiMember?.favoriteGameCoverUrl,
+    communityHighlight: apiMember?.communityHighlight,
+    duoLabel: apiMember?.duoLabel,
+    unlockedTitlesCount: apiMember?.unlockedTitlesCount ?? 0,
+    unlockedBannersCount: apiMember?.unlockedBannersCount ?? 0,
+    unlockedNamesCount: apiMember?.unlockedNamesCount ?? 0,
+    totalTitles: totalTitleCount,
+    totalBanners: totalBannerCount,
+    totalNames: totalNameCount,
+    postsCount: apiMember?.postsCount ?? 0,
+    authoredCommentsCount: apiMember?.authoredCommentsCount ?? 0,
+    profileCommentsCount: apiMember?.profileCommentsCount ?? 0,
+    fallbackLolRankEyebrow: stats[2].eyebrow,
+    fallbackLolRankValue: stats[2].value,
+    fallbackLolRankFrameSrc: profile.rankFrameSrc,
+  };
+
+  const renderModuleCard = (moduleId?: ProfileTopModuleId) =>
+    moduleId ? (
+    <ProfileTopModuleCard
+      key={moduleId}
+      moduleId={moduleId}
+      {...sharedModuleProps}
+    />
+    ) : null;
 
   const buildSide = (m: BadernaMember): CompareSide => {
     const idx = allMembers.findIndex((x) => x.id === m.id);
@@ -264,29 +323,24 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
             <div className="xl:pr-[26px]">
               <div className="grid gap-6 md:grid-cols-2">
-                <PanelLaneSelectorCard
-                  primaryLane={apiMember?.primaryLane ?? null}
-                  secondaryLane={apiMember?.secondaryLane ?? null}
-                  targetUserId={targetUserId}
-                />
+                {hasRiotId ? (
+                  <PanelLaneSelectorCard
+                    primaryLane={apiMember?.primaryLane ?? null}
+                    secondaryLane={apiMember?.secondaryLane ?? null}
+                    targetUserId={targetUserId}
+                  />
+                ) : (
+                  renderModuleCard(topModules[0])
+                )}
                 <PanelStatCard
                   eyebrow={stats[1].eyebrow}
                   value={stats[1].value}
                   tone="rank-baderna"
                   placeholder={stats[1].placeholder}
                 />
-                <LiveRankCard
-                  riotId={riotId}
-                  fallbackEyebrow={stats[2].eyebrow}
-                  fallbackValue={stats[2].value}
-                  fallbackFrameSrc={profile.rankFrameSrc}
-                />
-                <LiveFeaturedChampionCard
-                  riotId={riotId}
-                  fallbackEyebrow={stats[3].eyebrow}
-                  fallbackValue={stats[3].value}
-                  fallbackSrc={profile.featuredChampionSrc}
-                />
+                {topModules
+                  .slice(hasRiotId ? 0 : 1)
+                  .map((moduleId) => renderModuleCard(moduleId))}
               </div>
             </div>
           </div>
@@ -297,21 +351,39 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 className="col-span-2 flex flex-wrap items-center gap-[10px]"
                 {...actionProps}
               />
-              <div className="flex justify-end">
+              {hasRiotId ? (
+                <div className="flex justify-end">
+                  <PanelGameModeToggle />
+                </div>
+              ) : null}
+            </div>
+            {hasRiotId ? (
+              <div className="mt-[72px] mb-4 flex justify-center xl:hidden">
                 <PanelGameModeToggle />
               </div>
-            </div>
-            <div className="mt-[72px] mb-4 flex justify-center xl:hidden">
-              <PanelGameModeToggle />
-            </div>
-            <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
-              <div className="min-w-0 max-w-full"><LiveHistoryCard riotId={riotId} /></div>
-              <div className="min-w-0 max-w-full"><PanelMemberWinratesCard targetUserId={targetUserId} /></div>
-              <div className="flex min-w-0 max-w-full flex-col gap-8">
-                <LiveFavoriteChampionsCard riotId={riotId} />
-                <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
+            ) : null}
+            {hasRiotId ? (
+              <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
+                <div className="min-w-0 max-w-full"><LiveHistoryCard riotId={riotId} /></div>
+                <div className="min-w-0 max-w-full"><PanelMemberWinratesCard targetUserId={targetUserId} /></div>
+                <div className="flex min-w-0 max-w-full flex-col gap-8">
+                  <LiveFavoriteChampionsCard riotId={riotId} />
+                  <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
+                <div className="grid gap-6 md:grid-cols-2">
+                  {renderModuleCard("collection")}
+                  {renderModuleCard("participation")}
+                  {renderModuleCard("community-highlight")}
+                  {renderModuleCard("duo")}
+                </div>
+                <div className="min-w-0 max-w-full">
+                  <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -340,29 +412,24 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 />
               </div>
 
-              <PanelLaneSelectorCard
+              {hasRiotId ? (
+                <PanelLaneSelectorCard
                   primaryLane={apiMember?.primaryLane ?? null}
                   secondaryLane={apiMember?.secondaryLane ?? null}
                   targetUserId={targetUserId}
                 />
+              ) : (
+                renderModuleCard(topModules[0])
+              )}
               <PanelStatCard
                 eyebrow={stats[1].eyebrow}
                 value={stats[1].value}
                 tone="rank-baderna"
                 placeholder={stats[1].placeholder}
               />
-              <LiveRankCard
-                riotId={riotId}
-                fallbackEyebrow={stats[2].eyebrow}
-                fallbackValue={stats[2].value}
-                fallbackFrameSrc={profile.rankFrameSrc}
-              />
-              <LiveFeaturedChampionCard
-                riotId={riotId}
-                fallbackEyebrow={stats[3].eyebrow}
-                fallbackValue={stats[3].value}
-                fallbackSrc={profile.featuredChampionSrc}
-              />
+              {topModules
+                .slice(hasRiotId ? 0 : 1)
+                .map((moduleId) => renderModuleCard(moduleId))}
             </div>
 
             <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
@@ -370,24 +437,41 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 className="col-start-1 col-span-3 flex flex-wrap items-center gap-[10px]"
                 {...actionProps}
               />
-              <div className="col-start-4 col-span-2 flex justify-end">
-                <PanelGameModeToggle />
-              </div>
+              {hasRiotId ? (
+                <div className="col-start-4 col-span-2 flex justify-end">
+                  <PanelGameModeToggle />
+                </div>
+              ) : null}
             </div>
-            <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
-              <div className="col-start-1 col-span-1">
-                <PanelMemberWinratesCard targetUserId={targetUserId} />
-              </div>
+            {hasRiotId ? (
+              <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
+                <div className="col-start-1 col-span-1">
+                  <PanelMemberWinratesCard targetUserId={targetUserId} />
+                </div>
 
-              <div className="col-start-2 col-span-2">
-                <LiveHistoryCard riotId={riotId} />
-              </div>
+                <div className="col-start-2 col-span-2">
+                  <LiveHistoryCard riotId={riotId} />
+                </div>
 
-              <div className="col-start-4 col-span-2 flex flex-col gap-[42px]">
-                <LiveFavoriteChampionsCard riotId={riotId} />
-                <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
+                <div className="col-start-4 col-span-2 flex flex-col gap-[42px]">
+                  <LiveFavoriteChampionsCard riotId={riotId} />
+                  <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
+                <div className="col-start-1 col-span-3 grid grid-cols-2 gap-6">
+                  {renderModuleCard("collection")}
+                  {renderModuleCard("participation")}
+                  {renderModuleCard("community-highlight")}
+                  {renderModuleCard("duo")}
+                </div>
+
+                <div className="col-start-4 col-span-2">
+                  <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </GameModeProvider>
