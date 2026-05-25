@@ -229,17 +229,45 @@ export function PostCommentsSection({
               if (fileInput.current) fileInput.current.value = "";
             }}
           />
+          {/* Mesmos icones do post-composer (SVGs identicos), so menores. */}
           <button
             type="button"
             onClick={() => fileInput.current?.click()}
             disabled={uploading}
             aria-label="Adicionar imagem"
-            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:opacity-50"
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center transition-opacity hover:opacity-70 disabled:opacity-50"
           >
-            <svg className="h-[20px] w-[20px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.8" />
-              <circle cx="9" cy="9" r="1.5" fill="currentColor" />
-              <path d="M21 15l-4-4-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              className="h-[22px] w-[22px] text-[#0f0f0f]"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <clipPath id="comment-img-icon-clip">
+                  <rect x="3" y="3" width="18" height="18" rx="5" ry="5" />
+                </clipPath>
+              </defs>
+              <rect
+                x="3"
+                y="3"
+                width="18"
+                height="18"
+                rx="5"
+                ry="5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <g clipPath="url(#comment-img-icon-clip)">
+                <circle cx="8.5" cy="9" r="1.6" stroke="currentColor" strokeWidth="1.5" />
+                <path
+                  d="M21 15.5L16.5 11L6 21.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
             </svg>
           </button>
 
@@ -247,11 +275,8 @@ export function PostCommentsSection({
             type="button"
             onClick={() => setGiphyOpen((v) => !v)}
             aria-label="Adicionar GIF"
-            className={`flex h-[30px] shrink-0 items-center justify-center rounded-md border-[1.6px] px-[6px] text-[10px] font-bold transition-colors ${
-              giphyOpen
-                ? "border-[#ff4100] text-[#ff4100]"
-                : "border-[#0f0f0f] text-[#0f0f0f] hover:border-[#ff4100] hover:text-[#ff4100]"
-            }`}
+            aria-expanded={giphyOpen}
+            className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[6px] text-[9px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
           >
             GIF
           </button>
