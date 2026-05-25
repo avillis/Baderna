@@ -61,7 +61,7 @@ export function useMobileNav() {
 
 /** Largura do drawer mobile — também é o quanto a página é empurrada. */
 export const MOBILE_DRAWER_WIDTH = 280;
-const MOBILE_CARD_RADIUS = 24;
+const MOBILE_CARD_RADIUS = 25;
 const MOBILE_STAGE_COLOR = "#ece8e4";
 
 /**
@@ -86,7 +86,7 @@ export function MobilePushRegion({
         "relative z-[30] min-h-screen transition-[left,border-radius] duration-300 ease-out xl:left-0 xl:rounded-none",
         bgClassName,
         open
-          ? "left-[280px] rounded-l-[24px] before:pointer-events-none before:absolute before:bottom-[24px] before:left-[-18px] before:top-[24px] before:w-[18px] before:bg-[linear-gradient(to_left,rgba(0,0,0,0.18),rgba(0,0,0,0))] before:content-['']"
+          ? "left-[280px] rounded-l-[25px]"
           : "left-0",
       )}
     >
