@@ -278,7 +278,7 @@ export function PostCommentsSection({
             onClick={() => setGiphyOpen((v) => !v)}
             aria-label="Adicionar GIF"
             aria-expanded={giphyOpen}
-            className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-[7px] text-[8px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
+            className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-[5px] text-[8px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
           >
             GIF
           </button>
