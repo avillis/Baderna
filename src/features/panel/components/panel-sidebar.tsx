@@ -532,7 +532,7 @@ export function MobileMenu() {
     <div
       aria-hidden={!open}
       className={cn(
-        "fixed inset-y-0 left-0 z-[20] flex w-[280px] flex-col bg-white px-[19px] pb-[24px] pt-[120px] xl:hidden",
+        "fixed inset-y-0 left-0 z-[20] flex w-[280px] flex-col bg-white px-[19px] pb-[24px] pt-[120px] after:pointer-events-none after:absolute after:bottom-0 after:right-[-25px] after:top-0 after:w-[25px] after:bg-white after:content-[''] xl:hidden",
         open ? "" : "pointer-events-none",
       )}
     >
