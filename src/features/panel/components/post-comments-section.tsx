@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 
 import { useToast } from "@/components/toast";
 import { GiphyPickerInline } from "@/features/panel/components/giphy-picker-modal";
+import { ImageLightbox } from "@/features/panel/components/image-lightbox";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { useAuth } from "@/features/panel/use-auth";
@@ -35,6 +36,7 @@ export function PostCommentsSection({
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [giphyOpen, setGiphyOpen] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const mediaUrl = imageUrl ?? gifUrl;
@@ -156,14 +158,20 @@ export function PostCommentsSection({
                         </p>
                       )}
                       {(comment.imageUrl || comment.gifUrl) && (
-                        <div className="mt-[10px] overflow-hidden rounded-[12px] bg-[#ededed]">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setLightboxSrc(comment.imageUrl ?? comment.gifUrl ?? null)
+                          }
+                          className="mt-[12px] block w-full max-w-[420px] overflow-hidden rounded-[16px] bg-[#ededed] text-left transition-opacity hover:opacity-95"
+                        >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={comment.imageUrl ?? comment.gifUrl ?? ""}
                             alt=""
-                            className="max-h-[280px] w-auto max-w-full object-contain"
+                            className="h-[320px] w-full object-cover object-center"
                           />
-                        </div>
+                        </button>
                       )}
                     </div>
 
@@ -302,6 +310,10 @@ export function PostCommentsSection({
           }}
         />
       </form>
+
+      {lightboxSrc && (
+        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+      )}
     </section>
   );
 }
