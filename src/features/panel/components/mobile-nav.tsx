@@ -62,7 +62,6 @@ export function useMobileNav() {
 /** Largura do drawer mobile — também é o quanto a página é empurrada. */
 export const MOBILE_DRAWER_WIDTH = 280;
 const MOBILE_CARD_RADIUS = 24;
-const MOBILE_CARD_SHADOW_WIDTH = 16;
 const MOBILE_STAGE_COLOR = "#ece8e4";
 
 /**
@@ -84,10 +83,10 @@ export function MobilePushRegion({
   return (
     <div
       className={cn(
-        "relative z-[30] min-h-screen transition-[left,border-radius,box-shadow] duration-300 ease-out xl:left-0 xl:rounded-none xl:shadow-none",
+        "relative z-[30] min-h-screen transition-[left,border-radius] duration-300 ease-out xl:left-0 xl:rounded-none",
         bgClassName,
         open
-          ? "left-[280px] rounded-l-[24px] shadow-[-16px_0_50px_rgba(0,0,0,0.20)]"
+          ? "left-[280px] rounded-l-[24px] before:pointer-events-none before:absolute before:bottom-[24px] before:left-[-18px] before:top-[24px] before:w-[18px] before:bg-[linear-gradient(to_left,rgba(0,0,0,0.18),rgba(0,0,0,0))] before:content-['']"
           : "left-0",
       )}
     >
@@ -97,8 +96,8 @@ export function MobilePushRegion({
           viewport (a página rola no body, então o card sozinho só arredondaria
           no topo/fundo do documento). São máscaras côncavas fixas na borda
           esquerda do card (x=280): pintam a cor do stage fora do arco e deixam
-          o card aparecer dentro dele. A faixa extra cobre só o trecho reto da
-          sombra, sem criar blocos visíveis no topo e no rodapé. */}
+          o card aparecer dentro dele. A sombra agora é uma faixa separada,
+          então não precisamos mais de preenchimento reto cinza nos cantos. */}
       {open && (
         <>
           <span
@@ -114,16 +113,6 @@ export function MobilePushRegion({
           />
           <span
             aria-hidden
-            className="pointer-events-none fixed top-0 z-[35] xl:hidden"
-            style={{
-              left: MOBILE_DRAWER_WIDTH - MOBILE_CARD_SHADOW_WIDTH,
-              width: MOBILE_CARD_SHADOW_WIDTH,
-              height: MOBILE_CARD_RADIUS,
-              background: MOBILE_STAGE_COLOR,
-            }}
-          />
-          <span
-            aria-hidden
             className="pointer-events-none fixed bottom-0 z-[36] xl:hidden"
             style={{
               left: MOBILE_DRAWER_WIDTH,
@@ -131,16 +120,6 @@ export function MobilePushRegion({
               height: MOBILE_CARD_RADIUS,
               background:
                 `radial-gradient(circle at top right, transparent ${MOBILE_CARD_RADIUS - 0.5}px, ${MOBILE_STAGE_COLOR} ${MOBILE_CARD_RADIUS}px)`,
-            }}
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none fixed bottom-0 z-[35] xl:hidden"
-            style={{
-              left: MOBILE_DRAWER_WIDTH - MOBILE_CARD_SHADOW_WIDTH,
-              width: MOBILE_CARD_SHADOW_WIDTH,
-              height: MOBILE_CARD_RADIUS,
-              background: MOBILE_STAGE_COLOR,
             }}
           />
         </>
