@@ -210,11 +210,11 @@ export function MembersTable() {
                       disabled={roleLocked}
                       title={
                         isOwnerRow
-                          ? "O dono não pode ser despromovido"
+                          ? "Master não pode ser despromovido"
                           : isSelf
                             ? "Você não pode alterar seu próprio cargo"
                             : !viewerIsOwner
-                              ? "Apenas o dono pode alterar cargos"
+                              ? "Apenas o Master pode alterar cargos"
                               : "Clique para alterar o cargo"
                       }
                       className={
@@ -229,7 +229,7 @@ export function MembersTable() {
                           : " hover:bg-[#e0e0e0]")
                       }
                     >
-                      {isOwnerRow ? "Dono" : isAdmin ? "Admin" : "Membro"}
+                      {isOwnerRow ? "Master" : isAdmin ? "Admin" : "Membro"}
                     </button>
                   </td>
 
@@ -259,7 +259,7 @@ export function MembersTable() {
                         aria-label={`Apagar conta de ${member.nickname}`}
                         title={
                           isOwnerRow
-                            ? "O dono não pode ser apagado"
+                            ? "Master não pode ser apagado"
                             : isSelf
                               ? "Você não pode apagar a própria conta"
                               : "Apagar conta"
