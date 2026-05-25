@@ -61,6 +61,11 @@ export function useMobileNav() {
 
 /** Largura do drawer mobile — também é o quanto a página é empurrada. */
 export const MOBILE_DRAWER_WIDTH = 280;
+const MOBILE_CARD_RADIUS = 24;
+const MOBILE_CARD_SHADOW_COVER = 24;
+const MOBILE_CARD_CORNER_MASK_SIZE =
+  MOBILE_CARD_RADIUS + MOBILE_CARD_SHADOW_COVER;
+const MOBILE_STAGE_COLOR = "#ece8e4";
 
 /**
  * Card da página: opaco (tapa o <MobileMenu/> atrás dele) e empurrado pra
@@ -93,24 +98,31 @@ export function MobilePushRegion({
       {/* Cantos arredondados do card "em cima e em baixo", ancorados na
           viewport (a página rola no body, então o card sozinho só arredondaria
           no topo/fundo do documento). São máscaras côncavas fixas na borda
-          esquerda do card (x=280): pintam STAGE_COLOR fora do arco e deixam o
-          card aparecer dentro dele. */}
+          esquerda do card (x=280): pintam a cor do stage fora do arco e deixam
+          o card aparecer dentro dele. A máscara é mais larga do que o raio
+          para também cobrir o trecho reto da box-shadow que ficava vazando. */}
       {open && (
         <>
           <span
             aria-hidden
-            className="pointer-events-none fixed left-[280px] top-0 z-[36] h-[24px] w-[24px] xl:hidden"
+            className="pointer-events-none fixed top-0 z-[36] xl:hidden"
             style={{
+              left: MOBILE_DRAWER_WIDTH - MOBILE_CARD_SHADOW_COVER,
+              width: MOBILE_CARD_CORNER_MASK_SIZE,
+              height: MOBILE_CARD_CORNER_MASK_SIZE,
               background:
-                "radial-gradient(circle at bottom right, transparent 23.5px, #ece8e4 24px)",
+                `radial-gradient(circle at bottom right, transparent ${MOBILE_CARD_RADIUS - 0.5}px, ${MOBILE_STAGE_COLOR} ${MOBILE_CARD_RADIUS}px)`,
             }}
           />
           <span
             aria-hidden
-            className="pointer-events-none fixed bottom-0 left-[280px] z-[36] h-[24px] w-[24px] xl:hidden"
+            className="pointer-events-none fixed bottom-0 z-[36] xl:hidden"
             style={{
+              left: MOBILE_DRAWER_WIDTH - MOBILE_CARD_SHADOW_COVER,
+              width: MOBILE_CARD_CORNER_MASK_SIZE,
+              height: MOBILE_CARD_CORNER_MASK_SIZE,
               background:
-                "radial-gradient(circle at top right, transparent 23.5px, #ece8e4 24px)",
+                `radial-gradient(circle at top right, transparent ${MOBILE_CARD_RADIUS - 0.5}px, ${MOBILE_STAGE_COLOR} ${MOBILE_CARD_RADIUS}px)`,
             }}
           />
         </>
