@@ -21,6 +21,7 @@ class User extends Authenticatable
         'is_admin',
         'is_deleted',
         'pending_registration',
+        'approval_status',
         'profile_icon_id',
         'summoner_name',
         'tagLine',
@@ -53,6 +54,7 @@ class User extends Authenticatable
         'is_admin',
         'is_deleted',
         'pending_registration',
+        'approval_status',
         'created_at',
         'updated_at',
     ];

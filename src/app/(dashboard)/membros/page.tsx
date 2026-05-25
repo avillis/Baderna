@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Check, Search } from "lucide-react";
+import { Check, Search, X } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { StyledName } from "@/features/panel/components/styled-name";
@@ -159,7 +159,17 @@ export default function MembrosPage() {
             />
           </div>
 
-          <div className="flex w-full gap-2 sm:w-auto">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            {lane && (
+              <button
+                type="button"
+                onClick={() => setLane(null)}
+                aria-label="Limpar filtro de lane"
+                className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full bg-white text-[#6f6f6f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:text-[#ff4100]"
+              >
+                <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+              </button>
+            )}
             {LANES.map((l) => {
               const active = lane === l.value;
               return (

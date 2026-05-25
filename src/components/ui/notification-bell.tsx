@@ -48,7 +48,7 @@ export default function NotificationBell({
   const buttonClass =
     placement === "below"
       ? "relative flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-opacity duration-200 hover:opacity-85"
-      : "relative flex items-center justify-center rounded-full p-2 text-[#313131] transition-colors duration-200 hover:bg-[#fff4f4]";
+      : "relative flex h-[36px] w-[36px] items-center justify-center rounded-full border border-[#efe6e2] text-[#313131] transition-colors duration-200 hover:bg-[#fff4f4]";
 
   // Com não-lidas, troca pro sino "tocando" (com as ondinhas) pra dar mais
   // dinamismo; zerado, fica o sino normal.
@@ -134,7 +134,7 @@ export default function NotificationBell({
         title="Notificações"
       >
         <svg
-          className="h-[20px] w-[20px]"
+          className={placement === "below" ? "h-[20px] w-[20px]" : "h-[16px] w-[16px]"}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
