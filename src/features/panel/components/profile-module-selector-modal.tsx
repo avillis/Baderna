@@ -7,10 +7,7 @@ import { useToast } from "@/components/toast";
 import lolLogo from "../../../../icons/lol_logo.png";
 
 import type { ProfileModuleId } from "@/features/panel/components/profile-modules";
-import {
-  ALL_CONFIGURABLE_MODULE_IDS,
-  LOL_LOCKED_MODULE_IDS,
-} from "@/features/panel/components/profile-modules";
+import { ALL_CONFIGURABLE_MODULE_IDS } from "@/features/panel/components/profile-modules";
 
 type ModuleMeta = {
   id: ProfileModuleId;
@@ -72,13 +69,11 @@ export const MODULE_META: ModuleMeta[] = [
 
 function ModulePicker({
   current,
-  hasRiotId,
   occupied: occupiedRaw,
   onChange,
   onClose,
 }: {
   current: ProfileModuleId | null;
-  hasRiotId: boolean;
   occupied: ProfileModuleId[];
   onChange: (id: ProfileModuleId) => void;
   onClose: () => void;
@@ -236,7 +231,6 @@ function SlotRow({
       {open && onSelect ? (
         <ModulePicker
           current={current ?? null}
-          hasRiotId={hasRiotId}
           occupied={allSelected}
           onChange={onSelect}
           onClose={() => setOpen(false)}
