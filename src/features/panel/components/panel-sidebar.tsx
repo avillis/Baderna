@@ -429,7 +429,11 @@ function SidebarInner({
   );
 }
 
-export function PanelSidebar() {
+/**
+ * Resolve a lista de itens do menu (com o "Meu Perfil" apontando pro slug do
+ * próprio user). Compartilhado pela sidebar do desktop e pelo drawer mobile.
+ */
+function usePanelMenuModel() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { account } = useAccount();
@@ -451,7 +455,11 @@ export function PanelSidebar() {
         }
       : item,
   );
+  return { menuItems, pathname, isOnFeed };
+}
 
+export function PanelSidebar() {
+  const { menuItems, pathname, isOnFeed } = usePanelMenuModel();
   const { open: drawerOpen, setOpen: setDrawerOpen } = useMobileNav();
 
   return (
@@ -504,36 +512,37 @@ export function PanelSidebar() {
 
       {/* Spacer pra reservar o espaço do header fixo (só no mobile). */}
       <div className="h-[76px] xl:hidden" />
-
-      {/* Mobile: drawer deslizante reusando a sidebar */}
-      <div className="xl:hidden">
-        <button
-          type="button"
-          aria-label="Fechar menu"
-          tabIndex={drawerOpen ? 0 : -1}
-          onClick={() => setDrawerOpen(false)}
-          className={cn(
-            "fixed inset-0 z-[65] bg-transparent",
-            drawerOpen ? "" : "pointer-events-none",
-          )}
-        />
-        <div
-          className={cn(
-            "fixed inset-y-0 left-0 z-[70] flex w-[280px] flex-col bg-white px-[19px] pb-[24px] pt-[76px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out",
-            drawerOpen ? "translate-x-0" : "-translate-x-full",
-          )}
-        >
-          <SidebarInner
-            menuItems={menuItems}
-            pathname={pathname}
-            isOnFeed={isOnFeed}
-            showLogo={false}
-            dropdownPlacement="above"
-            onNavigate={() => setDrawerOpen(false)}
-          />
-        </div>
-      </div>
     </>
+  );
+}
+
+/**
+ * Menu mobile que fica "embaixo" da página: um painel fixo na esquerda, atrás
+ * do card da página (z menor). A página (MobilePushRegion) é que desliza pra
+ * direita e revela este menu — por isso aqui não tem animação de translate.
+ * Renderizado como irmão do card no PanelShell, nunca aninhado dentro dele.
+ */
+export function MobileMenu() {
+  const { menuItems, pathname, isOnFeed } = usePanelMenuModel();
+  const { open, setOpen } = useMobileNav();
+
+  return (
+    <div
+      aria-hidden={!open}
+      className={cn(
+        "fixed inset-y-0 left-0 z-[20] flex w-[280px] flex-col bg-white px-[19px] pb-[24px] pt-[120px] xl:hidden",
+        open ? "" : "pointer-events-none",
+      )}
+    >
+      <SidebarInner
+        menuItems={menuItems}
+        pathname={pathname}
+        isOnFeed={isOnFeed}
+        showLogo={false}
+        dropdownPlacement="above"
+        onNavigate={() => setOpen(false)}
+      />
+    </div>
   );
 }
 

@@ -7,7 +7,10 @@ import {
   MobileNavProvider,
   MobilePushRegion,
 } from "@/features/panel/components/mobile-nav";
-import { PanelSidebar } from "@/features/panel/components/panel-sidebar";
+import {
+  MobileMenu,
+  PanelSidebar,
+} from "@/features/panel/components/panel-sidebar";
 import { panelProfile } from "@/features/panel/panel-data";
 import type { SplashGroup } from "@/features/panel/splash-catalog";
 
@@ -36,7 +39,9 @@ export function PanelShell({
   return (
     <MobileNavProvider>
       <div className={`relative min-h-screen overflow-x-clip sm:rounded-l-[24px] sm:rounded-br-[24px] xl:rounded-none ${bgClassName}`}>
-        <MobilePushRegion>
+        {/* Menu mobile, atrás do card — revelado quando a página desliza. */}
+        <MobileMenu />
+        <MobilePushRegion bgClassName={bgClassName}>
           <PullToRefresh />
           <div className="relative w-full px-4 pt-4 sm:px-6 sm:pt-6 xl:px-[45px] xl:pt-[45px]">
             <div className="grid gap-6 xl:grid-cols-[318px_minmax(0,1fr)] xl:gap-[60px] 2xl:gap-[80px]">

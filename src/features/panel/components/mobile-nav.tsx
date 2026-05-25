@@ -63,21 +63,46 @@ export function useMobileNav() {
 export const MOBILE_DRAWER_WIDTH = 280;
 
 /**
- * Região da página que é "empurrada" pra direita quando o drawer mobile abre.
- * Usa `left` (e não `transform`) de propósito: assim os elementos `fixed` lá
- * dentro (o header e o próprio drawer) continuam ancorados na viewport e não
- * se mexem junto. O overflow horizontal é cortado pelo PanelShell.
+ * Card da página: opaco (tapa o <MobileMenu/> atrás dele) e empurrado pra
+ * direita quando o drawer abre, revelando o menu. Usa `left` (e não
+ * `transform`) de propósito: o header fixo lá dentro continua ancorado na
+ * viewport e não desliza junto. O overflow horizontal é cortado pelo PanelShell.
  */
-export function MobilePushRegion({ children }: { children: ReactNode }) {
-  const { open } = useMobileNav();
+export function MobilePushRegion({
+  children,
+  bgClassName = "bg-[#f7f7f7]",
+}: {
+  children: ReactNode;
+  /** Mesmo fundo da página: o card precisa ser opaco pra tapar o menu atrás
+   *  dele quando o drawer está fechado. */
+  bgClassName?: string;
+}) {
+  const { open, setOpen } = useMobileNav();
   return (
     <div
       className={cn(
-        "relative transition-[left] duration-300 ease-out xl:left-0",
-        open ? "left-[280px]" : "left-0",
+        "relative z-[30] min-h-screen transition-[left,border-radius,box-shadow] duration-300 ease-out xl:left-0 xl:rounded-none xl:shadow-none",
+        bgClassName,
+        open
+          ? "left-[280px] rounded-l-[28px] shadow-[-12px_0_44px_rgba(0,0,0,0.16)]"
+          : "left-0",
       )}
     >
       {children}
+
+      {/* Captura toques na página empurrada pra fechar o drawer. Fica colado na
+          caixa do card (que já está deslocada 280px à direita), então não cobre
+          o menu revelado à esquerda. */}
+      <button
+        type="button"
+        aria-label="Fechar menu"
+        tabIndex={open ? 0 : -1}
+        onClick={() => setOpen(false)}
+        className={cn(
+          "absolute inset-0 z-[40] bg-transparent xl:hidden",
+          open ? "" : "pointer-events-none",
+        )}
+      />
     </div>
   );
 }
