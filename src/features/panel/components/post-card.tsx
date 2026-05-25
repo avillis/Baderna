@@ -441,7 +441,7 @@ function PostReactions({ postId }: { postId: number }) {
             e.stopPropagation();
             react(emoji);
           }}
-          className={`flex items-center gap-[4px] rounded-full px-[8px] py-[3px] text-[12px] font-semibold transition-colors ${
+          className={`flex h-[22px] items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
             mine === emoji
               ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
               : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
