@@ -36,11 +36,6 @@ export function PostCard({
   const canDelete =
     onDelete && user && (user.id === post.author.id || user.is_admin);
 
-  // Slug do autor pra link do perfil (mesma lógica do useBadernaMembers)
-  const authorSlug = post.author.gameNick
-    ? getMemberSlug({ nickname: post.author.gameNick.split("#")[0] })
-    : "";
-
   // Pega o membro ATUAL pra puxar nickname/name/estilo de nome. O backend
   // salva snapshot no payload do post; aqui sobrescreve com a versão fresh
   // da lista de membros (vinculada por user_id).
@@ -58,6 +53,14 @@ export function PostCard({
     liveMember?.nickname ?? fallbackNick ?? "Anônimo";
   const authorRealName = liveMember?.name ?? post.author.name ?? "";
   const authorStyleId = liveMember?.activeNameId ?? undefined;
+  const authorSlugSource =
+    liveMember?.nickname ||
+    post.author.gameNick?.split("#")[0] ||
+    post.author.name ||
+    "";
+  const authorSlug = authorSlugSource
+    ? getMemberSlug({ nickname: authorSlugSource })
+    : "";
 
   // Click no card → permalink do post. Buttons/links internos param
   // propagação pra não disparar duas navegações.
@@ -271,7 +274,7 @@ export function PostCard({
           <PostReactions postId={post.id} />
           <BookmarkButton />
           {expanded && (
-            <span className="ml-auto text-[12px] text-[#8d8d8d]">
+            <span className="basis-full pt-[2px] text-left text-[12px] text-[#8d8d8d] sm:ml-auto sm:basis-auto sm:pt-0 sm:text-right">
               {formatPostDateLong(post.createdAt)}
             </span>
           )}
