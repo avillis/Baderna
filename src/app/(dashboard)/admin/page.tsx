@@ -7,6 +7,7 @@ import { AdminEmailsCard } from "@/features/panel/components/admin-emails-card";
 import { AdminErrorLogsCard } from "@/features/panel/components/admin-error-logs-card";
 import { AdminInhousePointsCard } from "@/features/panel/components/admin-inhouse-points-card";
 import { AdminIntegrationsCard } from "@/features/panel/components/admin-integrations-card";
+import { AdminLoadingOverlayCard } from "@/features/panel/components/admin-loading-overlay-card";
 import { CreateTitleModal } from "@/features/panel/components/create-title-modal";
 import { InhouseCreatorModal } from "@/features/panel/components/inhouse-creator-modal";
 
@@ -40,6 +41,7 @@ export default function AdminPage() {
             <AdminIntegrationsCard />
             <AdminCoinRewardsCard />
             <AdminInhousePointsCard />
+            <AdminLoadingOverlayCard />
           </div>
 
         </div>

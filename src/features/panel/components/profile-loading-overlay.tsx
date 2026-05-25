@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
+import { useProfileLoadingToggle } from "@/features/panel/use-profile-loading-toggle";
 import { useRiotProfile } from "@/features/panel/use-riot-profile";
 
 const MIN_VISIBLE_MS = 2000;
@@ -20,6 +21,7 @@ export function ProfileLoadingOverlay() {
   const { hydrated } = useAuth();
   const { account } = useAccount();
   const riot = useRiotProfile(account.gameNick || null);
+  const { disabled: overlayDisabled } = useProfileLoadingToggle();
   const [mountedAt] = useState(() => Date.now());
   const [visible, setVisible] = useState(true);
   const [fading, setFading] = useState(false);
@@ -43,6 +45,8 @@ export function ProfileLoadingOverlay() {
     return () => clearTimeout(t1);
   }, [hydrated, riot.status, mountedAt]);
 
+  // Toggle global do admin: silencia o overlay em todas as telas.
+  if (overlayDisabled) return null;
   if (!visible) return null;
   if (typeof document === "undefined") return null;
 
