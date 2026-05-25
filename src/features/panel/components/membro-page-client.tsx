@@ -45,6 +45,7 @@ type ApiMember = {
   userId: number;
   name: string;
   nickname: string | null;
+  activeNameId: string | null;
   summonerName: string | null;
   tagLine: string | null;
   avatarSrc: string | null;
@@ -242,8 +243,11 @@ export function MembroPageClient({ slug }: { slug: string }) {
     fallbackFeaturedSrc: profile.featuredChampionSrc,
     favoriteChampionSlugs: apiMember?.favoriteChampionSlugs ?? [],
     communityHighlight: apiMember?.communityHighlight ?? null,
+    duoSlug: duoMember?.id ?? null,
+    duoFullName: duoMember?.name ?? null,
     duoName: duoMember?.nickname ?? duoMember?.name ?? null,
     duoAvatarSrc: duoMember?.avatarSrc ?? null,
+    duoStyleId: duoMember?.activeNameId ?? null,
     favoriteGameTitle: apiMember?.favoriteGameTitle ?? null,
     favoriteGameCoverUrl: apiMember?.favoriteGameCoverUrl ?? null,
     memberSince: apiMember?.memberSince ?? null,
