@@ -167,7 +167,9 @@ export default function NotificationBell({
 
         {unreadCount > 0 && (
           <span className="absolute right-0 top-0 flex h-[16px] min-w-[16px] -translate-y-[2px] translate-x-[2px] items-center justify-center rounded-full border border-white bg-[#ededed] px-[3px] text-center text-[9px] font-bold leading-none text-[#0f0f0f] tabular-nums">
-            {unreadCount > 9 ? "9+" : unreadCount}
+            <span className="relative -top-px">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
           </span>
         )}
       </button>
