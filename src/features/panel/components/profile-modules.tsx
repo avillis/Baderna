@@ -621,13 +621,13 @@ const LOL_DEFAULT_ORDER: ProfileModuleId[] = [
 ];
 
 const NO_LOL_DEFAULT_ORDER: ProfileModuleId[] = [
+  "member-since",
+  "showcase",
+  "community-highlight",
   "collection",
   "participation",
   "duo",
-  "community-highlight",
   "favorite-game",
-  "member-since",
-  "showcase",
   "lol-rank",
   "featured-champion",
   "top-champions",
