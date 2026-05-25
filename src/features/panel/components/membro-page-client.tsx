@@ -253,6 +253,9 @@ export function MembroPageClient({ slug }: { slug: string }) {
     duoStyleId: duoMember?.activeNameId ?? null,
     favoriteGameTitle: apiMember?.favoriteGameTitle ?? null,
     favoriteGameCoverUrl: apiMember?.favoriteGameCoverUrl ?? null,
+    onUpdateFavoriteGameTitle: isOwnProfile
+      ? (title) => updateField("favoriteGameTitle", title)
+      : null,
     memberSince: apiMember?.memberSince ?? null,
     unlockedBanners: apiMember?.unlockedBannersCount ?? 0,
     unlockedTitles: apiMember?.unlockedTitlesCount ?? 0,

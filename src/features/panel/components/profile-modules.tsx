@@ -449,49 +449,285 @@ function CommunityHighlightModuleCard({
 function FavoriteGameModuleCard({
   title,
   coverUrl,
+  onSave,
 }: {
   title: string | null;
   coverUrl: string | null;
+  onSave: ((title: string | null) => Promise<boolean> | boolean) | null;
 }) {
+  const toast = useToast();
+  const canEdit = Boolean(onSave);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState(title ?? "");
+
+  async function handleSave() {
+    if (!onSave) return;
+    setSaving(true);
+    try {
+      const nextTitle = draft.trim();
+      const ok = await onSave(nextTitle.length > 0 ? nextTitle : null);
+      if (!ok) {
+        toast.show("NÃ£o foi possÃ­vel salvar seu jogo favorito.");
+        return;
+      }
+      toast.show("Jogo favorito salvo.", "success");
+      setOpen(false);
+    } catch {
+      toast.show("NÃ£o foi possÃ­vel salvar seu jogo favorito.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (coverUrl) {
     return (
-      <article
-        className={`relative ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-black shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]`}
-      >
-        <Image
-          src={coverUrl}
-          alt={title ?? "Jogo favorito"}
-          fill
-          className="object-cover"
-          sizes="(min-width: 1536px) 237px, (min-width: 1280px) 25vw, 100vw"
-          unoptimized
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.75)_0%,rgba(0,0,0,0.10)_100%)]" />
-        <div className="relative z-10 flex h-full flex-col justify-end p-[22px]">
-          <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
-            Jogo favorito
-          </p>
-          <p className="mt-[6px] line-clamp-1 text-[22px] font-bold leading-[1.05] tracking-[-0.04em] text-white">
-            {title}
-          </p>
-        </div>
-      </article>
+      <>
+        <button
+          type="button"
+          disabled={!canEdit}
+          onClick={() => {
+            if (canEdit) {
+              setDraft(title ?? "");
+              setOpen(true);
+            }
+          }}
+          className={`relative block ${CARD_HEIGHT_CLASS} w-full overflow-hidden rounded-[var(--panel-radius-card)] bg-black text-left shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${canEdit ? "cursor-pointer" : "cursor-default"}`}
+        >
+          <Image
+            src={coverUrl}
+            alt={title ?? "Jogo favorito"}
+            fill
+            className="object-cover"
+            sizes="(min-width: 1536px) 237px, (min-width: 1280px) 25vw, 100vw"
+            unoptimized
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.80)_0%,rgba(0,0,0,0.24)_55%,rgba(0,0,0,0.10)_100%)]" />
+          <div className="relative z-10 flex h-full flex-col justify-between p-[22px]">
+            <div className="flex items-start justify-between gap-[12px]">
+              <p className="text-[10px] font-bold tracking-[-0.03em] text-white/78">
+                Jogo favorito
+              </p>
+              {canEdit ? (
+                <span className="rounded-full bg-white/18 px-[8px] py-[4px] text-[10px] font-bold tracking-[-0.02em] text-white backdrop-blur-[2px]">
+                  editar
+                </span>
+              ) : null}
+            </div>
+            <div>
+              <p className="line-clamp-2 max-w-[72%] text-[22px] font-bold leading-[1.02] tracking-[-0.05em] text-white">
+                {title}
+              </p>
+              <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-white/72">
+                capa puxada automaticamente
+              </p>
+            </div>
+          </div>
+        </button>
+
+        {typeof document !== "undefined" && open
+          ? createPortal(
+              <div
+                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
+                onClick={() => setOpen(false)}
+              >
+                <div
+                  className="relative flex w-full max-w-[460px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="h-[16px] w-[16px]"
+                      stroke="currentColor"
+                      strokeWidth={2.4}
+                      strokeLinecap="round"
+                    >
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
+                    <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                      Jogo favorito
+                    </h2>
+                    <p className="mt-[8px] text-[13px] text-[#8d8d8d]">
+                      Defina o nome agora. A capa automÃ¡tica entra depois com a API.
+                    </p>
+                  </div>
+                  <div className="px-[24px] py-[22px]">
+                    <label className="block text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+                      Nome do jogo
+                    </label>
+                    <input
+                      type="text"
+                      value={draft}
+                      onChange={(event) => setDraft(event.target.value)}
+                      placeholder="Ex.: League of Legends, Valorant, Hades..."
+                      className="mt-[10px] h-[48px] w-full rounded-[14px] border border-[#ededed] bg-[#fafafa] px-[14px] text-[14px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none transition-colors placeholder:text-[#a6a6a6] focus:border-[#ff4100]"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between border-t border-[#f0f0f0] px-[24px] py-[18px]">
+                    <p className="text-[11px] font-medium text-[#8d8d8d]">
+                      vocÃª pode trocar isso quando quiser
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {saving ? (
+                        <>
+                          <svg
+                            className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
+                            viewBox="25 25 50 50"
+                          >
+                            <circle r="20" cy="50" cx="50" />
+                          </svg>
+                          Salvando...
+                        </>
+                      ) : (
+                        "Salvar"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            )
+          : null}
+      </>
     );
   }
   return (
-    <CardShell>
-      <div className="flex h-full w-full flex-col justify-between">
-        <Eyebrow>Jogo favorito</Eyebrow>
-        <div>
-          <p className="text-[18px] font-bold leading-[1.05] tracking-[-0.04em] text-[#0f0f0f]">
-            {title ?? "Defina seu jogo favorito"}
-          </p>
-          <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
-            {title ? "Sem capa cacheada ainda" : "Editor multi-game em breve"}
-          </p>
-        </div>
-      </div>
-    </CardShell>
+    <>
+      <CardShell>
+        <button
+          type="button"
+          disabled={!canEdit}
+          onClick={() => {
+            if (canEdit) {
+              setDraft(title ?? "");
+              setOpen(true);
+            }
+          }}
+          className={`flex h-full w-full text-left ${canEdit ? "cursor-pointer" : "cursor-default"}`}
+        >
+          <div className="flex h-full w-full items-center gap-[14px]">
+            <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#f6f0ed_0%,#ededed_100%)] ring-1 ring-[#eee3de]">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-[24px] w-[24px] text-[#0f0f0f]"
+                stroke="currentColor"
+                strokeWidth={1.9}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 4h9l3 3v13H6z" />
+                <path d="M15 4v3h3" />
+                <path d="M9 12h6M9 16h4" />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <Eyebrow>Jogo favorito</Eyebrow>
+              <p className="mt-[10px] line-clamp-2 text-[18px] font-bold leading-[1.02] tracking-[-0.04em] text-[#0f0f0f]">
+                {title ?? "Defina seu jogo favorito"}
+              </p>
+              <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
+                {title
+                  ? "a capa automÃ¡tica entra na prÃ³xima etapa"
+                  : canEdit
+                    ? "clique para escolher o nome do jogo"
+                    : "mÃ³dulo multi-game"}
+              </p>
+            </div>
+          </div>
+        </button>
+      </CardShell>
+
+      {typeof document !== "undefined" && open
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
+              onClick={() => setOpen(false)}
+            >
+              <div
+                className="relative flex w-full max-w-[460px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="h-[16px] w-[16px]"
+                    stroke="currentColor"
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
+                  <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                    Jogo favorito
+                  </h2>
+                  <p className="mt-[8px] text-[13px] text-[#8d8d8d]">
+                    Defina o nome agora. A capa automÃ¡tica entra depois com a API.
+                  </p>
+                </div>
+                <div className="px-[24px] py-[22px]">
+                  <label className="block text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+                    Nome do jogo
+                  </label>
+                  <input
+                    type="text"
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    placeholder="Ex.: League of Legends, Valorant, Hades..."
+                    className="mt-[10px] h-[48px] w-full rounded-[14px] border border-[#ededed] bg-[#fafafa] px-[14px] text-[14px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none transition-colors placeholder:text-[#a6a6a6] focus:border-[#ff4100]"
+                  />
+                </div>
+                <div className="flex items-center justify-between border-t border-[#f0f0f0] px-[24px] py-[18px]">
+                  <p className="text-[11px] font-medium text-[#8d8d8d]">
+                    vocÃª pode trocar isso quando quiser
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {saving ? (
+                      <>
+                        <svg
+                          className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
+                          viewBox="25 25 50 50"
+                        >
+                          <circle r="20" cy="50" cx="50" />
+                        </svg>
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
 
@@ -585,6 +821,7 @@ export type ProfileModuleData = {
   duoStyleId: string | null;
   favoriteGameTitle: string | null;
   favoriteGameCoverUrl: string | null;
+  onUpdateFavoriteGameTitle: ((title: string | null) => Promise<boolean> | boolean) | null;
   memberSince: string | null;
   unlockedBanners: number;
   unlockedTitles: number;
@@ -707,6 +944,7 @@ export function ProfileModuleCard({
         <FavoriteGameModuleCard
           title={data.favoriteGameTitle}
           coverUrl={data.favoriteGameCoverUrl}
+          onSave={data.onUpdateFavoriteGameTitle}
         />
       );
 
