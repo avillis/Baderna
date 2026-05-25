@@ -126,28 +126,43 @@ export function MobilePushRegion({
       }}
       onTouchCancel={handleTouchCancel}
       className={cn(
-        "relative z-[30] min-h-screen transition-[left,border-radius] duration-300 ease-out xl:left-0 xl:rounded-none",
-        bgClassName,
-        open
-          ? "left-[280px] overflow-hidden rounded-l-[25px] ring-1 ring-[#f3ebe8]"
-          : "left-0",
+        "relative z-[30] min-h-screen transition-[left] duration-300 ease-out xl:left-0",
+        open ? "left-[280px]" : "left-0",
       )}
     >
-      {children}
+      {open && (
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-0 rounded-l-[25px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] xl:hidden",
+            bgClassName,
+          )}
+        />
+      )}
 
-      {/* Captura toques na página empurrada pra fechar o drawer. Fica colado na
-          caixa do card (que já está deslocada 280px à direita), então não cobre
-          o menu revelado à esquerda. */}
-      <button
-        type="button"
-        aria-label="Fechar menu"
-        tabIndex={open ? 0 : -1}
-        onClick={() => setOpen(false)}
+      <div
         className={cn(
-          "absolute inset-0 z-[40] bg-transparent xl:hidden",
-          open ? "" : "pointer-events-none",
+          "relative min-h-screen xl:min-h-0",
+          bgClassName,
+          open ? "overflow-hidden rounded-l-[25px]" : "",
         )}
-      />
+      >
+        {children}
+
+        {/* Captura toques na página empurrada pra fechar o drawer. Fica colado na
+            caixa do card (que já está deslocada 280px à direita), então não cobre
+            o menu revelado à esquerda. */}
+        <button
+          type="button"
+          aria-label="Fechar menu"
+          tabIndex={open ? 0 : -1}
+          onClick={() => setOpen(false)}
+          className={cn(
+            "absolute inset-0 z-[40] bg-transparent xl:hidden",
+            open ? "" : "pointer-events-none",
+          )}
+        />
+      </div>
     </div>
   );
 }
