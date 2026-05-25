@@ -119,13 +119,13 @@ function ModulePicker({
                 {mod.label}
               </span>
               {mod.lol && (
-                <span className={`inline-flex h-[28px] w-[28px] items-center justify-center rounded-full ${active ? "bg-white/20" : "bg-[#fff0ec]"}`}>
+                <span className={`inline-flex h-[24px] w-[24px] items-center justify-center rounded-full ${active ? "bg-white/20" : "bg-[#fff0ec]"}`}>
                   <Image
                     src={lolLogo}
                     alt="League of Legends"
-                    width={18}
-                    height={18}
-                    className="h-[18px] w-[18px] object-contain"
+                    width={15}
+                    height={15}
+                    className="h-[15px] w-[15px] object-contain"
                   />
                 </span>
               )}
