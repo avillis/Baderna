@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/toast";
+import lolLogo from "../../../../icons/lol_logo.png";
 
 import type { ProfileModuleId } from "@/features/panel/components/profile-modules";
 import {
@@ -120,7 +121,7 @@ function ModulePicker({
               {mod.lol && (
                 <span className={`inline-flex h-[28px] w-[28px] items-center justify-center rounded-full ${active ? "bg-white/20" : "bg-[#fff0ec]"}`}>
                   <Image
-                    src="/icons/lol_logo.png"
+                    src={lolLogo}
                     alt="League of Legends"
                     width={18}
                     height={18}
