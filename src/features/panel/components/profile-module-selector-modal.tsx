@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { useToast } from "@/components/toast";
-import lolLogo from "../../../../icons/lol_logo.png";
 
 import type { ProfileModuleId } from "@/features/panel/components/profile-modules";
 import { ALL_CONFIGURABLE_MODULE_IDS } from "@/features/panel/components/profile-modules";
@@ -116,7 +115,7 @@ function ModulePicker({
                   }`}
                 >
                   <Image
-                    src={lolLogo}
+                    src="/lol_logo.png"
                     alt="League of Legends"
                     width={15}
                     height={15}
