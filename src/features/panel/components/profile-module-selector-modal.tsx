@@ -88,14 +88,13 @@ function ModulePicker({
     <div className="mt-[8px] overflow-hidden rounded-[14px] border border-[#f0f0f0] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.10)]">
       <div className="max-h-[260px] overflow-y-auto p-[6px]">
         {MODULE_META.map((mod) => {
-          const locked = LOL_LOCKED_MODULE_IDS.has(mod.id) && !hasRiotId;
           const taken = occupied.has(mod.id) && mod.id !== current;
           const active = mod.id === current;
           return (
             <button
               key={mod.id}
               type="button"
-              disabled={locked || taken}
+              disabled={taken}
               onClick={() => {
                 onChange(mod.id);
                 onClose();
@@ -103,7 +102,7 @@ function ModulePicker({
               className={`flex w-full items-center gap-[10px] rounded-[10px] px-[12px] py-[9px] text-left transition-colors ${
                 active
                   ? "bg-[#0f0f0f] text-white"
-                  : locked || taken
+                  : taken
                     ? "cursor-not-allowed opacity-40"
                     : "hover:bg-[#f5f5f5]"
               }`}

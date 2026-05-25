@@ -76,11 +76,11 @@ function LockedOverlay({ message }: { message?: string }) {
     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-[var(--panel-radius-card)] bg-white/72 backdrop-blur-[2px]">
       <div className="flex flex-col items-center gap-[6px] px-[14px] text-center">
         <Image
-          src="/images/lanes/Top_icon.png"
-          alt=""
+          src="/riot_logo.svg"
+          alt="Riot Games"
           width={20}
           height={20}
-          className="opacity-50"
+          className="opacity-70"
         />
         <p className="text-[11px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
           {message ?? "Conecte seu Riot ID"}
