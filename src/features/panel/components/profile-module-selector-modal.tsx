@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/toast";
 
@@ -117,8 +118,14 @@ function ModulePicker({
                 {mod.label}
               </span>
               {mod.lol && (
-                <span className={`rounded-full px-[7px] py-[2px] text-[10px] font-bold ${active ? "bg-white/20 text-white" : "bg-[#fff0ec] text-[#ff4100]"}`}>
-                  LoL
+                <span className={`inline-flex h-[18px] w-[18px] items-center justify-center rounded-full ${active ? "bg-white/20" : "bg-[#fff0ec]"}`}>
+                  <Image
+                    src="/icons/lol_logo.png"
+                    alt="League of Legends"
+                    width={10}
+                    height={10}
+                    className="h-[10px] w-[10px] object-contain"
+                  />
                 </span>
               )}
               {taken && (
