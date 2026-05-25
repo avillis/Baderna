@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // App settings públicos pra qualquer logado
     Route::get('/coin-rewards', [AppSettingsController::class, 'showCoinRewards']);
     Route::get('/inhouse-points', [AppSettingsController::class, 'showInhousePoints']);
+    Route::get('/profile-loading-overlay', [AppSettingsController::class, 'showProfileLoadingOverlay']);
     Route::get('/titles', [TitlesController::class, 'index']);
 
     // Listagens da comunidade
@@ -120,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/riot-key', [SettingsController::class, 'updateRiotKey']);
         Route::put('/coin-rewards', [AppSettingsController::class, 'updateCoinRewards']);
         Route::put('/inhouse-points', [AppSettingsController::class, 'updateInhousePoints']);
+        Route::put('/profile-loading-overlay', [AppSettingsController::class, 'updateProfileLoadingOverlay']);
         Route::post('/titles', [TitlesController::class, 'store']);
         Route::delete('/titles/{slug}', [TitlesController::class, 'destroy']);
         Route::get('/member-coins', [MemberCoinsController::class, 'index']);

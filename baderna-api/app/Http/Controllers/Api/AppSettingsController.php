@@ -10,6 +10,7 @@ class AppSettingsController extends Controller
 {
     private const COIN_REWARDS_KEY = 'coin_rewards';
     private const INHOUSE_POINTS_KEY = 'inhouse_points';
+    private const PROFILE_LOADING_OVERLAY_KEY = 'profile_loading_overlay';
 
     private const COIN_REWARDS_DEFAULTS = [
         'flex'    => ['win' => 20, 'loss' => 10],
@@ -19,6 +20,10 @@ class AppSettingsController extends Controller
     private const INHOUSE_POINTS_DEFAULTS = [
         'flex'    => ['win' => 10, 'loss' => 5],
         'inhouse' => ['win' => 25, 'loss' => 15],
+    ];
+
+    private const PROFILE_LOADING_OVERLAY_DEFAULTS = [
+        'disabled' => false,
     ];
 
     public function showCoinRewards()
@@ -58,6 +63,26 @@ class AppSettingsController extends Controller
         ]);
 
         AppSetting::put(self::INHOUSE_POINTS_KEY, $data);
+        return response()->json($data);
+    }
+
+    public function showProfileLoadingOverlay()
+    {
+        return response()->json(
+            AppSetting::get(
+                self::PROFILE_LOADING_OVERLAY_KEY,
+                self::PROFILE_LOADING_OVERLAY_DEFAULTS
+            )
+        );
+    }
+
+    public function updateProfileLoadingOverlay(Request $request)
+    {
+        $data = $request->validate([
+            'disabled' => 'required|boolean',
+        ]);
+
+        AppSetting::put(self::PROFILE_LOADING_OVERLAY_KEY, $data);
         return response()->json($data);
     }
 }
