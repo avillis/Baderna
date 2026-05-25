@@ -441,7 +441,7 @@ function PostReactions({ postId }: { postId: number }) {
             e.stopPropagation();
             react(emoji);
           }}
-          className={`flex items-center gap-[4px] rounded-full px-[8px] py-[3px] text-[12px] font-semibold transition-colors ${
+          className={`flex h-[22px] items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
             mine === emoji
               ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
               : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
@@ -452,44 +452,51 @@ function PostReactions({ postId }: { postId: number }) {
         </button>
       ))}
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
-        aria-label="Reagir"
-        className="flex h-[22px] w-[22px] items-center justify-center text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
-      >
-        <SmilePlus className="h-[20px] w-[20px]" strokeWidth={2.2} />
-      </button>
+      {/* Wrapper relative ancora o picker no proprio botao (em vez de na
+          linha de acoes inteira, que jogava o picker pra outro canto do post
+          no desktop e fazia o usuario clicar no emoji errado). */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((o) => !o);
+          }}
+          aria-label="Reagir"
+          className="flex h-[22px] w-[22px] items-center justify-center text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
+        >
+          <SmilePlus className="h-[20px] w-[20px]" strokeWidth={2.2} />
+        </button>
 
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(false);
-            }}
-          />
-          <div className="absolute bottom-full right-0 z-20 mb-[8px] flex gap-[2px] rounded-full bg-white p-[6px] shadow-[0px_8px_30px_rgba(0,0,0,0.14)]">
-            {REACTION_EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  react(emoji);
-                }}
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-[20px] transition-transform hover:scale-125"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+        {open && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(false);
+              }}
+            />
+            {/* bottom-full + left-1/2 + -translate-x-1/2 -> picker fica
+                exatamente acima do botao, centralizado. Em mobile/desktop. */}
+            <div className="absolute bottom-full left-1/2 z-20 mb-[8px] flex -translate-x-1/2 gap-[2px] rounded-full bg-white p-[6px] shadow-[0px_8px_30px_rgba(0,0,0,0.14)]">
+              {REACTION_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    react(emoji);
+                  }}
+                  className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-[20px] transition-transform hover:scale-125"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
