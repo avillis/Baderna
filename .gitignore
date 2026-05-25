@@ -79,3 +79,6 @@ dev.err.log
 .idea/
 .vscode/
 Thumbs.db
+
+# scratch dir local (ssh helpers etc) — fora do git
+.tmp/
