@@ -618,8 +618,8 @@ function FavoriteGameModuleCard({
           }}
           className={`flex h-full w-full text-left ${canEdit ? "cursor-pointer" : "cursor-default"}`}
         >
-          <div className="flex h-full w-full items-center gap-[14px]">
-            <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#f6f0ed_0%,#ededed_100%)] ring-1 ring-[#eee3de]">
+          <div className="flex h-full w-full items-center justify-between gap-[18px]">
+            <div className="order-2 ml-auto flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#f6f0ed_0%,#ededed_100%)] ring-1 ring-[#eee3de]">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -634,12 +634,12 @@ function FavoriteGameModuleCard({
                 <path d="M9 12h6M9 16h4" />
               </svg>
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="order-1 min-w-0 flex-1">
               <Eyebrow>Jogo favorito</Eyebrow>
-              <p className="mt-[10px] line-clamp-2 text-[18px] font-bold leading-[1.02] tracking-[-0.04em] text-[#0f0f0f]">
+              <p className="mt-[10px] line-clamp-2 max-w-[190px] text-[18px] font-bold leading-[1.02] tracking-[-0.04em] text-[#0f0f0f]">
                 {title ?? "Defina seu jogo favorito"}
               </p>
-              <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
+              <p className="hidden mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
                 {title
                   ? "a capa automÃ¡tica entra na prÃ³xima etapa"
                   : canEdit
