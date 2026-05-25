@@ -240,7 +240,7 @@ export function PostCommentsSection({
             className="flex h-[30px] w-[30px] shrink-0 items-center justify-center transition-opacity hover:opacity-70 disabled:opacity-50"
           >
             <svg
-              className="h-[22px] w-[22px] text-[#0f0f0f]"
+              className="h-[24px] w-[24px] text-[#0f0f0f]"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -278,7 +278,7 @@ export function PostCommentsSection({
             onClick={() => setGiphyOpen((v) => !v)}
             aria-label="Adicionar GIF"
             aria-expanded={giphyOpen}
-            className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-[5px] text-[8px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
+            className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-[7px] text-[8px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
           >
             GIF
           </button>
@@ -287,7 +287,7 @@ export function PostCommentsSection({
             type="submit"
             aria-label="Enviar comentário"
             disabled={!canSubmit}
-            className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+            className="ml-[8px] flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ArrowUp className="h-[16px] w-[16px] translate-x-[0.5px]" strokeWidth={2.4} />
           </button>
