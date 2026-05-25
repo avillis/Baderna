@@ -990,12 +990,12 @@ const LOL_DEFAULT_ORDER: ProfileModuleId[] = [
 
 const NO_LOL_DEFAULT_ORDER: ProfileModuleId[] = [
   "member-since",
-  "top-champions",
+  "favorite-game",
   "community-highlight",
   "collection",
   "participation",
   "duo",
-  "favorite-game",
+  "top-champions",
   "lol-rank",
   "featured-champion",
   "top-champions",
