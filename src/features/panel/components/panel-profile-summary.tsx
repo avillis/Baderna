@@ -193,7 +193,7 @@ export function PanelProfileSummary({
           )}
         </div>
 
-        <div className="relative z-10 flex flex-nowrap items-center gap-x-[10px] overflow-x-auto sm:gap-x-[14px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="relative z-10 flex items-center gap-x-[10px] sm:gap-x-[14px]">
           {isOwnProfile ? (
             <button
               type="button"
@@ -211,7 +211,7 @@ export function PanelProfileSummary({
           )}
 
           {titles.length > 0 ? (
-            <div className="flex items-center gap-[8px]">
+            <div className="flex min-w-0 flex-1 items-center gap-[8px] overflow-x-auto touch-pan-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {titles.map((title) => (
                 <button
                   key={title.id}
