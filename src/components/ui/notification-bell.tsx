@@ -166,7 +166,7 @@ export default function NotificationBell({
         </svg>
 
         {unreadCount > 0 && (
-          <span className="absolute right-0 top-0 flex h-[16px] min-w-[16px] -translate-y-[2px] translate-x-[2px] items-center justify-center rounded-full border border-white bg-[#d8d5d2] px-[3px] text-center text-[9px] font-bold leading-none text-[#0f0f0f] tabular-nums">
+          <span className="absolute right-0 top-0 flex h-[16px] min-w-[16px] -translate-y-[2px] translate-x-[2px] items-center justify-center rounded-full border border-white bg-[#ededed] px-[3px] text-center text-[9px] font-bold leading-none text-[#0f0f0f] tabular-nums">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

@@ -133,7 +133,10 @@ export function MobilePushRegion({
       {open && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-l-[25px] bg-[#ededed] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] xl:hidden"
+          className={cn(
+            "pointer-events-none absolute inset-0 rounded-l-[25px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] xl:hidden",
+            bgClassName,
+          )}
         />
       )}
 
