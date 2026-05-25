@@ -84,11 +84,37 @@ export function MobilePushRegion({
         "relative z-[30] min-h-screen transition-[left,border-radius,box-shadow] duration-300 ease-out xl:left-0 xl:rounded-none xl:shadow-none",
         bgClassName,
         open
-          ? "left-[280px] rounded-l-[28px] shadow-[-12px_0_44px_rgba(0,0,0,0.16)]"
+          ? "left-[280px] rounded-l-[24px] shadow-[-16px_0_50px_rgba(0,0,0,0.20)]"
           : "left-0",
       )}
     >
       {children}
+
+      {/* Cantos arredondados do card "em cima e em baixo", ancorados na
+          viewport (a página rola no body, então o card sozinho só arredondaria
+          no topo/fundo do documento). São máscaras côncavas fixas na borda
+          esquerda do card (x=280): pintam STAGE_COLOR fora do arco e deixam o
+          card aparecer dentro dele. */}
+      {open && (
+        <>
+          <span
+            aria-hidden
+            className="pointer-events-none fixed left-[280px] top-0 z-[36] h-[24px] w-[24px] xl:hidden"
+            style={{
+              background:
+                "radial-gradient(circle at bottom right, transparent 23.5px, #ece8e4 24px)",
+            }}
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none fixed bottom-0 left-[280px] z-[36] h-[24px] w-[24px] xl:hidden"
+            style={{
+              background:
+                "radial-gradient(circle at top right, transparent 23.5px, #ece8e4 24px)",
+            }}
+          />
+        </>
+      )}
 
       {/* Captura toques na página empurrada pra fechar o drawer. Fica colado na
           caixa do card (que já está deslocada 280px à direita), então não cobre

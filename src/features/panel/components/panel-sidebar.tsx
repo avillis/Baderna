@@ -405,7 +405,9 @@ function SidebarInner({
           </Link>
 
           <div className="flex items-center gap-1">
-            <NotificationBell />
+            <NotificationBell
+              placement={dropdownPlacement === "above" ? "above" : "up"}
+            />
             <SidebarIconButton
               label="Mais opções"
               onClick={toggleAcct}

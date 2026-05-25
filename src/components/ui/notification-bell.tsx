@@ -8,10 +8,12 @@ import { useNotifications } from "@/features/panel/use-notifications";
 export default function NotificationBell({
   placement = "up",
 }: {
-  /** "up": abre pra cima ancorado ao botão (sidebar do desktop, que fica no
-   *  canto inferior). "below": abre pra baixo via portal, ancorado à direita
-   *  do viewport — igual o dropdown da foto de perfil no header mobile. */
-  placement?: "up" | "below";
+  /** "up": abre pra cima ancorado ao botão, em fluxo (sidebar do desktop, que
+   *  fica no canto inferior). "above": abre pra cima também, mas via portal no
+   *  body — usado no drawer mobile, onde o menu fica num stacking context
+   *  abaixo do card da página, então um dropdown em fluxo ficaria atrás dele.
+   *  "below": abre pra baixo via portal, ancorado à direita do viewport. */
+  placement?: "up" | "above" | "below";
 }) {
   const { notifications, unreadCount, markAsRead, remove } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
@@ -184,6 +186,28 @@ export default function NotificationBell({
           {panel}
         </div>
       )}
+
+      {/* Drawer mobile: abre pra cima via portal (left alinhado à margem do
+          drawer), pra escapar do stacking context do menu e ficar sobre o
+          card da página. */}
+      {isOpen &&
+        placement === "above" &&
+        anchorRect &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: "fixed",
+              left: 16,
+              bottom: window.innerHeight - anchorRect.top + 8,
+              zIndex: 9999,
+            }}
+            className="w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]"
+          >
+            {panel}
+          </div>,
+          document.body,
+        )}
 
       {/* Header mobile: abre pra baixo via portal, ancorado à direita do
           viewport — mesmo posicionamento do dropdown da foto de perfil. */}
