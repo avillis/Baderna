@@ -40,6 +40,7 @@ import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { useMemberCoins } from "@/features/panel/use-member-coins";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/ui/notification-bell";
+import { useMobileNav } from "@/features/panel/components/mobile-nav";
 
 function MenuItem({
   label,
@@ -451,27 +452,7 @@ export function PanelSidebar() {
       : item,
   );
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // Fecha o drawer ao trocar de rota.
-  useEffect(() => {
-    setDrawerOpen(false);
-  }, [pathname]);
-
-  // Trava o scroll do body + fecha no Escape enquanto o drawer tá aberto.
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setDrawerOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [drawerOpen]);
+  const { open: drawerOpen, setOpen: setDrawerOpen } = useMobileNav();
 
   return (
     <>
@@ -532,13 +513,13 @@ export function PanelSidebar() {
           tabIndex={drawerOpen ? 0 : -1}
           onClick={() => setDrawerOpen(false)}
           className={cn(
-            "fixed inset-0 z-[60] bg-black/40 transition-opacity duration-300",
-            drawerOpen ? "opacity-100" : "pointer-events-none opacity-0",
+            "fixed inset-0 z-[65] bg-transparent",
+            drawerOpen ? "" : "pointer-events-none",
           )}
         />
         <div
           className={cn(
-            "fixed inset-y-0 left-0 z-[70] flex w-[300px] max-w-[85vw] flex-col bg-white px-[19px] pb-[24px] pt-[76px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out",
+            "fixed inset-y-0 left-0 z-[70] flex w-[280px] flex-col bg-white px-[19px] pb-[24px] pt-[76px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out",
             drawerOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
