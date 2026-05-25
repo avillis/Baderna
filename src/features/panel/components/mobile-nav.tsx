@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type Dispatch,
   type ReactNode,
@@ -62,6 +63,8 @@ export function useMobileNav() {
 /** Largura do drawer mobile — também é o quanto a página é empurrada. */
 export const MOBILE_DRAWER_WIDTH = 280;
 const MOBILE_CARD_RADIUS = 25;
+const MOBILE_DRAWER_SWIPE_EDGE = 32;
+const MOBILE_DRAWER_SWIPE_DISTANCE = 56;
 
 /**
  * Card da página: opaco (tapa o <MobileMenu/> atrás dele) e empurrado pra
@@ -79,8 +82,49 @@ export function MobilePushRegion({
   bgClassName?: string;
 }) {
   const { open, setOpen } = useMobileNav();
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    if (event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleSwipeGesture(startX: number, deltaX: number) {
+    if (!open && startX > MOBILE_DRAWER_SWIPE_EDGE) return;
+    if (!open && deltaX > MOBILE_DRAWER_SWIPE_DISTANCE) {
+      setOpen(true);
+      return;
+    }
+    if (open && deltaX < -MOBILE_DRAWER_SWIPE_DISTANCE) {
+      setOpen(false);
+    }
+  }
+
+  function handleTouchCancel() {
+    touchStartRef.current = null;
+  }
+
   return (
     <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={(event) => {
+        const start = touchStartRef.current;
+        if (!start || event.changedTouches.length !== 1) {
+          touchStartRef.current = null;
+          return;
+        }
+        const touch = event.changedTouches[0];
+        const deltaX = touch.clientX - start.x;
+        const deltaY = touch.clientY - start.y;
+        touchStartRef.current = null;
+
+        if (Math.abs(deltaX) < MOBILE_DRAWER_SWIPE_DISTANCE) return;
+        if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+        handleSwipeGesture(start.x, deltaX);
+      }}
+      onTouchCancel={handleTouchCancel}
       className={cn(
         "relative z-[30] min-h-screen transition-[left,border-radius] duration-300 ease-out xl:left-0 xl:rounded-none",
         bgClassName,
