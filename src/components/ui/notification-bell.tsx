@@ -100,7 +100,7 @@ export default function NotificationBell({
           notifications.map((notif) => (
             <div
               key={notif.id}
-              className={`flex cursor-pointer gap-[12px] border-b border-[#f0e9e5] p-[12px] transition-colors duration-150 ${
+              className={`flex cursor-pointer items-center gap-[12px] border-b border-[#f0e9e5] p-[12px] transition-colors duration-150 ${
                 notif.read_at ? "bg-white opacity-70 hover:bg-[#fafafa]" : "bg-[#fff4f4] hover:bg-[#ffeaea]"
               }`}
               onClick={() => handleNotificationClick(notif.id)}
