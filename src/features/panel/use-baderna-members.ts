@@ -70,6 +70,7 @@ type ApiMember = {
   bannerFileName: string | null;
   bannerFocusY: number | null;
   isAdmin?: boolean;
+  isOwner?: boolean;
   bio: string | null;
   teamName: string | null;
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
@@ -272,6 +273,7 @@ export function useBadernaMembers(): BadernaMember[] {
         laneFocus: "—",
         status: "online",
         isAdmin: m.isAdmin ?? false,
+        isOwner: m.isOwner ?? false,
         avatarSrc: m.avatarSrc ?? undefined,
         summonerName: m.summonerName ?? undefined,
         tagLine: m.tagLine ?? undefined,
