@@ -62,7 +62,7 @@ export function useMobileNav() {
 /** Largura do drawer mobile — também é o quanto a página é empurrada. */
 export const MOBILE_DRAWER_WIDTH = 280;
 const MOBILE_CARD_RADIUS = 25;
-const MOBILE_STAGE_COLOR = "#ece8e4";
+const MOBILE_STAGE_COLOR = "#ffffff";
 
 /**
  * Card da página: opaco (tapa o <MobileMenu/> atrás dele) e empurrado pra
