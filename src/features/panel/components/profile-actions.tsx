@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2 } from "lucide-react";
+import { Download, Share2 } from "lucide-react";
 import { useState } from "react";
 
 import { NAME_BY_ID } from "@/features/panel/names-data";
@@ -47,8 +47,13 @@ type ProfileActionsProps = {
   badernaRank?: number;
   bannerSrc?: string;
   onCompare?: () => void;
-  /** Classe do container dos botões (controla posição/layout). */
   className?: string;
+  editButton?: React.ReactNode;
+};
+
+type CardBuild = {
+  cardUrl: string;
+  fileName: string;
 };
 
 export function ProfileActions({
@@ -63,10 +68,12 @@ export function ProfileActions({
   bannerSrc,
   onCompare,
   className = "",
+  editButton,
 }: ProfileActionsProps) {
   const { account } = useAccount();
   const { user } = useAuth();
   const [sharing, setSharing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const isOwnProfile =
     user != null && targetUserId != null && user.id === targetUserId;
@@ -93,8 +100,9 @@ export function ProfileActions({
     "preto",
   );
 
-  async function shareCard() {
-    if (typeof window === "undefined" || sharing) return;
+  function buildCardRequest(): CardBuild | null {
+    if (typeof window === "undefined") return null;
+
     const rankObj = riot.status === "ready" ? riot.profile.rank : null;
     const elo =
       rankObj && rankObj.tier && rankObj.tier !== "Unranked"
@@ -103,7 +111,7 @@ export function ProfileActions({
           }`
         : "Sem classificação";
     const games = rankObj ? rankObj.wins + rankObj.losses : 0;
-    const wr = games > 0 ? String(Math.round((rankObj!.wins / games) * 100)) : "";
+    const wr = games > 0 ? String(Math.round((rankObj.wins / games) * 100)) : "";
     const abs = (src: string) => {
       try {
         return new URL(src, window.location.origin).toString();
@@ -128,12 +136,39 @@ export function ProfileActions({
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")}.png`;
 
+    return { cardUrl, fileName };
+  }
+
+  async function fetchCardBlob() {
+    const built = buildCardRequest();
+    if (!built) return null;
+
+    const res = await fetch(built.cardUrl);
+    if (!res.ok) throw new Error("falha ao gerar o cartão");
+    const blob = await res.blob();
+    return { ...built, blob };
+  }
+
+  function downloadBlob(blob: Blob, fileName: string) {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+  }
+
+  async function shareCard() {
+    if (typeof window === "undefined" || sharing || saving) return;
+
     setSharing(true);
     try {
-      const res = await fetch(cardUrl);
-      if (!res.ok) throw new Error("falha ao gerar o cartão");
-      const blob = await res.blob();
-      const file = new File([blob], fileName, { type: "image/png" });
+      const card = await fetchCardBlob();
+      if (!card) return;
+
+      const file = new File([card.blob], card.fileName, { type: "image/png" });
       const profileUrl = memberId
         ? `${window.location.origin}/membro/${memberId}`
         : window.location.origin;
@@ -144,6 +179,7 @@ export function ProfileActions({
       const nav = navigator as Navigator & {
         canShare?: (data: { files?: File[] }) => boolean;
       };
+
       if (nav.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
@@ -152,24 +188,36 @@ export function ProfileActions({
             title: `Perfil de ${liveDisplayName} · Baderna`,
           });
         } catch {
-          /* usuário cancelou */
+          // usuario cancelou
         }
       } else {
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = objectUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(objectUrl);
+        downloadBlob(card.blob, card.fileName);
       }
     } catch {
-      window.open(cardUrl, "_blank");
+      const built = buildCardRequest();
+      if (built) window.open(built.cardUrl, "_blank");
     } finally {
       setSharing(false);
     }
   }
+
+  async function saveCard() {
+    if (typeof window === "undefined" || saving || sharing) return;
+
+    setSaving(true);
+    try {
+      const card = await fetchCardBlob();
+      if (!card) return;
+      downloadBlob(card.blob, card.fileName);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const actionButtonClass =
+    "inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60";
+  const compareButtonClass =
+    "inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#ff4100] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90";
 
   return (
     <div className={className}>
@@ -177,7 +225,7 @@ export function ProfileActions({
         <button
           type="button"
           onClick={onCompare}
-          className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-6 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+          className={compareButtonClass}
         >
           <svg
             viewBox="0 0 24 24"
@@ -196,11 +244,12 @@ export function ProfileActions({
           Comparar com você
         </button>
       )}
+
       <button
         type="button"
         onClick={shareCard}
-        disabled={sharing}
-        className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={sharing || saving}
+        className={actionButtonClass}
       >
         {sharing ? (
           <svg
@@ -212,8 +261,29 @@ export function ProfileActions({
         ) : (
           <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
         )}
-        {sharing ? "Carregando…" : "Compartilhar"}
+        {sharing ? "Carregando..." : "Compartilhar"}
       </button>
+
+      <button
+        type="button"
+        onClick={saveCard}
+        disabled={saving || sharing}
+        className={actionButtonClass}
+      >
+        {saving ? (
+          <svg
+            className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
+            viewBox="25 25 50 50"
+          >
+            <circle r="20" cy="50" cx="50" />
+          </svg>
+        ) : (
+          <Download className="h-[16px] w-[16px]" strokeWidth={2.4} />
+        )}
+        {saving ? "Salvando..." : "Salvar"}
+      </button>
+
+      {editButton}
     </div>
   );
 }
