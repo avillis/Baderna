@@ -196,8 +196,7 @@ export function ProfileActions({
 
   const actionButtonClass =
     "inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60";
-  const compareButtonClass =
-    "inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#ff4100] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90";
+  const compareButtonClass = actionButtonClass;
 
   return (
     <div className={className}>
