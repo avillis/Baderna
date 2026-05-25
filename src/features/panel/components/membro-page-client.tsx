@@ -239,8 +239,8 @@ export function MembroPageClient({ slug }: { slug: string }) {
       <ProfileLoadingOverlay />
       <GameModeProvider>
         <div className="2xl:hidden">
-          <div className="grid gap-8 xl:grid-cols-[277px_minmax(0,1fr)] xl:items-start">
-            <div className="xl:pl-0">
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-[277px_minmax(0,1fr)] xl:items-start">
+            <div className="min-w-0 xl:pl-0">
               <PanelProfileSummary
                 avatarSrc={profile.avatarSrc}
                 displayName={profile.displayName}
