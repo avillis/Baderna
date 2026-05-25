@@ -129,7 +129,7 @@ export function MobilePushRegion({
         "relative z-[30] min-h-screen transition-[left,border-radius] duration-300 ease-out xl:left-0 xl:rounded-none",
         bgClassName,
         open
-          ? "left-[280px] overflow-hidden rounded-l-[25px] before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-[#e7e2dc] before:content-['']"
+          ? "left-[280px] overflow-hidden rounded-l-[25px] ring-1 ring-[#f3ebe8]"
           : "left-0",
       )}
     >
