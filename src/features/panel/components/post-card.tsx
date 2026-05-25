@@ -10,7 +10,7 @@ import { getMemberSlug } from "@/features/panel/members-data";
 import { ImageLightbox } from "@/features/panel/components/image-lightbox";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { VideoPlayer } from "@/features/panel/components/video-player";
-import { useAuth } from "@/features/panel/use-auth";
+import { authToken, useAuth } from "@/features/panel/use-auth";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 
@@ -269,7 +269,7 @@ export function PostCard({
             href={`/post/${post.shortCode || post.id}`}
           />
           <BookmarkButton />
-          <PostReactions />
+          <PostReactions postId={post.id} />
           {expanded && (
             <span className="ml-auto text-[12px] text-[#8d8d8d]">
               {formatPostDateLong(post.createdAt)}
@@ -353,25 +353,80 @@ function CommentButton({ count, href }: { count: number; href: string }) {
 
 const REACTION_EMOJIS = ["👍", "🔥", "😂", "😮", "😢"];
 
+const REACTIONS_API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+
+type ReactionsState = { reactions: Record<string, number>; mine: string | null };
+
 /**
- * Reações — preview (mock). Estado local apenas; ainda sem persistência.
- * Backend precisa de: GET/POST /posts/{id}/reactions com { emoji } e retorno
- * { reactions: { emoji: count }, mine: emoji|null }.
+ * Reações persistentes. Hidrata via GET /posts/{id}/reactions; cada clique
+ * faz POST com optimistic toggle e sincroniza com a resposta do server
+ * (counts canônicos). Falha silenciosa: se a API cair, mantém o estado local.
  */
-function PostReactions() {
+function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [mine, setMine] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
+  // Hidrata na montagem. Cancela se o componente desmontar antes da resposta
+  // (evita warn de setState em unmounted).
+  useEffect(() => {
+    let cancelled = false;
+    const token = authToken();
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
+          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const body = (await res.json()) as ReactionsState;
+        setCounts(body.reactions ?? {});
+        setMine(body.mine ?? null);
+      } catch {
+        /* mantém estado local */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [postId]);
+
   function react(emoji: string) {
+    // Optimistic: aplica o toggle/troca antes de bater na API.
+    const prevMine = mine;
     setCounts((prev) => {
       const next = { ...prev };
-      if (mine) next[mine] = Math.max(0, (next[mine] ?? 1) - 1);
-      if (mine !== emoji) next[emoji] = (next[emoji] ?? 0) + 1;
+      if (prevMine) next[prevMine] = Math.max(0, (next[prevMine] ?? 1) - 1);
+      if (prevMine !== emoji) next[emoji] = (next[emoji] ?? 0) + 1;
       return next;
     });
     setMine((m) => (m === emoji ? null : emoji));
     setOpen(false);
+
+    const token = authToken();
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ emoji }),
+        });
+        if (!res.ok) return;
+        // Resposta é a verdade final — substitui o estado pra alinhar contagens
+        // entre todos os usuários (caso outro tenha reagido em paralelo).
+        const body = (await res.json()) as ReactionsState;
+        setCounts(body.reactions ?? {});
+        setMine(body.mine ?? null);
+      } catch {
+        /* mantém otimista */
+      }
+    })();
   }
 
   const active = REACTION_EMOJIS.filter((e) => (counts[e] ?? 0) > 0);
