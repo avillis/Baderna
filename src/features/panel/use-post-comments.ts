@@ -44,7 +44,12 @@ async function fetchFromApi(postId: number): Promise<Comment[] | null> {
   return (await res.json()) as Comment[];
 }
 
-async function postToApi(postId: number, body: string): Promise<Comment | null> {
+async function postToApi(
+  postId: number,
+  body: string,
+  imageUrl?: string | null,
+  gifUrl?: string | null,
+): Promise<Comment | null> {
   const token = authToken();
   if (!token) return null;
   const res = await fetch(`${API_BASE}/posts/${postId}/comments`, {
@@ -54,7 +59,7 @@ async function postToApi(postId: number, body: string): Promise<Comment | null> 
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ body }),
+    body: JSON.stringify({ body, image_url: imageUrl, gif_url: gifUrl }),
   });
   if (!res.ok) return null;
   return (await res.json()) as Comment;
@@ -100,10 +105,11 @@ export function usePostComments(postId: number) {
   }, [postId]);
 
   const addComment = useCallback(
-    async (body: string) => {
+    async (body: string, imageUrl?: string | null, gifUrl?: string | null) => {
       const trimmed = body.trim();
-      if (!trimmed) return null;
-      const fresh = await postToApi(postId, trimmed);
+      // Precisa de texto OU mídia. Backend rejeita vazio.
+      if (!trimmed && !imageUrl && !gifUrl) return null;
+      const fresh = await postToApi(postId, trimmed, imageUrl ?? null, gifUrl ?? null);
       if (!fresh) return null;
       const next = [fresh, ...comments];
       setComments(next);
