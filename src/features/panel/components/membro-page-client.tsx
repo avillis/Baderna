@@ -399,6 +399,11 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 badernaRank={badernaRank}
                 bannerSrc={profile.bannerSrc}
               />
+              {canEditModules && (
+                <div className="mt-[10px] flex px-[16px] sm:px-0 sm:pl-[42px] xl:hidden">
+                  {editCardsButton}
+                </div>
+              )}
             </div>
 
             <div className="xl:pr-[26px]">
@@ -407,7 +412,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
           </div>
 
           <div className="mt-[20px] xl:mt-[24px]">
-            <div className="mb-6 flex flex-wrap items-center gap-[10px]">
+            <div className="mb-6 hidden flex-wrap items-center gap-[10px] xl:flex">
               <ProfileActions
                 className="flex flex-wrap items-center gap-[10px]"
                 editButton={editCardsButton}
