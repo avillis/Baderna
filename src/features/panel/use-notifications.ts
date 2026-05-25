@@ -68,6 +68,16 @@ async function postMarkAsRead(id: string): Promise<boolean> {
   return res.ok;
 }
 
+async function deleteOne(id: string): Promise<boolean> {
+  const token = authToken();
+  if (!token) return false;
+  const res = await fetch(`${API_BASE}/notifications/${id}`, {
+    method: "DELETE",
+    headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+  });
+  return res.ok;
+}
+
 export function useNotifications() {
   const [data, setData] = useState<ApiNotificationResponse>(() => readCacheRaw());
 
@@ -124,10 +134,32 @@ export function useNotifications() {
     [data]
   );
 
+  const remove = useCallback(
+    async (id: string) => {
+      // Optimistic: tira da lista na hora. Se nao-lida, decrementa o badge.
+      const target = data.notifications.find((n) => n.id === id);
+      if (!target) return;
+
+      const nextData = {
+        unread_count: target.read_at
+          ? data.unread_count
+          : Math.max(0, data.unread_count - 1),
+        notifications: data.notifications.filter((n) => n.id !== id),
+      };
+
+      setData(nextData);
+      writeCache(nextData);
+
+      await deleteOne(id);
+    },
+    [data]
+  );
+
   return {
     notifications: data.notifications,
     unreadCount: data.unread_count,
     markAsRead,
+    remove,
     refresh: loadFromServer,
   };
 }

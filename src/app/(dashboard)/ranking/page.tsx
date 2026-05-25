@@ -42,13 +42,6 @@ const TIER_COLOR: Record<string, string> = {
   CHALLENGER: "#f0c674",
 };
 
-// Pódio (1º, 2º, 3º) com o mesmo visual usado na lista de membros.
-const PODIUM: Record<number, { ring: string; glow: string }> = {
-  1: { ring: "linear-gradient(135deg, #ffe066, #ffb300)", glow: "0 0 12px 2px rgba(255,185,0,0.30)" },
-  2: { ring: "linear-gradient(135deg, #f2f2f2, #b0b0b0)", glow: "0 0 12px 2px rgba(140,140,140,0.22)" },
-  3: { ring: "linear-gradient(135deg, #f0c08a, #c98a4f)", glow: "0 0 12px 2px rgba(180,120,60,0.22)" },
-};
-
 // Cor do número do top 3, no mesmo esquema do banner de rank da Baderna:
 // 1º Platina, 2º Ouro, 3º Prata.
 const POSITION_COLOR: Record<number, string> = {
@@ -141,8 +134,8 @@ export default function RankingPage() {
         <div className="overflow-hidden rounded-[25px] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
           {sorted.map(({ member, rank, score }, index) => {
             const position = index + 1;
-            const podium = score >= 0 ? PODIUM[position] : undefined;
-            const posColor = podium ? POSITION_COLOR[position] : undefined;
+            const isPodium = score >= 0 && position <= 3;
+            const posColor = isPodium ? POSITION_COLOR[position] : undefined;
             const tier = rank?.tier?.toUpperCase();
             const tierColor = (tier && TIER_COLOR[tier]) || "#b0a8a4";
             const hasRank = score >= 0;
@@ -161,18 +154,9 @@ export default function RankingPage() {
                   {position}
                 </span>
 
-                <div
-                  className="shrink-0 rounded-full p-[2px]"
-                  style={
-                    podium
-                      ? { background: podium.ring, boxShadow: podium.glow }
-                      : undefined
-                  }
-                >
-                  <div className="relative h-[44px] w-[44px] overflow-hidden rounded-full bg-[#ededed]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={avatar} alt={member.nickname} className="h-full w-full object-cover" />
-                  </div>
+                <div className="relative h-[44px] w-[44px] shrink-0 overflow-hidden rounded-full bg-[#ededed]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={avatar} alt={member.nickname} className="h-full w-full object-cover" />
                 </div>
 
                 <div className="min-w-0 flex-1">
