@@ -111,6 +111,7 @@ function AccountDropdown({
    *  viewport (usado no drawer mobile, onde o botão fica embaixo). */
   placement?: "right" | "below" | "above";
 }) {
+  const mobileDrawerDropdownLeft = 28;
   const positionStyle =
     placement === "right"
       ? {
@@ -122,7 +123,7 @@ function AccountDropdown({
       : placement === "above"
         ? {
             position: "fixed" as const,
-            left: 16,
+            left: mobileDrawerDropdownLeft,
             bottom: window.innerHeight - anchorRect.top + 8,
             zIndex: 9999,
           }
