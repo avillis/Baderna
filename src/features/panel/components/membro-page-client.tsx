@@ -50,6 +50,7 @@ type ApiMember = {
   teamName: string | null;
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   secondaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
+  activeTitleSlugs: string[] | null;
 };
 
 async function fetchMembersList(): Promise<ApiMember[]> {
@@ -248,7 +249,11 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 rankType={profile.rankType}
                 targetUserId={targetUserId}
                 riotId={riotId}
-                initialTitleIds={["aprendiz"]}
+                initialTitleIds={
+                  apiMember?.activeTitleSlugs?.length
+                    ? apiMember.activeTitleSlugs
+                    : ["aprendiz"]
+                }
                 unlockedTitleIds={["aprendiz"]}
                 memberId={member.id}
                 onCompare={handleCompare}
