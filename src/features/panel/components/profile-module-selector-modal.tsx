@@ -143,7 +143,6 @@ function SlotRow({
   fixedLabel,
   fixedReason,
   current,
-  hasRiotId,
   allSelected,
   onSelect,
 }: {
@@ -152,7 +151,6 @@ function SlotRow({
   fixedLabel?: string;
   fixedReason?: string;
   current?: ProfileModuleId | null;
-  hasRiotId: boolean;
   allSelected: ProfileModuleId[];
   onSelect?: (id: ProfileModuleId) => void;
 }) {
@@ -365,7 +363,6 @@ export function ProfileModuleSelectorModal({
                 fixed
                 fixedLabel={slot.label}
                 fixedReason={slot.reason}
-                hasRiotId={hasRiotId}
                 allSelected={allSelected}
               />
             ) : (
@@ -373,7 +370,6 @@ export function ProfileModuleSelectorModal({
                 key={index}
                 number={index + 1}
                 current={slot.configIdx !== null ? selected[slot.configIdx] : null}
-                hasRiotId={hasRiotId}
                 allSelected={allSelected}
                 onSelect={(id) => slot.configIdx !== null && setSlot(slot.configIdx, id)}
               />
