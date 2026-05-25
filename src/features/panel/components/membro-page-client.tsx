@@ -327,7 +327,11 @@ export function MembroPageClient({ slug }: { slug: string }) {
                   rankType={profile.rankType}
                   targetUserId={targetUserId}
                   riotId={riotId}
-                  initialTitleIds={["aprendiz"]}
+                  initialTitleIds={
+                    apiMember?.activeTitleSlugs?.length
+                      ? apiMember.activeTitleSlugs
+                      : ["aprendiz"]
+                  }
                   unlockedTitleIds={["aprendiz"]}
                   memberId={member.id}
                   onCompare={handleCompare}
