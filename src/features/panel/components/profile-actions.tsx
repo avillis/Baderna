@@ -79,6 +79,7 @@ export function ProfileActions({
     isOwnProfile && account.avatarSrc ? account.avatarSrc : avatarSrc;
 
   const effectiveRiotId = riotId || (isOwnProfile ? account.gameNick : "");
+  const hasRiotId = Boolean(effectiveRiotId);
   const riot = useRiotProfile(effectiveRiotId || null);
   const liveTier = riot.status === "ready" ? riot.profile?.rank?.tier ?? "" : "";
   const isUnranked =
@@ -200,7 +201,7 @@ export function ProfileActions({
 
   return (
     <div className={className}>
-      {!isOwnProfile && onCompare && (
+      {!isOwnProfile && onCompare && hasRiotId && (
         <button
           type="button"
           onClick={onCompare}
