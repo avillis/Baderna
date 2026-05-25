@@ -28,11 +28,12 @@ export type Account = {
   secondaryLane?: Lane | null;
   riotIconUrl?: string | null;
   communityHighlight?: string | null;
-  duoLabel?: string | null;
-  profileModuleOrder?: string[];
-  favoriteChampionSlugs?: string[];
+  profileModuleOrder?: string[] | null;
+  favoriteChampionSlugs?: string[] | null;
   favoriteGameTitle?: string | null;
   favoriteGameCoverUrl?: string | null;
+  duoUserId?: number | null;
+  memberSince?: string | null;
 };
 
 function buildDefaults(user: AuthUser | null): Account {
@@ -53,12 +54,6 @@ function buildDefaults(user: AuthUser | null): Account {
     activeTitleSlugs: ["aprendiz"],
     primaryLane: null,
     secondaryLane: null,
-    communityHighlight: null,
-    duoLabel: null,
-    profileModuleOrder: [],
-    favoriteChampionSlugs: [],
-    favoriteGameTitle: null,
-    favoriteGameCoverUrl: null,
   };
 }
 
@@ -167,12 +162,11 @@ const FIELD_TO_API: Partial<Record<keyof Account, string>> = {
   activeTitleSlugs: "active_title_slugs",
   primaryLane: "primary_lane",
   secondaryLane: "secondary_lane",
-  communityHighlight: "community_highlight",
-  duoLabel: "duo_label",
   profileModuleOrder: "profile_module_order",
   favoriteChampionSlugs: "favorite_champion_slugs",
   favoriteGameTitle: "favorite_game_title",
   favoriteGameCoverUrl: "favorite_game_cover_url",
+  duoUserId: "duo_user_id",
 };
 
 export function useCurrentUserId(): string | null {
@@ -190,6 +184,7 @@ export function useAccount() {
 
   useEffect(() => {
     if (!hydrated) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAccount(readCache(userId, defaults));
 
     let cancelled = false;
@@ -218,7 +213,7 @@ export function useAccount() {
   }, [hydrated, userId]);
 
   const updateField = useCallback(
-    <K extends keyof Account>(key: K, value: Account[K]) => {
+    async <K extends keyof Account>(key: K, value: Account[K]) => {
       const next = { ...account, [key]: value };
       // Update otimista
       setAccount(next);
@@ -238,15 +233,15 @@ export function useAccount() {
         if (apiField) body = { [apiField]: value };
       }
 
-      if (body) {
-        void putToApi(body).then((fresh) => {
-          if (fresh) {
-            const merged = { ...defaults, ...fresh };
-            setAccount(merged);
-            writeCache(userId, merged);
-          }
-        });
-      }
+      if (!body) return true;
+
+      const fresh = await putToApi(body);
+      if (!fresh) return false;
+
+      const merged = { ...defaults, ...fresh };
+      setAccount(merged);
+      writeCache(userId, merged);
+      return true;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [account, userId],
@@ -269,6 +264,7 @@ export function getTeamNameMap(): Record<string, string> {
 export function useTeamNames() {
   const [map, setMap] = useState<Record<string, string>>({});
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMap(getTeamNameMap());
     function refresh() {
       setMap(getTeamNameMap());

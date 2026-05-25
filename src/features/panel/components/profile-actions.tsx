@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useState } from "react";
 
 import { NAME_BY_ID } from "@/features/panel/names-data";
@@ -51,11 +51,6 @@ type ProfileActionsProps = {
   editButton?: React.ReactNode;
 };
 
-type CardBuild = {
-  cardUrl: string;
-  fileName: string;
-};
-
 export function ProfileActions({
   displayName,
   fullName,
@@ -73,7 +68,6 @@ export function ProfileActions({
   const { account } = useAccount();
   const { user } = useAuth();
   const [sharing, setSharing] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   const isOwnProfile =
     user != null && targetUserId != null && user.id === targetUserId;
@@ -100,7 +94,7 @@ export function ProfileActions({
     "preto",
   );
 
-  function buildCardRequest(): CardBuild | null {
+  function buildCardRequest() {
     if (typeof window === "undefined") return null;
 
     const rankObj = riot.status === "ready" ? riot.profile.rank : null;
@@ -161,7 +155,7 @@ export function ProfileActions({
   }
 
   async function shareCard() {
-    if (typeof window === "undefined" || sharing || saving) return;
+    if (typeof window === "undefined" || sharing) return;
 
     setSharing(true);
     try {
@@ -201,19 +195,6 @@ export function ProfileActions({
     }
   }
 
-  async function saveCard() {
-    if (typeof window === "undefined" || saving || sharing) return;
-
-    setSaving(true);
-    try {
-      const card = await fetchCardBlob();
-      if (!card) return;
-      downloadBlob(card.blob, card.fileName);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   const actionButtonClass =
     "inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60";
   const compareButtonClass =
@@ -245,12 +226,12 @@ export function ProfileActions({
         </button>
       )}
 
-      <button
-        type="button"
-        onClick={shareCard}
-        disabled={sharing || saving}
-        className={actionButtonClass}
-      >
+        <button
+          type="button"
+          onClick={shareCard}
+          disabled={sharing}
+          className={actionButtonClass}
+        >
         {sharing ? (
           <svg
             className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
@@ -262,25 +243,6 @@ export function ProfileActions({
           <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
         )}
         {sharing ? "Carregando..." : "Compartilhar"}
-      </button>
-
-      <button
-        type="button"
-        onClick={saveCard}
-        disabled={saving || sharing}
-        className={actionButtonClass}
-      >
-        {saving ? (
-          <svg
-            className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
-            viewBox="25 25 50 50"
-          >
-            <circle r="20" cy="50" cx="50" />
-          </svg>
-        ) : (
-          <Download className="h-[16px] w-[16px]" strokeWidth={2.4} />
-        )}
-        {saving ? "Salvando..." : "Salvar"}
       </button>
 
       {editButton}

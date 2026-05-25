@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToast } from "@/components/toast";
 
 import type { ProfileModuleId } from "@/features/panel/components/profile-modules";
 import {
@@ -228,7 +229,7 @@ function SlotRow({
 type Props = {
   currentOrder: string[];
   hasRiotId: boolean;
-  onSave: (order: ProfileModuleId[]) => void;
+  onSave: (order: ProfileModuleId[]) => Promise<boolean> | boolean;
   onClose: () => void;
 };
 
@@ -238,6 +239,7 @@ export function ProfileModuleSelectorModal({
   onSave,
   onClose,
 }: Props) {
+  const toast = useToast();
   const validIds = new Set<string>(ALL_CONFIGURABLE_MODULE_IDS);
 
   // Para LoL: 2 slots configuráveis (slots 3 e 4)
@@ -252,6 +254,7 @@ export function ProfileModuleSelectorModal({
     const norm = normalizeOrder(currentOrder);
     return Array.from({ length: slotCount }, (_, i) => norm[i] ?? null);
   });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -269,9 +272,23 @@ export function ProfileModuleSelectorModal({
     });
   }
 
-  function handleSave() {
-    onSave(selected.filter((id): id is ProfileModuleId => id !== null));
-    onClose();
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const ok = await onSave(
+        selected.filter((id): id is ProfileModuleId => id !== null),
+      );
+      if (!ok) {
+        toast.show("Não foi possível salvar os cards.");
+        return;
+      }
+      toast.show("Cards salvos.", "success");
+      onClose();
+    } catch {
+      toast.show("Não foi possível salvar os cards.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const allSelected = selected.filter((id): id is ProfileModuleId => id !== null);
@@ -354,9 +371,10 @@ export function ProfileModuleSelectorModal({
           <button
             type="button"
             onClick={handleSave}
-            className="inline-flex h-[40px] items-center justify-center rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80"
+            disabled={saving}
+            className="inline-flex h-[40px] items-center justify-center rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Salvar
+            {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>
