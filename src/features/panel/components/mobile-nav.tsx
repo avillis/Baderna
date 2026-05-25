@@ -62,7 +62,6 @@ export function useMobileNav() {
 /** Largura do drawer mobile — também é o quanto a página é empurrada. */
 export const MOBILE_DRAWER_WIDTH = 280;
 const MOBILE_CARD_RADIUS = 25;
-const MOBILE_STAGE_COLOR = "#ffffff";
 
 /**
  * Card da página: opaco (tapa o <MobileMenu/> atrás dele) e empurrado pra
@@ -86,44 +85,11 @@ export function MobilePushRegion({
         "relative z-[30] min-h-screen transition-[left,border-radius] duration-300 ease-out xl:left-0 xl:rounded-none",
         bgClassName,
         open
-          ? "left-[280px] rounded-l-[25px]"
+          ? "left-[280px] overflow-hidden rounded-l-[25px] before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-[#e7e2dc] before:content-['']"
           : "left-0",
       )}
     >
       {children}
-
-      {/* Cantos arredondados do card "em cima e em baixo", ancorados na
-          viewport (a página rola no body, então o card sozinho só arredondaria
-          no topo/fundo do documento). São máscaras côncavas fixas na borda
-          esquerda do card (x=280): pintam a cor do stage fora do arco e deixam
-          o card aparecer dentro dele. A sombra agora é uma faixa separada,
-          então não precisamos mais de preenchimento reto cinza nos cantos. */}
-      {open && (
-        <>
-          <span
-            aria-hidden
-            className="pointer-events-none fixed top-0 z-[36] xl:hidden"
-            style={{
-              left: MOBILE_DRAWER_WIDTH,
-              width: MOBILE_CARD_RADIUS,
-              height: MOBILE_CARD_RADIUS,
-              background:
-                `radial-gradient(circle at bottom right, transparent ${MOBILE_CARD_RADIUS - 0.5}px, ${MOBILE_STAGE_COLOR} ${MOBILE_CARD_RADIUS}px)`,
-            }}
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none fixed bottom-0 z-[36] xl:hidden"
-            style={{
-              left: MOBILE_DRAWER_WIDTH,
-              width: MOBILE_CARD_RADIUS,
-              height: MOBILE_CARD_RADIUS,
-              background:
-                `radial-gradient(circle at top right, transparent ${MOBILE_CARD_RADIUS - 0.5}px, ${MOBILE_STAGE_COLOR} ${MOBILE_CARD_RADIUS}px)`,
-            }}
-          />
-        </>
-      )}
 
       {/* Captura toques na página empurrada pra fechar o drawer. Fica colado na
           caixa do card (que já está deslocada 280px à direita), então não cobre
