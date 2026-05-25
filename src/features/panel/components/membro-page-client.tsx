@@ -242,6 +242,9 @@ export function MembroPageClient({ slug }: { slug: string }) {
     fallbackFeaturedValue: stats[3].value,
     fallbackFeaturedSrc: profile.featuredChampionSrc,
     favoriteChampionSlugs: apiMember?.favoriteChampionSlugs ?? [],
+    onUpdateFavoriteChampions: isOwnProfile
+      ? (champions) => updateField("favoriteChampionSlugs", champions)
+      : null,
     communityHighlight: apiMember?.communityHighlight ?? null,
     duoSlug: duoMember?.id ?? null,
     duoFullName: duoMember?.name ?? null,

@@ -3,7 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
+import { useToast } from "@/components/toast";
+import {
+  CHAMPION_AVATAR_FILES,
+  getChampionTileSrc,
+} from "@/features/panel/champion-avatar";
 import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
 import { LiveRankCard } from "@/features/panel/components/live-rank-card";
 import { PanelLaneSelectorCard } from "@/features/panel/components/panel-lane-selector-card";
@@ -153,41 +160,200 @@ function ParticipationModuleCard({
 
 function TopChampionsModuleCard({
   favoriteChampionSlugs,
+  isOwnProfile,
+  onSave,
 }: {
   favoriteChampionSlugs: string[];
+  isOwnProfile: boolean;
+  onSave: ((champions: string[]) => Promise<boolean> | boolean) | null;
 }) {
-  const champs = favoriteChampionSlugs.filter(Boolean).slice(0, 3);
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<string[]>(
+    favoriteChampionSlugs.filter(Boolean).slice(0, 3),
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelected(favoriteChampionSlugs.filter(Boolean).slice(0, 3));
+  }, [favoriteChampionSlugs]);
+
+  const champs = selected;
+  const championOptions = useMemo(
+    () =>
+      CHAMPION_AVATAR_FILES.map((file) => file.replace(/_0\.jpg$/i, "")).sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [],
+  );
+
+  function toggleChampion(champion: string) {
+    setSelected((prev) => {
+      if (prev.includes(champion)) return prev.filter((item) => item !== champion);
+      if (prev.length >= 3) return [...prev.slice(1), champion];
+      return [...prev, champion];
+    });
+  }
+
+  async function handleSave() {
+    if (!onSave) return;
+    setSaving(true);
+    try {
+      const ok = await onSave(selected);
+      if (!ok) {
+        toast.show("Não foi possível salvar seus mains.");
+        return;
+      }
+      toast.show("Mains salvos.", "success");
+      setOpen(false);
+    } catch {
+      toast.show("Não foi possível salvar seus mains.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <CardShell>
-      <div className="flex h-full w-full flex-col">
-        <Eyebrow>Top 3 favoritos</Eyebrow>
-        <div className="mt-auto flex items-end justify-between gap-[10px]">
-          {champs.length > 0 ? (
-            champs.map((champ) => (
-              <div key={champ} className="min-w-0 flex-1 text-center">
-                <div className="relative mx-auto h-[46px] w-[46px] overflow-hidden rounded-full bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
-                  <Image
-                    src={`/api/champion-tile/${champ}_0.jpg`}
-                    alt={champ}
-                    fill
-                    className="object-cover"
-                    sizes="46px"
-                    unoptimized
-                  />
+    <>
+      <CardShell>
+        <button
+          type="button"
+          disabled={!isOwnProfile}
+          onClick={() => {
+            if (isOwnProfile) setOpen(true);
+          }}
+          className={`flex h-full w-full flex-col text-left ${isOwnProfile ? "cursor-pointer" : "cursor-default"}`}
+        >
+          <Eyebrow>Mains</Eyebrow>
+          <div className="mt-auto flex items-end justify-between gap-[10px]">
+            {champs.length > 0 ? (
+              champs.map((champ) => (
+                <div key={champ} className="min-w-0 flex-1 text-center">
+                  <div className="relative mx-auto h-[46px] w-[46px] overflow-hidden rounded-full bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
+                    <Image
+                      src={`/api/champion-tile/${champ}_0.jpg`}
+                      alt={champ}
+                      fill
+                      className="object-cover"
+                      sizes="46px"
+                      unoptimized
+                    />
+                  </div>
+                  <p className="mt-[6px] truncate text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                    {champ}
+                  </p>
                 </div>
-                <p className="mt-[6px] truncate text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                  {champ}
-                </p>
+              ))
+            ) : (
+              <p className="text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
+                {isOwnProfile
+                  ? "Clique para escolher 3 mains"
+                  : "Sem mains escolhidos"}
+              </p>
+            )}
+          </div>
+        </button>
+      </CardShell>
+
+      {typeof document !== "undefined" && open
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
+              onClick={() => setOpen(false)}
+            >
+              <div
+                className="relative flex max-h-[86vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="h-[16px] w-[16px]"
+                    stroke="currentColor"
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
+                  <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                    Escolher mains
+                  </h2>
+                  <p className="mt-[8px] text-[13px] text-[#8d8d8d]">
+                    Escolha até 3 campeões para destacar no perfil.
+                  </p>
+                </div>
+                <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-4 items-start gap-[16px] overflow-y-auto p-[24px] sm:grid-cols-5 md:grid-cols-6">
+                  {championOptions.map((champion) => {
+                    const selectedChampion = selected.includes(champion);
+                    return (
+                      <button
+                        key={champion}
+                        type="button"
+                        onClick={() => toggleChampion(champion)}
+                        className="group text-center"
+                      >
+                        <div
+                          className={`relative mx-auto h-[62px] w-[62px] overflow-hidden rounded-full ring-2 transition-all ${
+                            selectedChampion
+                              ? "ring-[#ff4100]"
+                              : "ring-transparent group-hover:ring-[#ff4100]/35"
+                          }`}
+                        >
+                          <Image
+                            src={getChampionTileSrc(`${champion}_0.jpg`)}
+                            alt={champion}
+                            fill
+                            className="object-cover"
+                            sizes="62px"
+                            unoptimized
+                          />
+                        </div>
+                        <p className="mt-[8px] truncate text-[11px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+                          {champion}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between border-t border-[#f0f0f0] px-[24px] py-[18px]">
+                  <p className="text-[11px] font-medium text-[#8d8d8d]">
+                    {selected.length}/3 selecionados
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {saving ? (
+                      <>
+                        <svg
+                          className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
+                          viewBox="25 25 50 50"
+                        >
+                          <circle r="20" cy="50" cx="50" />
+                        </svg>
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar"
+                    )}
+                  </button>
+                </div>
               </div>
-            ))
-          ) : (
-            <p className="text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
-              Escolha 3 champs favoritos
-            </p>
-          )}
-        </div>
-      </div>
-    </CardShell>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
 
@@ -396,46 +562,6 @@ function MemberSinceModuleCard({ memberSince }: { memberSince: string | null }) 
   );
 }
 
-function ShowcaseModuleCard({
-  items,
-}: {
-  items: { label: string; src: string | null }[];
-}) {
-  const slots = items.slice(0, 3);
-  while (slots.length < 3) slots.push({ label: "—", src: null });
-  return (
-    <CardShell>
-      <div className="flex h-full w-full flex-col">
-        <Eyebrow>Vitrine</Eyebrow>
-        <div className="mt-auto flex items-end justify-between gap-[8px]">
-          {slots.map((slot, idx) => (
-            <div
-              key={`${slot.label}-${idx}`}
-              className="min-w-0 flex-1 text-center"
-            >
-              <div className="relative mx-auto h-[44px] w-[44px] overflow-hidden rounded-[10px] bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
-                {slot.src ? (
-                  <Image
-                    src={slot.src}
-                    alt={slot.label}
-                    fill
-                    className="object-cover"
-                    sizes="44px"
-                    unoptimized
-                  />
-                ) : null}
-              </div>
-              <p className="mt-[6px] truncate text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                {slot.label}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </CardShell>
-  );
-}
-
 export type ProfileModuleData = {
   hasRiotId: boolean;
   isOwnProfile: boolean;
@@ -451,6 +577,7 @@ export type ProfileModuleData = {
   fallbackFeaturedValue: string;
   fallbackFeaturedSrc?: string;
   favoriteChampionSlugs: string[];
+  onUpdateFavoriteChampions: ((champions: string[]) => Promise<boolean> | boolean) | null;
   communityHighlight: string | null;
   duoSlug: string | null;
   duoFullName: string | null;
@@ -534,6 +661,8 @@ export function ProfileModuleCard({
         <LockedWrapper locked={locked}>
           <TopChampionsModuleCard
             favoriteChampionSlugs={data.favoriteChampionSlugs}
+            isOwnProfile={data.isOwnProfile}
+            onSave={data.onUpdateFavoriteChampions}
           />
         </LockedWrapper>
       );
@@ -587,7 +716,13 @@ export function ProfileModuleCard({
       return <MemberSinceModuleCard memberSince={data.memberSince} />;
 
     case "showcase":
-      return <ShowcaseModuleCard items={data.showcaseItems} />;
+      return (
+        <TopChampionsModuleCard
+          favoriteChampionSlugs={data.favoriteChampionSlugs}
+          isOwnProfile={data.isOwnProfile}
+          onSave={data.onUpdateFavoriteChampions}
+        />
+      );
 
     default:
       return null;

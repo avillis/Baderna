@@ -33,7 +33,7 @@ export const MODULE_META: ModuleMeta[] = [
   },
   {
     id: "top-champions",
-    label: "Top 3 favoritos",
+    label: "Mains",
     description: "3 champs que você escolhe à mão.",
     lol: true,
   },
@@ -69,7 +69,7 @@ export const MODULE_META: ModuleMeta[] = [
   },
   {
     id: "showcase",
-    label: "Vitrine",
+    label: "Mains",
     description: "3 itens da coleção em destaque.",
   },
 ];
