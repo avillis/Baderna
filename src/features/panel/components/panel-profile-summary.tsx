@@ -193,7 +193,7 @@ export function PanelProfileSummary({
           )}
         </div>
 
-        <div className="relative z-10 flex flex-nowrap items-center gap-x-[10px] sm:gap-x-[14px]">
+        <div className="relative z-10 flex flex-wrap items-center gap-x-[10px] gap-y-[8px] sm:gap-x-[14px]">
           {isOwnProfile ? (
             <button
               type="button"
@@ -211,7 +211,7 @@ export function PanelProfileSummary({
           )}
 
           {titles.length > 0 ? (
-            <div className="flex items-center gap-[8px]">
+            <div className="flex flex-wrap items-center gap-[8px]">
               {titles.map((title) => (
                 <button
                   key={title.id}
