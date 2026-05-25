@@ -160,11 +160,9 @@ function ParticipationModuleCard({
 
 function TopChampionsModuleCard({
   favoriteChampionSlugs,
-  isOwnProfile,
   onSave,
 }: {
   favoriteChampionSlugs: string[];
-  isOwnProfile: boolean;
   onSave: ((champions: string[]) => Promise<boolean> | boolean) | null;
 }) {
   const toast = useToast();
@@ -662,7 +660,6 @@ export function ProfileModuleCard({
         <LockedWrapper locked={locked}>
           <TopChampionsModuleCard
             favoriteChampionSlugs={data.favoriteChampionSlugs}
-            isOwnProfile={data.isOwnProfile}
             onSave={data.onUpdateFavoriteChampions}
           />
         </LockedWrapper>
@@ -720,7 +717,6 @@ export function ProfileModuleCard({
       return (
         <TopChampionsModuleCard
           favoriteChampionSlugs={data.favoriteChampionSlugs}
-          isOwnProfile={data.isOwnProfile}
           onSave={data.onUpdateFavoriteChampions}
         />
       );
