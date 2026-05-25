@@ -13,7 +13,7 @@ export default function NotificationBell({
    *  do viewport — igual o dropdown da foto de perfil no header mobile. */
   placement?: "up" | "below";
 }) {
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, remove } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -110,7 +110,7 @@ export default function NotificationBell({
                 alt="Avatar"
                 className="h-[36px] w-[36px] shrink-0 rounded-full object-cover ring-1 ring-[#ece1db]"
               />
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <Link
                   href={notif.data.action_url}
                   className="block text-[13px] font-medium leading-snug tracking-[-0.01em] text-[#0f0f0f] hover:text-[#ff4100]"
@@ -118,6 +118,25 @@ export default function NotificationBell({
                   {notif.data.message}
                 </Link>
               </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  remove(notif.id);
+                }}
+                aria-label="Excluir notificação"
+                className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full text-[#a59c95] transition-colors hover:bg-[#f0e9e5] hover:text-[#0f0f0f]"
+              >
+                <svg
+                  className="h-[12px] w-[12px]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" strokeWidth="2.4" strokeLinecap="round" />
+                </svg>
+              </button>
             </div>
           ))
         )}
