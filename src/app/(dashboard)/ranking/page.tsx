@@ -73,9 +73,12 @@ export default function RankingPage() {
     });
   }, [members, ranks]);
 
-  // Flex: ordenado por elo
+  // Flex: ordenado por elo. Filtra quem não tem Riot ID conectada —
+  // ranking por elo só faz sentido pra conta linkada com a Riot.
   const sorted = useMemo(() => {
-    return [...badernaList].sort((a, b) => b.score - a.score);
+    return [...badernaList]
+      .filter(({ member }) => !!member.summonerName && !!member.tagLine)
+      .sort((a, b) => b.score - a.score);
   }, [badernaList]);
 
   const TABS = [
