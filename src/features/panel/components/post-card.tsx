@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { getMemberSlug } from "@/features/panel/members-data";
 import { ImageLightbox } from "@/features/panel/components/image-lightbox";
+import { renderWithMentions } from "@/features/panel/components/mention-text";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { VideoPlayer } from "@/features/panel/components/video-player";
 import { authToken, useAuth } from "@/features/panel/use-auth";
@@ -46,6 +47,9 @@ export function PostCard({
   const liveMember = post.author.id
     ? members.find((m) => m.userId === post.author.id)
     : undefined;
+  // Mapa de slug → membro pra resolver @menções no conteúdo
+  const membersBySlug = new Map<string, { id: string; nickname: string }>();
+  for (const m of members) membersBySlug.set(m.id, m);
   const fallbackNick = post.author.gameNick
     ? post.author.gameNick.split("#")[0]
     : post.author.name;
@@ -225,7 +229,7 @@ export function PostCard({
       <div className="mt-[16px] sm:ml-[62px]">
         {post.content && (
           <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.45] text-[#0f0f0f] sm:text-[15px]">
-            {post.content}
+            {renderWithMentions(post.content, membersBySlug)}
           </p>
         )}
 

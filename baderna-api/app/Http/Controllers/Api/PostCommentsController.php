@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\Post;
+use App\Support\Mentions;
 use Illuminate\Http\Request;
 
 class PostCommentsController extends Controller
@@ -104,6 +105,19 @@ class PostCommentsController extends Controller
         $parentKey = $parentId ? 'c-' . $parentId : null;
         $row = $this->serializeComment($comment, $request->user()->id, $parentKey);
         $row['replies'] = [];
+
+        // Notifica @mencionados no body (skip self).
+        if ($body) {
+            $author    = $request->user();
+            $actionUrl = '/post/' . ($post->short_code ?: $post->id);
+            $contextWord = $parentId ? 'em uma resposta' : 'em um comentário';
+            Mentions::notifyMentioned(
+                $body,
+                $author,
+                Mentions::authorDisplayName($author) . ' mencionou você ' . $contextWord,
+                $actionUrl,
+            );
+        }
 
         return response()->json($row, 201);
     }

@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { useToast } from "@/components/toast";
 import { GiphyPickerInline } from "@/features/panel/components/giphy-picker-modal";
 import { useAccount } from "@/features/panel/use-account";
+import { useMentions } from "@/features/panel/use-mentions";
 import {
   MAX_VIDEO_SIZE_BYTES,
   uploadPostImage,
@@ -35,6 +36,12 @@ export function PostComposer({
   const [giphyOpen, setGiphyOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentions = useMentions({
+    value: text,
+    onChange: setText,
+    inputRef: textareaRef,
+  });
 
   const canPost = text.trim().length > 0 || imageUrl || gifUrl || videoUrl;
 
@@ -131,15 +138,22 @@ export function PostComposer({
           {/* Linha texto + mídia lateral. Texto fica em flex-1, mídia
               ocupa coluna fixa à direita só quando existe. */}
           <div className="flex gap-[14px]">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onPaste={handlePaste}
-              placeholder="Qual a boa de hoje?"
-              rows={4}
-              maxLength={2000}
-              className="min-w-0 flex-1 resize-none border-none bg-transparent text-[15px] tracking-[-0.01em] text-[#0f0f0f] outline-none placeholder:text-[#a89e99] sm:text-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            />
+            <div className="relative min-w-0 flex-1">
+              <textarea
+                ref={textareaRef}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onPaste={handlePaste}
+                onKeyDown={mentions.onKeyDown}
+                onSelect={mentions.onSelect}
+                onClick={mentions.onSelect}
+                placeholder="Qual a boa de hoje? Use @ pra mencionar alguém"
+                rows={4}
+                maxLength={2000}
+                className="w-full resize-none border-none bg-transparent text-[15px] tracking-[-0.01em] text-[#0f0f0f] outline-none placeholder:text-[#a89e99] sm:text-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              />
+              {mentions.dropdown}
+            </div>
 
             {mediaUrl && (
               <div className="relative h-fit w-[90px] flex-shrink-0 overflow-hidden rounded-[12px] bg-[#ededed] sm:w-[180px] sm:rounded-[16px]">

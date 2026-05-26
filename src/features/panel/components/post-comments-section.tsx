@@ -8,11 +8,13 @@ import { useRef, useState } from "react";
 import { useToast } from "@/components/toast";
 import { GiphyPickerInline } from "@/features/panel/components/giphy-picker-modal";
 import { ImageLightbox } from "@/features/panel/components/image-lightbox";
+import { renderWithMentions } from "@/features/panel/components/mention-text";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { useAuth } from "@/features/panel/use-auth";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatCommentDate, type Comment } from "@/features/panel/use-comments";
+import { useMentions } from "@/features/panel/use-mentions";
 import { usePostComments } from "@/features/panel/use-post-comments";
 import { uploadPostImage } from "@/features/panel/use-posts";
 
@@ -29,7 +31,15 @@ function ReplyInput({
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
+  const mentions = useMentions({
+    value: draft,
+    onChange: setDraft,
+    inputRef,
+    // Dropdown abre PRA CIMA pra não cobrir conteúdo abaixo (resposta é pequena)
+    dropdownClassName: "left-0 bottom-full mb-[6px]",
+  });
   const canSubmit = (draft.trim().length > 0 || imageUrl) && !submitting && !uploading;
 
   async function handleImageFile(file: File) {
@@ -82,16 +92,23 @@ function ReplyInput({
         </div>
       )}
       <form onSubmit={handleSubmit}>
-        <div className="flex items-center gap-[8px] rounded-full bg-[#EDEDED] pl-[14px] pr-[6px] py-[5px]">
+        <div className="relative flex items-center gap-[8px] rounded-full bg-[#EDEDED] pl-[14px] pr-[6px] py-[5px]">
           <input
-            ref={(el) => { if (el) el.focus(); }}
+            ref={(el) => {
+              inputRef.current = el;
+              if (el) el.focus();
+            }}
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onPaste={handlePaste}
-            placeholder="Escrever resposta..."
+            onKeyDown={mentions.onKeyDown}
+            onSelect={mentions.onSelect}
+            onClick={mentions.onSelect}
+            placeholder="Escrever resposta... (use @ pra mencionar)"
             className="min-w-0 flex-1 bg-transparent text-[12px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-[#a4a4a4]"
           />
+          {mentions.dropdown}
           <input
             ref={fileInput}
             type="file"
@@ -152,6 +169,7 @@ function CommentRow({
   likedByMe,
   likesCount,
   memberByUserId,
+  membersBySlug,
   onDelete,
   onLike,
   onReply,
@@ -163,6 +181,7 @@ function CommentRow({
   likedByMe: boolean;
   likesCount: number;
   memberByUserId: Map<number, { id: string; nickname: string; activeNameId?: string }>;
+  membersBySlug: Map<string, { id: string; nickname: string }>;
   onDelete: () => void;
   onLike: () => void;
   onReply?: () => void;
@@ -223,11 +242,11 @@ function CommentRow({
         </p>
         {comment.body && (
           <p
-            className={`mt-[8px] font-medium leading-[1.45] tracking-[-0.02em] text-[#666666] ${
+            className={`mt-[8px] whitespace-pre-wrap font-medium leading-[1.45] tracking-[-0.02em] text-[#666666] ${
               isReply ? "text-[12px]" : "text-[13px]"
             }`}
           >
-            {comment.body}
+            {renderWithMentions(comment.body, membersBySlug)}
           </p>
         )}
         {(comment.imageUrl || comment.gifUrl) && (
@@ -314,6 +333,14 @@ export function PostCommentsSection({
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const fileInput = useRef<HTMLInputElement>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
+  const commentMentions = useMentions({
+    value: draft,
+    onChange: setDraft,
+    inputRef: commentInputRef,
+    // Dropdown abre PRA CIMA — o input de comentário fica no fundo da seção
+    dropdownClassName: "left-0 bottom-full mb-[6px]",
+  });
 
   const mediaUrl = imageUrl ?? gifUrl;
   const canSubmit = (draft.trim().length > 0 || mediaUrl) && !submitting && !uploading;
@@ -321,8 +348,10 @@ export function PostCommentsSection({
   // Mapeia user_id → membro ao vivo. Usando member.id como slug garante que
   // links sempre apontem pro slug atual, mesmo após mudança de nick.
   const memberByUserId = new Map<number, { id: string; nickname: string; activeNameId?: string }>();
+  const membersBySlug = new Map<string, { id: string; nickname: string }>();
   for (const m of members) {
     if (m.userId) memberByUserId.set(m.userId, m);
+    membersBySlug.set(m.id, m);
   }
 
   async function handleImageFile(file: File) {
@@ -420,6 +449,7 @@ export function PostCommentsSection({
                     likedByMe={comment.likedByMe ?? false}
                     likesCount={comment.likesCount ?? 0}
                     memberByUserId={memberByUserId}
+                    membersBySlug={membersBySlug}
                     onDelete={() => handleRemove(comment.id)}
                     onLike={() => toggleLike(comment.id)}
                     onReply={() => {
@@ -472,6 +502,7 @@ export function PostCommentsSection({
                               likedByMe={reply.likedByMe ?? false}
                               likesCount={reply.likesCount ?? 0}
                               memberByUserId={memberByUserId}
+                    membersBySlug={membersBySlug}
                               onDelete={() => handleRemove(reply.id)}
                               onLike={() => toggleLike(reply.id)}
                               onImageClick={setLightboxSrc}
@@ -509,15 +540,20 @@ export function PostCommentsSection({
           </div>
         )}
 
-        <div className="flex items-center gap-[8px] rounded-full bg-[#EDEDED] pl-[18px] pr-[6px] py-[6px]">
+        <div className="relative flex items-center gap-[8px] rounded-full bg-[#EDEDED] pl-[18px] pr-[6px] py-[6px]">
           <input
+            ref={commentInputRef}
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onPaste={handlePaste}
-            placeholder="Fazer um comentário..."
+            onKeyDown={commentMentions.onKeyDown}
+            onSelect={commentMentions.onSelect}
+            onClick={commentMentions.onSelect}
+            placeholder="Fazer um comentário... (use @ pra mencionar)"
             className="min-w-0 flex-1 bg-transparent text-[13px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-[#a4a4a4]"
           />
+          {commentMentions.dropdown}
 
           <input
             ref={fileInput}

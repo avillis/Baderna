@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostLike;
+use App\Support\Mentions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -86,6 +87,18 @@ class PostController extends Controller
 
         $post->load('user:id,name,display_name,summoner_name,tagLine,avatar_src');
         $post->loadCount(['likes', 'comments']);
+
+        // Notifica @mencionados no conteúdo (skip self).
+        if ($content !== '') {
+            $author = $request->user();
+            $actionUrl = '/post/' . ($post->short_code ?: $post->id);
+            Mentions::notifyMentioned(
+                $content,
+                $author,
+                Mentions::authorDisplayName($author) . ' mencionou você em um post',
+                $actionUrl,
+            );
+        }
 
         return response()->json(['post' => $this->serialize($post, [])], 201);
     }
