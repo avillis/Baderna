@@ -17,7 +17,10 @@ type InputLike = HTMLInputElement | HTMLTextAreaElement;
 
 /** Match @slug no fim do texto antes do caret (slug = a-z0-9 + hifens). */
 const TRIGGER_RE = /(?:^|\s)@([a-zA-Z0-9-]*)$/;
-const MAX_RESULTS = 6;
+/** Cap alto pra mostrar todos os membros (dropdown é scrollável de qualquer
+ *  jeito via max-h + overflow-y-auto). Mantém um limite só pra futuro-proof
+ *  caso a comunidade cresça pra milhares. */
+const MAX_RESULTS = 100;
 
 export interface UseMentionsArgs {
   value: string;
