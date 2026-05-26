@@ -260,8 +260,8 @@ export function PostCard({
           </div>
         )}
 
-        {/* Linha de ações: like + comentários. Expanded mostra data à direita. */}
-        <div className="relative mt-[18px] flex flex-wrap items-center gap-x-[16px] gap-y-[10px]">
+        {/* Linha de ações: like + comentários + reações. */}
+        <div className="relative mt-[18px] flex flex-wrap items-center gap-x-[14px] gap-y-[10px]">
           <LikeButton
             liked={post.liked}
             count={post.likesCount}
@@ -271,6 +271,7 @@ export function PostCard({
             count={post.commentsCount}
             href={`/post/${post.shortCode || post.id}`}
           />
+          <PostReactions postId={post.id} />
           <BookmarkButton />
           {expanded && (
             <span className="basis-full pt-[2px] text-left text-[12px] text-[#8d8d8d] sm:ml-auto sm:basis-auto sm:pt-0 sm:text-right">
@@ -353,8 +354,6 @@ function CommentButton({ count, href }: { count: number; href: string }) {
   );
 }
 
-const REACTION_EMOJIS = ["👍", "🔥", "😂", "😮", "😢"];
-
 const REACTIONS_API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
@@ -365,10 +364,182 @@ function parseMine(raw: unknown): string[] {
   return [];
 }
 
+/* ─── Categorias de emoji para o picker completo ─────────────────────────── */
+const EMOJI_CATS = [
+  {
+    icon: "😀",
+    label: "Smileys",
+    emojis: [
+      "😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇",
+      "🥰","😍","🤩","😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝",
+      "🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄",
+      "😬","🤥","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵",
+      "🥶","🥴","😵","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","😟","🙁",
+      "😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱",
+      "😖","😣","😞","😓","😩","😫","🤬","😤","😠","😡","🤡","👻","💀",
+      "☠️","👽","👾","🤖","😺","😸","😹","😻","😼","😽","🙀","😿","😾",
+    ],
+  },
+  {
+    icon: "👋",
+    label: "Gestos",
+    emojis: [
+      "👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙",
+      "👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏",
+      "🙌","👐","🤲","🤝","🙏","✍️","💅","💪","🦾","🫡","🫠","🫣","🫢",
+      "🧑","👦","👧","👨","👩","🧓","👴","👵","🙍","🙎","🙅","🙆","💁",
+      "🙋","🧏","🙇","🤦","🤷","💆","💇","🚶","🧍","🧎","🏃","💃","🕺",
+    ],
+  },
+  {
+    icon: "🐶",
+    label: "Animais",
+    emojis: [
+      "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷",
+      "🐸","🐵","🙈","🙉","🙊","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇",
+      "🐺","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🦟","🦗","🕷️","🦂",
+      "🐢","🐍","🦎","🐙","🦑","🦐","🦀","🐡","🐠","🐟","🐬","🐳","🦈",
+      "🐊","🐘","🦒","🦓","🦍","🦧","🦛","🦏","🐪","🐫","🦘","🐃","🐄",
+      "🐎","🐖","🐑","🦙","🐐","🦌","🐕","🐩","🐈","🐓","🦃","🦚","🦜",
+      "🦢","🕊️","🐇","🦝","🦨","🦡","🦦","🦥","🐁","🐀","🐿️","🦔","🐾",
+      "🌵","🎄","🌲","🌳","🌴","🌱","🌿","☘️","🍀","🍃","🍂","🍁","🌾",
+      "💐","🌷","🌹","🥀","🌺","🌸","🌼","🌻","🍄","🌊","🔥","💧","🌈",
+      "❄️","☃️","⛄","⚡","🌪️","🌫️","☁️","⛅","🌤️","🌙","⭐","🌟","🌠",
+    ],
+  },
+  {
+    icon: "🍕",
+    label: "Comida",
+    emojis: [
+      "🍇","🍈","🍉","🍊","🍋","🍌","🍍","🥭","🍎","🍏","🍐","🍑","🍒",
+      "🍓","🫐","🥝","🍅","🥥","🥑","🍆","🥔","🥕","🌽","🌶️","🫑","🥒",
+      "🥬","🥦","🧄","🧅","🍞","🥐","🥖","🫓","🥨","🥯","🥞","🧇","🧀",
+      "🍖","🍗","🥩","🥓","🍔","🍟","🍕","🌭","🌮","🌯","🥙","🧆","🥚",
+      "🍳","🥘","🍲","🥗","🍿","🧂","🍱","🍘","🍙","🍚","🍛","🍜","🍝",
+      "🍠","🍢","🍣","🍤","🍥","🥮","🍡","🥟","🥠","🥡","🍦","🍧","🍨",
+      "🍩","🍪","🎂","🍰","🧁","🥧","🍫","🍬","🍭","🍯","🧃","🥤","🧋",
+      "☕","🍵","🧉","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🍾","🧊",
+    ],
+  },
+  {
+    icon: "⚽",
+    label: "Atividades",
+    emojis: [
+      "⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🥏","🎱","🏓","🏸","🥊",
+      "🥋","🛹","🛷","⛸️","🥌","🎯","🏹","🎣","🤿","🏋️","🤸","🤺","⛹️",
+      "🤾","🏇","🧘","🧗","🚵","🚴","🏆","🥇","🥈","🥉","🏅","🎖️","🎫",
+      "🎪","🎭","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🎸","🎻",
+      "🎲","♟️","🎮","🕹️","🎰","🎳","🧩","🪆","🪅","🎴","🃏","🎉","🎊",
+      "🎈","🎀","🎁","🎗️","🎟️","🏵️",
+    ],
+  },
+  {
+    icon: "✈️",
+    label: "Viagem",
+    emojis: [
+      "🚗","🚕","🚙","🚌","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜",
+      "🏍️","🛵","🚲","🛴","🛹","🚏","⛽","🚨","🚥","🚦","⚓","⛵","🚤",
+      "🛥️","🚢","✈️","🛩️","🚁","🚀","🛸","🪂","💺","🌍","🌎","🌏","🗺️",
+      "🧭","🏔️","⛰️","🌋","🗻","🏕️","🏖️","🏜️","🏝️","🏟️","🏛️","🏗️",
+      "🏠","🏡","🏢","🏥","🏦","🏨","🏪","🏫","🏭","🏯","🏰","💒","🗼",
+      "🗽","⛪","🕌","🕍","⛩️","🎌","🚩",
+    ],
+  },
+  {
+    icon: "💡",
+    label: "Objetos",
+    emojis: [
+      "⌚","📱","💻","⌨️","🖥️","🖨️","🖱️","💽","💾","💿","📀","🧮","📷",
+      "📸","📹","🎥","📞","☎️","📺","📻","🧭","⏱️","⏰","🕰️","⌛","⏳",
+      "📡","🔋","🔌","💡","🔦","🕯️","🪔","🛋️","🚿","🛁","🪞","🛒","🚪",
+      "🔑","🗝️","🔐","🔒","🔓","🔨","🪓","⛏️","🛠️","⚒️","🔧","🔩","⚙️",
+      "⚖️","🔗","⛓️","🪝","🧲","🪜","💊","💉","🩸","🩹","🩺","💎","💍",
+      "👑","💼","🧳","👜","👛","👓","🕶️","🥽","🌂","🎉","🎊","📦","📫",
+      "📜","📊","📈","📉","📋","📁","📂","📌","📍","✂️","🗑️","🔬","🔭",
+      "🧪","🧫","🧬","🔮","🪄","🧸","🖼️","🎭",
+    ],
+  },
+  {
+    icon: "❤️",
+    label: "Símbolos",
+    emojis: [
+      "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹",
+      "❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉️",
+      "✡️","☯️","🛐","♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓",
+      "🆔","⚛️","☢️","☣️","📵","🚫","🚳","🚭","🚯","🚱","🚷","📛","🔞",
+      "💯","✅","❎","✔️","☑️","🔘","🔴","🟠","🟡","🟢","🔵","🟣","🟤",
+      "⚪","⚫","🔺","🔻","🔷","🔶","🔹","🔸","💠","🔲","🔳","▪️","▫️",
+      "🎵","🎶","🎼","💤","🔔","🔕","🔇","🔈","🔉","🔊","📢","📣","🔔",
+      "✨","🌟","💫","💥","💢","💨","💦","💧","💬","💭","🗯️","♻️","⚠️",
+    ],
+  },
+];
+
+/* ─── Picker de emoji completo com categorias ────────────────────────────── */
+function EmojiPicker({
+  onSelect,
+  onClose,
+}: {
+  onSelect: (emoji: string) => void;
+  onClose: () => void;
+}) {
+  const [catIdx, setCatIdx] = useState(0);
+
+  return (
+    <>
+      {/* Overlay que fecha o picker ao clicar fora */}
+      <div
+        className="fixed inset-0 z-[30]"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+      />
+      <div
+        className="absolute bottom-full left-1/2 z-[40] mb-[10px] w-[296px] -translate-x-1/2 overflow-hidden rounded-[18px] bg-white shadow-[0px_12px_48px_rgba(0,0,0,0.18)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Tabs de categoria */}
+        <div className="flex overflow-x-auto border-b border-[#f0f0f0] scrollbar-none">
+          {EMOJI_CATS.map((cat, i) => (
+            <button
+              key={i}
+              type="button"
+              title={cat.label}
+              onClick={() => setCatIdx(i)}
+              className={`flex-shrink-0 px-[10px] py-[8px] text-[18px] transition-colors ${
+                catIdx === i
+                  ? "border-b-2 border-[#ff4100] bg-[#fff6f3]"
+                  : "hover:bg-[#f8f8f8]"
+              }`}
+            >
+              {cat.icon}
+            </button>
+          ))}
+        </div>
+        {/* Grid de emojis */}
+        <div className="grid grid-cols-8 gap-[1px] overflow-y-auto p-[8px]" style={{ maxHeight: "190px" }}>
+          {EMOJI_CATS[catIdx].emojis.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => {
+                onSelect(emoji);
+              }}
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-[6px] text-[18px] transition-colors hover:bg-[#f5f5f5] active:scale-90"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 /**
- * Reações por post. Suporta múltiplas por usuário.
- * Clique faz toggle optimista + sync com servidor.
- * pendingRef evita cliques duplicados enquanto o POST está voando.
+ * Reações por post. Suporta múltiplas por usuário com qualquer emoji.
+ * Toggle otimista + sync com servidor. pendingRef evita duplo clique.
  */
 function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -376,7 +547,6 @@ function PostReactions({ postId }: { postId: number }) {
   const [open, setOpen] = useState(false);
   const pendingRef = useRef(false);
 
-  // Sincroniza com o servidor (GET). Chamado na montagem.
   function sync() {
     const token = authToken();
     if (!token) return;
@@ -389,7 +559,7 @@ function PostReactions({ postId }: { postId: number }) {
         setCounts(body.reactions ?? {});
         setMine(parseMine(body.mine));
       })
-      .catch(() => {/* sem rede, mantém vazio */});
+      .catch(() => {});
   }
 
   useEffect(() => {
@@ -402,20 +572,28 @@ function PostReactions({ postId }: { postId: number }) {
     pendingRef.current = true;
     setOpen(false);
 
-    // Optimistic toggle
     const isActive = mine.includes(emoji);
-    setCounts((prev) => ({
-      ...prev,
-      [emoji]: isActive
-        ? Math.max(0, (prev[emoji] ?? 1) - 1)
-        : (prev[emoji] ?? 0) + 1,
-    }));
+    // Optimistic update
+    setCounts((prev) => {
+      const next = { ...prev };
+      if (isActive) {
+        const val = (next[emoji] ?? 1) - 1;
+        if (val <= 0) delete next[emoji];
+        else next[emoji] = val;
+      } else {
+        next[emoji] = (next[emoji] ?? 0) + 1;
+      }
+      return next;
+    });
     setMine((prev) =>
       isActive ? prev.filter((e) => e !== emoji) : [...prev, emoji],
     );
 
     const token = authToken();
-    if (!token) { pendingRef.current = false; return; }
+    if (!token) {
+      pendingRef.current = false;
+      return;
+    }
 
     fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
       method: "POST",
@@ -429,19 +607,24 @@ function PostReactions({ postId }: { postId: number }) {
       .then((r) => (r.ok ? r.json() : null))
       .then((body) => {
         if (body) {
-          // Sincroniza com estado canônico do servidor
           setCounts(body.reactions ?? {});
           setMine(parseMine(body.mine));
         }
       })
-      .catch(() => {/* mantém optimista */})
-      .finally(() => { pendingRef.current = false; });
+      .catch(() => {})
+      .finally(() => {
+        pendingRef.current = false;
+      });
   }
 
-  const active = REACTION_EMOJIS.filter((e) => (counts[e] ?? 0) > 0);
+  // Emojis com pelo menos 1 reação, ordenados por contagem
+  const active = Object.entries(counts)
+    .filter(([, c]) => c > 0)
+    .sort(([, a], [, b]) => b - a)
+    .map(([e]) => e);
 
   return (
-    <div className="flex items-center gap-[6px]">
+    <div className="flex flex-wrap items-center gap-[5px]">
       {active.map((emoji) => (
         <button
           key={emoji}
@@ -450,20 +633,18 @@ function PostReactions({ postId }: { postId: number }) {
             e.stopPropagation();
             react(emoji);
           }}
-          className={`flex h-[22px] items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
+          className={`flex h-[24px] items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
             mine.includes(emoji)
               ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
               : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
           }`}
         >
-          <span className="text-[13px] leading-none">{emoji}</span>
+          <span className="text-[14px] leading-none">{emoji}</span>
           <span>{counts[emoji]}</span>
         </button>
       ))}
 
-      {/* Wrapper relative ancora o picker no proprio botao (em vez de na
-          linha de acoes inteira, que jogava o picker pra outro canto do post
-          no desktop e fazia o usuario clicar no emoji errado). */}
+      {/* Botão smiley que abre o picker */}
       <div className="relative">
         <button
           type="button"
@@ -471,11 +652,15 @@ function PostReactions({ postId }: { postId: number }) {
             e.stopPropagation();
             setOpen((o) => !o);
           }}
-          aria-label="Reagir"
-          className="flex h-[22px] w-[22px] items-center justify-center text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
+          aria-label="Reagir com emoji"
+          className={`flex h-[24px] w-[24px] items-center justify-center rounded-full transition-colors ${
+            open
+              ? "bg-[#fff1ea] text-[#ff4100]"
+              : "text-[#8d8d8d] hover:text-[#ff4100]"
+          }`}
         >
           <svg
-            className="h-[20px] w-[20px]"
+            className="h-[18px] w-[18px]"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -491,32 +676,10 @@ function PostReactions({ postId }: { postId: number }) {
         </button>
 
         {open && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen(false);
-              }}
-            />
-            {/* bottom-full + left-1/2 + -translate-x-1/2 -> picker fica
-                exatamente acima do botao, centralizado. Em mobile/desktop. */}
-            <div className="absolute bottom-full left-1/2 z-20 mb-[8px] flex -translate-x-1/2 gap-[2px] rounded-full bg-white p-[6px] shadow-[0px_8px_30px_rgba(0,0,0,0.14)]">
-              {REACTION_EMOJIS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    react(emoji);
-                  }}
-                  className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-[20px] transition-transform hover:scale-125"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </>
+          <EmojiPicker
+            onSelect={(emoji) => react(emoji)}
+            onClose={() => setOpen(false)}
+          />
         )}
       </div>
     </div>

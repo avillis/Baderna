@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\MembersController;
 use App\Http\Controllers\Api\MemberUnlocksController;
 use App\Http\Controllers\Api\RiotProfileController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\PostReactionsController;
 use App\Http\Controllers\Api\TitlesController;
 
 // ── Públicas (auth) ────────────────────────────────────────────────────
@@ -72,6 +73,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/error-logs', [ErrorLogsController::class, 'store']);
     Route::delete('/posts/{id}', [PostController::class, 'destroy'])->whereNumber('id');
     Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->whereNumber('id');
+
+    // Reações por emoji
+    Route::get('/posts/{id}/reactions', [PostReactionsController::class, 'show'])->whereNumber('id');
+    Route::post('/posts/{id}/reactions', [PostReactionsController::class, 'toggle'])->whereNumber('id');
 
     // Comentários em posts (mesma shape do MemberCommentsController)
     Route::get('/posts/{id}/comments', [PostCommentsController::class, 'index'])->whereNumber('id');
