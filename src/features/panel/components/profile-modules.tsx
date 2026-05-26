@@ -235,6 +235,19 @@ function TopChampionsModuleCard({
   );
 }
 
+/** Retorna props de estilo para o nome a partir de um activeNameId. */
+function nameStyleProps(styleId: string | null): {
+  style?: React.CSSProperties;
+  className?: string;
+} {
+  if (!styleId) return {};
+  const ns = NAME_BY_ID[styleId];
+  if (!ns) return {};
+  if (ns.className) return { className: ns.className };
+  if (ns.color) return { style: { color: ns.color } };
+  return {};
+}
+
 function DuoModuleCard({
   duoName,
   duoFullName,
@@ -250,9 +263,7 @@ function DuoModuleCard({
   duoStyleId: string | null;
   onEdit?: () => void;
 }) {
-  const nameColor = duoStyleId
-    ? (NAME_BY_ID[duoStyleId]?.color ?? "#0f0f0f")
-    : "#0f0f0f";
+  const nsp = nameStyleProps(duoStyleId);
 
   if (!duoSlug) {
     // Estado vazio
@@ -334,8 +345,8 @@ function DuoModuleCard({
         <div className="min-w-0">
           {/* Nickname estilizado */}
           <p
-            className="truncate text-[14px] font-bold leading-[1.15] tracking-[-0.03em]"
-            style={{ color: nameColor }}
+            className={`truncate text-[14px] font-bold leading-[1.15] tracking-[-0.03em] ${nsp.className ?? ""}`}
+            style={nsp.style}
           >
             {duoName ?? duoFullName ?? "—"}
           </p>

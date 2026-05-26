@@ -155,11 +155,26 @@ export function useNotifications() {
     [data]
   );
 
+  const removeAll = useCallback(async () => {
+    if (data.notifications.length === 0) return;
+    const ids = data.notifications.map((n) => n.id);
+
+    // Optimistic: zera tudo na hora
+    const empty: ApiNotificationResponse = { unread_count: 0, notifications: [] };
+    setData(empty);
+    writeCache(empty);
+
+    // Persiste no backend em paralelo (silencioso — se falhar, o próximo
+    // polling dos 15s vai ressincronizar)
+    await Promise.allSettled(ids.map((id) => deleteOne(id)));
+  }, [data.notifications]);
+
   return {
     notifications: data.notifications,
     unreadCount: data.unread_count,
     markAsRead,
     remove,
+    removeAll,
     refresh: loadFromServer,
   };
 }

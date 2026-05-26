@@ -3,7 +3,19 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { NAME_BY_ID } from "@/features/panel/names-data";
+import { NAME_BY_ID, type NameStyle } from "@/features/panel/names-data";
+
+function nameStyleProps(styleId: string | null): {
+  style?: React.CSSProperties;
+  className?: string;
+} {
+  if (!styleId) return {};
+  const ns: NameStyle | undefined = NAME_BY_ID[styleId];
+  if (!ns) return {};
+  if (ns.className) return { className: ns.className };
+  if (ns.color) return { style: { color: ns.color } };
+  return {};
+}
 
 export type DuoCandidate = {
   userId: number;
@@ -164,24 +176,12 @@ export function DuoPickerModal({
               }`}
             >
               <div
-                className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full ring-2 transition-all ${
+                className={`h-[42px] w-[42px] shrink-0 rounded-full ring-2 transition-all ${
                   selected === null
-                    ? "bg-[#f4f0ed] ring-[#ff4100]"
+                    ? "bg-[#f0f0f0] ring-[#ff4100]"
                     : "bg-[#f0f0f0] ring-transparent"
                 }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="h-[14px] w-[14px] text-[#8d8d8d]"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              </div>
+              />
               <span className="text-[13px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
                 Sem duo
               </span>
@@ -211,9 +211,7 @@ export function DuoPickerModal({
             <div className="flex flex-col gap-[4px]">
               {filtered.map((candidate) => {
                 const isSelected = selected === candidate.userId;
-                const nameColor = candidate.activeNameId
-                  ? (NAME_BY_ID[candidate.activeNameId]?.color ?? "#0f0f0f")
-                  : "#0f0f0f";
+                const nameColor = nameStyleProps(candidate.activeNameId);
                 return (
                   <button
                     key={candidate.userId}
@@ -245,8 +243,8 @@ export function DuoPickerModal({
                     </div>
                     <div className="min-w-0 text-left">
                       <p
-                        className="truncate text-[13px] font-bold tracking-[-0.02em]"
-                        style={{ color: nameColor }}
+                        className={`truncate text-[13px] font-bold tracking-[-0.02em] ${nameColor.className ?? ""}`}
+                        style={nameColor.style}
                       >
                         {candidate.nickname}
                       </p>

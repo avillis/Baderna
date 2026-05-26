@@ -15,7 +15,7 @@ export default function NotificationBell({
    *  "below": abre pra baixo via portal, ancorado à direita do viewport. */
   placement?: "up" | "above" | "below";
 }) {
-  const { notifications, unreadCount, markAsRead, remove } = useNotifications();
+  const { notifications, unreadCount, markAsRead, remove, removeAll } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
@@ -73,11 +73,19 @@ export default function NotificationBell({
         <h3 className="text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
           Notificações
         </h3>
-        {unreadCount > 0 && (
+        {unreadCount > 0 ? (
           <span className="rounded-full bg-[#fff4f4] px-[8px] py-[4px] text-[12px] font-semibold text-[#ff4100]">
             {unreadCount} novas
           </span>
-        )}
+        ) : notifications.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => removeAll?.()}
+            className="rounded-full bg-[#f0f0f0] px-[8px] py-[4px] text-[12px] font-semibold text-[#8d8d8d] transition-colors hover:bg-[#e5e5e5] hover:text-[#0f0f0f]"
+          >
+            Limpar
+          </button>
+        ) : null}
       </div>
 
       <div className="max-h-[320px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
