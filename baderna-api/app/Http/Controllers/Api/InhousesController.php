@@ -43,10 +43,10 @@ class InhousesController extends Controller
             'created_by_user_id' => $request->user()->id,
         ]);
 
-        // Dispara webhook do Discord (no-op se DISCORD_INHOUSE_WEBHOOK_URL
-        // não estiver no .env). Defensivo: nunca derruba a resposta da API
-        // se o Discord estiver fora.
-        DiscordWebhook::notifyInhouseCreated($inhouse, $request->user());
+        // Random mode: todos já vêm com side blue/red → completo na criação.
+        // Leader mode: a maioria começa com side='pool' (espera o draft) →
+        // a notificação rola depois no update(), quando o time fica completo.
+        $this->maybeNotifyDiscord($inhouse, $request->user());
 
         return response()->json($this->serialize($inhouse), 201);
     }
@@ -79,6 +79,12 @@ class InhousesController extends Controller
 
         $inhouse->update(['payload' => $merged]);
 
+        // Dispara o webhook do Discord quando o inhouse "fica pronto" pela
+        // primeira vez (ex.: último player que estava no pool foi draftado
+        // no modo líder). maybeNotifyDiscord checa a flag interna pra não
+        // notificar duas vezes.
+        $this->maybeNotifyDiscord($inhouse->fresh(), $inhouse->createdBy);
+
         return response()->json($this->serialize($inhouse->fresh()));
     }
 
@@ -104,6 +110,44 @@ class InhousesController extends Controller
             'createdAt' => $i->created_at?->getTimestampMs() ?? 0,
             'createdBy' => $i->created_by_user_id,
         ];
+    }
+
+    /**
+     * Dispara o webhook do Discord se (a) o inhouse está completo (ninguém
+     * no side='pool') E (b) ainda não foi notificado. Marca o flag
+     * `discordNotified` no payload pra garantir idempotência — mesmo que
+     * o líder mova players pra/do pool depois, não notifica de novo.
+     */
+    private function maybeNotifyDiscord(Inhouse $inhouse, $creator): void
+    {
+        $payload = is_array($inhouse->payload) ? $inhouse->payload : [];
+        if (! empty($payload['discordNotified'])) {
+            return; // já notificado, evita spam no canal
+        }
+        if (! $this->isInhouseComplete($payload)) {
+            return; // ainda tem player no pool
+        }
+
+        DiscordWebhook::notifyInhouseCreated($inhouse, $creator);
+
+        // Marca como notificado (idempotência). Não usa updated_at fresh
+        // pra não disparar listeners do model — saveQuietly seria ideal,
+        // mas update direto também funciona.
+        $inhouse->update([
+            'payload' => array_merge($payload, ['discordNotified' => true]),
+        ]);
+    }
+
+    /** Inhouse "completo" = nenhum player em side='pool'. */
+    private function isInhouseComplete(array $payload): bool
+    {
+        $players = $payload['players'] ?? [];
+        if (! is_array($players) || empty($players)) return false;
+        foreach ($players as $p) {
+            if (! is_array($p)) continue;
+            if (($p['side'] ?? null) === 'pool') return false;
+        }
+        return true;
     }
 
     private function generateShortCode(): string
