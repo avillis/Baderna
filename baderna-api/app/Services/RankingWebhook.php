@@ -173,8 +173,12 @@ class RankingWebhook
         return ['baderna' => $rows, 'flex' => $flex];
     }
 
-    /** Linha de cada player no embed (PDL ao invés de LP). */
-    private static function formatLine(int $position, array $r): string
+    /**
+     * Linha de cada player no embed (PDL ao invés de LP).
+     * $includeRank=false -> só nome (usado no Ranking Baderna oficial,
+     * que é por posição e não tem a ver com elo do LoL).
+     */
+    private static function formatLine(int $position, array $r, bool $includeRank): string
     {
         $medal = match ($position) {
             1 => '🥇',
@@ -183,14 +187,17 @@ class RankingWebhook
             default => '',
         };
 
-        if ($r['hasRank']) {
-            $tierLabel = self::TIER_PT[$r['tier']] ?? $r['tier'];
-            $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
-                ? "{$tierLabel} · {$r['lp']} PDL"
-                : "{$tierLabel} {$r['division']} · {$r['lp']} PDL";
-            $rankPart = " · `{$rankStr}`";
-        } else {
-            $rankPart = " · _sem rank_";
+        $rankPart = '';
+        if ($includeRank) {
+            if ($r['hasRank']) {
+                $tierLabel = self::TIER_PT[$r['tier']] ?? $r['tier'];
+                $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
+                    ? "{$tierLabel} · {$r['lp']} PDL"
+                    : "{$tierLabel} {$r['division']} · {$r['lp']} PDL";
+                $rankPart = " · `{$rankStr}`";
+            } else {
+                $rankPart = " · _sem rank_";
+            }
         }
 
         // Top 3 leva medalha (substitui o número); 4+ usa número plano.
@@ -200,19 +207,21 @@ class RankingWebhook
     }
 
     /** Formata uma lista inteira (multi-linha). */
-    private static function formatList(array $entries): string
+    private static function formatList(array $entries, bool $includeRank): string
     {
         $lines = [];
         foreach ($entries as $i => $r) {
-            $lines[] = self::formatLine($i + 1, $r);
+            $lines[] = self::formatLine($i + 1, $r, $includeRank);
         }
         return implode("\n", $lines);
     }
 
     private static function buildBody(array $lists): array
     {
-        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n" . self::formatList($lists['baderna']);
-        $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n" . self::formatList($lists['flex']);
+        // Baderna = só nomes (ranking por posição, não tem a ver com elo).
+        // Flex = nomes + rank LoL.
+        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n" . self::formatList($lists['baderna'], includeRank: false);
+        $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n" . self::formatList($lists['flex'], includeRank: true);
 
         // Linha vazia com zero-width-space entre as duas seções pra dar respiro.
         // Discord colapsa \n\n\n em um único parágrafo; o caractere invisível
