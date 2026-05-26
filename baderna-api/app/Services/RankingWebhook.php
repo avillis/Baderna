@@ -40,6 +40,36 @@ class RankingWebhook
         'CHALLENGER'  => 'Desafiante',
     ];
 
+    /**
+     * Custom emojis do servidor da Baderna (formato Discord: <:nome:id>).
+     * Preenche os IDs depois que o usuário enviar `\:emoji:` no Discord
+     * e mandar o código cru. Strings vazias = sem emoji custom (cai num
+     * fallback simples no formatLine).
+     *
+     * Esmeralda não tem emoji ainda → usa PLATINUM como fallback.
+     */
+    private const TIER_EMOJI = [
+        'IRON'        => '<:ferro:0>',
+        'BRONZE'      => '<:bronze:0>',
+        'SILVER'      => '<:prata:0>',
+        'GOLD'        => '<:ouro:0>',
+        'PLATINUM'    => '<:platina:0>',
+        // 'EMERALD'  → resolveTierEmoji() cai pra PLATINUM
+        'DIAMOND'     => '<:diamante:0>',
+        'MASTER'      => '<:mestre:0>',
+        'GRANDMASTER' => '<:grao_mestre:0>',
+        'CHALLENGER'  => '<:desafiante:0>',
+    ];
+
+    /** Pega o emoji do tier; Esmeralda cai pra Platina (até o user subir o asset). */
+    private static function tierEmoji(string $tier): string
+    {
+        if ($tier === 'EMERALD') {
+            return self::TIER_EMOJI['PLATINUM'] ?? '';
+        }
+        return self::TIER_EMOJI[$tier] ?? '';
+    }
+
     /** Tier index pro elo score (maior = melhor). Mesma ordem do front. */
     private const TIER_ORDER = [
         'IRON'        => 0,
@@ -194,7 +224,15 @@ class RankingWebhook
                 $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
                     ? "{$tierLabel} · {$r['lp']} PDL"
                     : "{$tierLabel} {$r['division']} · {$r['lp']} PDL";
-                $rankPart = " · `{$rankStr}`";
+
+                $emoji = self::tierEmoji($r['tier']);
+                $emojiConfigured = $emoji !== '' && ! str_contains($emoji, ':0>');
+
+                $rankPart = $emojiConfigured
+                    // Tem emoji do servidor → ele faz o trabalho visual, texto fica plano
+                    ? " · {$emoji} {$rankStr}"
+                    // Ainda sem emoji → mantém o pill mono pra ter algum destaque visual
+                    : " · `{$rankStr}`";
             } else {
                 $rankPart = " · _sem rank_";
             }
