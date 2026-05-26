@@ -260,30 +260,26 @@ export function PostCard({
           </div>
         )}
 
-        {/* Linha de ações em 2 fileiras:
-            1. Like + comentário (+ data se expanded)
-            2. Reações (scroll horizontal com setinhas) + bookmark */}
-        <div className="relative mt-[18px] space-y-[10px]">
-          <div className="flex items-center gap-x-[14px]">
-            <LikeButton
-              liked={post.liked}
-              count={post.likesCount}
-              onClick={() => onLike?.(post.id)}
-            />
-            <CommentButton
-              count={post.commentsCount}
-              href={`/post/${post.shortCode || post.id}`}
-            />
-            {expanded && (
-              <span className="ml-auto text-[12px] text-[#8d8d8d]">
-                {formatPostDateLong(post.createdAt)}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-[6px]">
-            <PostReactions postId={post.id} />
-            <BookmarkButton />
-          </div>
+        {/* Linha única de ações: like + comentários + reações (rolam horizontal
+            com setinhas quando estoura) + bookmark. min-w-0 no PostReactions
+            permite que ele encolha em vez de quebrar a linha. */}
+        <div className="relative mt-[18px] flex items-center gap-x-[14px]">
+          <LikeButton
+            liked={post.liked}
+            count={post.likesCount}
+            onClick={() => onLike?.(post.id)}
+          />
+          <CommentButton
+            count={post.commentsCount}
+            href={`/post/${post.shortCode || post.id}`}
+          />
+          <PostReactions postId={post.id} />
+          <BookmarkButton />
+          {expanded && (
+            <span className="text-[12px] text-[#8d8d8d]">
+              {formatPostDateLong(post.createdAt)}
+            </span>
+          )}
         </div>
       </div>
 
