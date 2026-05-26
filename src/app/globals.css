@@ -385,6 +385,14 @@ button {
      smoothly into the drift.
    - Rotation: continues linearly throughout so pieces keep flipping.
    Uses linear timing so the sampled curve stays faithful. */
+/* Marquee estilo player de música — desliza o título até o fim,
+   pausa, volta e repete. Distância controlada via --md (calc em JS). */
+@keyframes marquee-title {
+  0%, 18%  { transform: translateX(0); }
+  75%, 93% { transform: translateX(var(--md, 0px)); }
+  100%     { transform: translateX(0); }
+}
+
 @keyframes capas-confetti-physics {
   0% {
     transform: translate(-50%, -50%) rotate(0deg);

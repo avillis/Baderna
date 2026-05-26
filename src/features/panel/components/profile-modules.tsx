@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { StyledName } from "@/features/panel/components/styled-name";
 import { formatChampionName } from "@/features/panel/champion-utils";
@@ -402,6 +403,41 @@ function GameEditButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+/** Texto que desliza horizontalmente (estilo player de música) quando
+ *  ultrapassa a largura do container. Fica parado se couber. */
+function MarqueeTitle({ text, className }: { text: string; className: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [distance, setDistance] = useState(0);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const text = textRef.current;
+    if (!container || !text) return;
+    const overflow = text.scrollWidth - container.clientWidth;
+    setDistance(Math.max(0, overflow));
+  }, [text]);
+
+  return (
+    <div ref={containerRef} className="overflow-hidden">
+      <span
+        ref={textRef}
+        className={`inline-block whitespace-nowrap ${className}`}
+        style={
+          distance > 0
+            ? ({
+                "--md": `-${distance}px`,
+                animation: "marquee-title 6s ease-in-out infinite",
+              } as React.CSSProperties)
+            : undefined
+        }
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
+
 function FavoriteGameModuleCard({
   title,
   coverUrl,
@@ -435,9 +471,10 @@ function FavoriteGameModuleCard({
           <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
             Jogo favorito
           </p>
-          <p className="mt-[6px] line-clamp-1 text-[22px] font-bold leading-[1.05] tracking-[-0.04em] text-white">
-            {title}
-          </p>
+          <MarqueeTitle
+            text={title ?? ""}
+            className="mt-[6px] text-[22px] font-bold leading-[1.05] tracking-[-0.04em] text-white"
+          />
         </div>
       </article>
     );
