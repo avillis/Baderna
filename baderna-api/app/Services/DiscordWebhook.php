@@ -50,7 +50,6 @@ class DiscordWebhook
 
         $payload    = is_array($inhouse->payload) ? $inhouse->payload : [];
         $players    = is_array($payload['players'] ?? null) ? $payload['players'] : [];
-        $playerCount = count($players);
         $isLeaderMode = ($payload['mode'] ?? null) === 'leader';
         $modeLabel  = $isLeaderMode ? 'Líder' : 'Aleatório';
 
@@ -159,10 +158,11 @@ class DiscordWebhook
             $description = "_Aguardando os líderes draftarem os times..._\n\n{$description}";
         }
 
-        // Fields embaixo do bloco vs (compactos, na horizontal): código + modo + total.
+        // Fields embaixo do bloco vs (compactos, na horizontal): código + modo.
         // Spacer com zero-width-space na frente cria respiro entre o final
         // da description (Líder · X / lista de membros) e a fileira de fields —
         // Discord renderiza fields colados na description sem isso.
+        // Removido o campo "Jogadores" — inhouse é sempre 5v5, info redundante.
         $fields = [
             [
                 'name'   => "\u{200B}",
@@ -177,11 +177,6 @@ class DiscordWebhook
             [
                 'name'   => '⚔️ Modo',
                 'value'  => $modeLabel,
-                'inline' => true,
-            ],
-            [
-                'name'   => '👥 Jogadores',
-                'value'  => "{$playerCount}/10",
                 'inline' => true,
             ],
         ];
