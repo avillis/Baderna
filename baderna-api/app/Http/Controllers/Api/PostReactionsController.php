@@ -34,10 +34,11 @@ class PostReactionsController extends Controller
             $reactions[$row->emoji] = (int) $row->cnt;
         }
 
-        // Emoji do user logado neste post (máx 1)
         $mine = PostReaction::where('post_id', $id)
             ->where('user_id', $userId)
-            ->value('emoji'); // null se não reagiu
+            ->pluck('emoji')
+            ->values()
+            ->toArray();
 
         return response()->json(['reactions' => $reactions, 'mine' => $mine]);
     }
@@ -45,10 +46,10 @@ class PostReactionsController extends Controller
     /**
      * POST /posts/{id}/reactions
      * Corpo: { emoji: "👍" }
-     * Uma reação por usuário por post. Clicar no mesmo emoji remove; clicar
-     * em outro troca (remove o anterior, adiciona o novo).
+     * Toggle: adiciona se não existe, remove se já existe.
+     * Múltiplos emojis por usuário por post são permitidos.
      *
-     * Response: { reactions: { ... }, mine: string|null }
+     * Response: { reactions: { ... }, mine: string[] }
      */
     public function toggle(Request $request, int $id)
     {
@@ -61,15 +62,14 @@ class PostReactionsController extends Controller
         $emoji  = $data['emoji'];
         $userId = $request->user()->id;
 
-        $currentEmoji = PostReaction::where('user_id', $userId)
+        $existing = PostReaction::where('user_id', $userId)
             ->where('post_id', $id)
-            ->value('emoji'); // null se não reagiu
+            ->where('emoji', $emoji)
+            ->first();
 
-        // Remove TODAS as reações do user neste post (limpa duplicatas antigas).
-        PostReaction::where('user_id', $userId)->where('post_id', $id)->delete();
-
-        // Só recria se não era o mesmo emoji (toggle off = não recria).
-        if ($currentEmoji !== $emoji) {
+        if ($existing) {
+            $existing->delete();
+        } else {
             PostReaction::create([
                 'user_id' => $userId,
                 'post_id' => $id,
