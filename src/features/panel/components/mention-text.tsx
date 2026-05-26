@@ -42,7 +42,7 @@ export function renderWithMentions(
       <Link
         key={`m-${key++}`}
         href={`/membro/${member.id}`}
-        className="font-semibold text-[#ff4100] hover:underline"
+        className="font-semibold text-[#ff4100] transition-opacity hover:opacity-70"
         onClick={(e) => e.stopPropagation()}
       >
         @{member.nickname}
