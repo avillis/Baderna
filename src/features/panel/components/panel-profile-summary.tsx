@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { NAME_STYLES } from "@/features/panel/names-data";
 import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
@@ -57,6 +57,8 @@ type PanelProfileSummaryProps = {
   badernaRank?: number;
   /** Splash do banner — usado de fundo no cartão compartilhável. */
   bannerSrc?: string;
+  /** Botão extra (ex: "Editar cards") exibido junto às ações no mobile. */
+  editButton?: ReactNode;
 };
 
 export function PanelProfileSummary({
@@ -74,6 +76,7 @@ export function PanelProfileSummary({
   onCompare,
   badernaRank,
   bannerSrc,
+  editButton,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
@@ -264,6 +267,7 @@ export function PanelProfileSummary({
           badernaRank={badernaRank}
           bannerSrc={bannerSrc}
           onCompare={onCompare}
+          editButton={editButton}
         />
       </div>
 

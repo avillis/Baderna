@@ -428,12 +428,8 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 onCompare={handleCompare}
                 badernaRank={badernaRank}
                 bannerSrc={profile.bannerSrc}
+                editButton={editCardsButton}
               />
-              {canEditModules && (
-                <div className="mt-[10px] flex px-[16px] sm:px-0 sm:pl-[42px] xl:hidden">
-                  {editCardsButton}
-                </div>
-              )}
             </div>
 
             <div className="xl:pr-[26px]">
@@ -452,7 +448,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 <PanelGameModeToggle />
               </div>
             </div>
-            <div className="mt-[24px] mb-4 flex justify-center xl:hidden">
+            <div className="mt-[32px] mb-4 flex justify-center xl:hidden">
               <PanelGameModeToggle />
             </div>
             <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
