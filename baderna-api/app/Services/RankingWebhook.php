@@ -200,71 +200,91 @@ class RankingWebhook
         return ['baderna' => $rows, 'flex' => $flex];
     }
 
-    /**
-     * Linha de cada player no embed (PDL ao invés de LP).
-     * $includeRank=false -> só nome (usado no Ranking Baderna oficial,
-     * que é por posição e não tem a ver com elo do LoL).
-     */
-    private static function formatLine(int $position, array $r, bool $includeRank): string
+    /** Prefixo de posição: medalha pro top 3, número pro resto. */
+    private static function positionPrefix(int $position): string
     {
-        $medal = match ($position) {
+        return match ($position) {
             1 => '🥇',
             2 => '🥈',
             3 => '🥉',
-            default => '',
+            default => "{$position}.",
         };
-
-        $rankPart = '';
-        if ($includeRank) {
-            if ($r['hasRank']) {
-                $tierLabel = self::TIER_PT[$r['tier']] ?? $r['tier'];
-                $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
-                    ? "{$tierLabel} · {$r['lp']} PDL"
-                    : "{$tierLabel} {$r['division']} · {$r['lp']} PDL";
-
-                $emoji = self::tierEmoji($r['tier']);
-                $emojiConfigured = $emoji !== '' && ! str_contains($emoji, ':0>');
-
-                $rankPart = $emojiConfigured
-                    // Tem emoji do servidor → ele faz o trabalho visual, texto fica plano
-                    ? " · {$emoji} {$rankStr}"
-                    // Ainda sem emoji → mantém o pill mono pra ter algum destaque visual
-                    : " · `{$rankStr}`";
-            } else {
-                $rankPart = " · _sem rank_";
-            }
-        }
-
-        // Top 3 leva medalha (substitui o número); 4+ usa número plano.
-        $prefix = $medal !== '' ? $medal : "{$position}.";
-
-        return "{$prefix} **{$r['nickname']}**{$rankPart}";
     }
 
-    /** Formata uma lista inteira (multi-linha). */
-    private static function formatList(array $entries, bool $includeRank): string
+    /** Linha do "nome" — vai na coluna esquerda (Jogadores). */
+    private static function formatNameLine(int $position, array $r): string
+    {
+        return self::positionPrefix($position) . " **{$r['nickname']}**";
+    }
+
+    /** Linha do "rank" — vai na coluna direita (Ranque). */
+    private static function formatRankLine(array $r): string
+    {
+        if (! $r['hasRank']) return '_sem rank_';
+
+        $tierLabel = self::TIER_PT[$r['tier']] ?? $r['tier'];
+        $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
+            ? "{$tierLabel} · {$r['lp']} PDL"
+            : "{$tierLabel} {$r['division']} · {$r['lp']} PDL";
+
+        $emoji = self::tierEmoji($r['tier']);
+        $emojiConfigured = $emoji !== '' && ! str_contains($emoji, ':0>');
+
+        return $emojiConfigured
+            ? "{$emoji} {$rankStr}"
+            : "`{$rankStr}`";
+    }
+
+    /** Lista single-column de nomes (Ranking Baderna). */
+    private static function formatBadernaList(array $entries): string
     {
         $lines = [];
         foreach ($entries as $i => $r) {
-            $lines[] = self::formatLine($i + 1, $r, $includeRank);
+            $lines[] = self::formatNameLine($i + 1, $r);
         }
         return implode("\n", $lines);
     }
 
+    /** Constrói as duas colunas (Jogadores / Ranque) do Ranking Flex. */
+    private static function buildFlexColumns(array $entries): array
+    {
+        $names = [];
+        $ranks = [];
+        foreach ($entries as $i => $r) {
+            $names[] = self::formatNameLine($i + 1, $r);
+            $ranks[] = self::formatRankLine($r);
+        }
+        return [
+            'names' => implode("\n", $names),
+            'ranks' => implode("\n", $ranks),
+        ];
+    }
+
     private static function buildBody(array $lists): array
     {
-        // Baderna = só nomes (ranking por posição, não tem a ver com elo).
-        // Flex = nomes + rank LoL.
-        // \n\n após cada header cria linha em branco entre o título do bloco
-        // e o primeiro colocado.
-        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n\n" . self::formatList($lists['baderna'], includeRank: false);
-        $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n\n" . self::formatList($lists['flex'], includeRank: true);
+        // Baderna = só nomes (ranking por posição, não tem a ver com elo do LoL).
+        // Fica no description em coluna única.
+        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n\n" . self::formatBadernaList($lists['baderna']);
 
-        // Linhas invisíveis (ZWS) entre os dois blocos pra criar um respiro
-        // visível — Discord colapsa newlines sucessivas, mas linhas com
-        // caractere zero-width permanecem visíveis. Duas linhas = gap maior.
-        // No início, ZWS pra separar do título do embed.
-        $description = "\u{200B}\n\n{$bademaBlock}\n\n\u{200B}\n\u{200B}\n\n{$flexBlock}";
+        // Flex vai em DOIS FIELDS inline (nome | rank) pra criar layout de
+        // duas colunas alinhadas, igual a ref do user. O header "⚔️ Ranking
+        // Flex" fica no final do description pra cair logo antes dos fields.
+        $flexCols = self::buildFlexColumns($lists['flex']);
+
+        $description = "\u{200B}\n\n{$bademaBlock}\n\n\u{200B}\n\u{200B}\n\n**⚔️ Ranking Flex** _(por elo)_";
+
+        $fields = [
+            [
+                'name'   => 'Jogadores',
+                'value'  => $flexCols['names'],
+                'inline' => true,
+            ],
+            [
+                'name'   => 'Ranque',
+                'value'  => $flexCols['ranks'],
+                'inline' => true,
+            ],
+        ];
 
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
@@ -276,6 +296,7 @@ class RankingWebhook
                 'description' => $description,
                 'color'       => self::BRAND_COLOR,
                 'url'         => "{$siteBase}/ranking",
+                'fields'      => $fields,
                 'footer'      => ['text' => 'Atualizado a cada hora · bdrn.com.br/ranking'],
                 'timestamp'   => now()->toIso8601String(),
             ]],
