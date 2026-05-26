@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostLike;
+use App\Models\User;
+use App\Notifications\MemberNotification;
 use App\Support\Mentions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -141,6 +143,45 @@ class PostController extends Controller
         }
         $count = PostLike::where('post_id', $id)->count();
         return response()->json(['liked' => $liked, 'likesCount' => $count]);
+    }
+
+    /**
+     * Reporta um post. Notifica todos os admins via MemberNotification.
+     * Rate-limited no nível de rota (3/h por usuário) pra evitar spam.
+     * - Não permite reportar próprio post.
+     * - Idempotente do ponto de vista do usuário (sempre retorna 204), mas
+     *   o rate limit segura múltiplos reports do mesmo user em sequência.
+     */
+    public function report(Request $request, int $id)
+    {
+        $post = Post::find($id);
+        if (!$post) {
+            return response()->json(['error' => 'Post não encontrado.'], 404);
+        }
+        $reporter = $request->user();
+        if ($post->user_id === $reporter->id) {
+            return response()->json(['error' => 'Não dá pra reportar o próprio post.'], 422);
+        }
+
+        // Notifica todos os admins (exceto o próprio reporter caso seja admin
+        // e exceto o autor caso seja admin — evitar self-notify).
+        $admins = User::where('is_admin', true)
+            ->where('id', '!=', $reporter->id)
+            ->where('id', '!=', $post->user_id)
+            ->get();
+
+        $reporterName = Mentions::authorDisplayName($reporter);
+        $actionUrl = '/post/' . ($post->short_code ?: $post->id);
+
+        foreach ($admins as $admin) {
+            $admin->notify(new MemberNotification(
+                "{$reporterName} reportou um post",
+                $actionUrl,
+                $reporter->avatar_src,
+            ));
+        }
+
+        return response()->json(null, 204);
     }
 
     public function uploadImage(Request $request)

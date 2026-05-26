@@ -74,6 +74,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/error-logs', [ErrorLogsController::class, 'store']);
     Route::delete('/posts/{id}', [PostController::class, 'destroy'])->whereNumber('id');
     Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->whereNumber('id');
+    // Reportar — throttle:3,60 = 3 reports por hora por user, defensiva contra abuso.
+    Route::post('/posts/{id}/report', [PostController::class, 'report'])
+        ->whereNumber('id')
+        ->middleware('throttle:3,60');
 
     // Reações por emoji
     Route::get('/posts/{id}/reactions', [PostReactionsController::class, 'show'])->whereNumber('id');

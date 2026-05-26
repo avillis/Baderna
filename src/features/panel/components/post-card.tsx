@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Flag, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -68,6 +68,50 @@ export function PostCard({
       toast.show("Não foi possível copiar o link.");
     }
   }
+
+  /** Copia o texto do post pro clipboard. */
+  async function handleCopyText() {
+    setMenuOpen(false);
+    if (!post.content) return;
+    try {
+      await navigator.clipboard.writeText(post.content);
+      toast.show("Texto copiado!", "success");
+    } catch {
+      toast.show("Não foi possível copiar o texto.");
+    }
+  }
+
+  /** Reporta o post aos admins. Rate-limited no backend (3/h por usuário). */
+  async function handleReport() {
+    setMenuOpen(false);
+    const token = authToken();
+    if (!token) return;
+    try {
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+      const res = await fetch(`${apiBase}/posts/${post.id}/report`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        toast.show("Post reportado. Obrigado!", "success");
+      } else if (res.status === 429) {
+        toast.show("Você já reportou muitos posts recentemente. Tenta mais tarde.");
+      } else {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.show(body.error ?? "Não foi possível reportar o post.");
+      }
+    } catch {
+      toast.show("Não foi possível reportar o post.");
+    }
+  }
+
+  // Esconde "Reportar" e "Ver perfil" quando o post é seu — não faz sentido
+  // reportar a si mesmo, e o autor já está visualmente óbvio no header.
+  const isOwnPost = user?.id === post.author.id;
 
   // Pega o membro ATUAL pra puxar nickname/name/estilo de nome. O backend
   // salva snapshot no payload do post; aqui sobrescreve com a versão fresh
@@ -247,6 +291,39 @@ export function PostCard({
                     </svg>
                     Compartilhar
                   </button>
+                  {post.content && (
+                    <button
+                      type="button"
+                      onClick={handleCopyText}
+                      className="flex w-full items-center gap-[8px] border-t border-[#f4f4f4] px-[14px] py-[10px] text-[13px] font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f4f4f4]"
+                    >
+                      <Copy className="h-[14px] w-[14px]" strokeWidth={2} />
+                      Copiar texto
+                    </button>
+                  )}
+                  {!isOwnPost && authorSlug && (
+                    <Link
+                      href={`/membro/${authorSlug}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-[8px] border-t border-[#f4f4f4] px-[14px] py-[10px] text-[13px] font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f4f4f4]"
+                    >
+                      <User className="h-[14px] w-[14px]" strokeWidth={2} />
+                      Ver perfil do autor
+                    </Link>
+                  )}
+                  {!isOwnPost && (
+                    <button
+                      type="button"
+                      onClick={handleReport}
+                      className="flex w-full items-center gap-[8px] border-t border-[#f4f4f4] px-[14px] py-[10px] text-[13px] font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f4f4f4]"
+                    >
+                      <Flag className="h-[14px] w-[14px]" strokeWidth={2} />
+                      Reportar
+                    </button>
+                  )}
                   {canDelete && (
                     <button
                       type="button"
