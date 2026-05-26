@@ -1239,3 +1239,26 @@ button {
 .modal-panel-out {
   animation: modal-panel-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
 }
+
+/* Dropdown entrance/exit — abre pra cima (sidebar) */
+@keyframes dropdown-up-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+@keyframes dropdown-up-out {
+  from { opacity: 1; transform: scale(1)    translateY(0);   }
+  to   { opacity: 0; transform: scale(0.95) translateY(8px); }
+}
+/* Dropdown entrance/exit — abre pra baixo */
+@keyframes dropdown-down-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+@keyframes dropdown-down-out {
+  from { opacity: 1; transform: scale(1)    translateY(0);    }
+  to   { opacity: 0; transform: scale(0.95) translateY(-8px); }
+}
+.dropdown-up-in   { animation: dropdown-up-in   0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dropdown-up-out  { animation: dropdown-up-out  0.14s cubic-bezier(0.4, 0, 1, 1)     both; }
+.dropdown-down-in { animation: dropdown-down-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dropdown-down-out{ animation: dropdown-down-out 0.14s cubic-bezier(0.4, 0, 1, 1)    both; }

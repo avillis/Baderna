@@ -171,17 +171,15 @@ function SidebarIconButton({
 
 function AccountDropdown({
   onClose,
+  registerClose,
   anchorRect,
   dropdownRef,
   placement = "right",
 }: {
   onClose: () => void;
+  registerClose?: (fn: () => void) => void;
   anchorRect: DOMRect;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
-  /** "right": cresce pra direita do anchor (desktop sidebar). "below":
-   *  cresce pra baixo do anchor, alinhado à direita do anchor (mobile header
-   *  antigo). "above": cresce pra cima do anchor, alinhado à esquerda do
-   *  viewport (usado no drawer mobile, onde o botão fica embaixo). */
   placement?: "right" | "below" | "above";
 }) {
   const mobileDrawerDropdownLeft = 20;
@@ -213,17 +211,31 @@ function AccountDropdown({
   const displayFullName = account.name || user?.name || panelProfile.fullName;
   const displayEmail = account.email || user?.email || panelProfile.email;
 
+  function handleClose() {
+    setClosing(true);
+  }
+
   async function handleLogout() {
-    onClose();
+    handleClose();
     await logout();
     router.push("/entrar");
   }
+
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    registerClose?.(() => setClosing(true));
+  }, [registerClose]);
+
+  const directionClass =
+    placement === "below" ? "dropdown-down" : "dropdown-up";
 
   return createPortal(
     <div
       ref={dropdownRef}
       style={positionStyle}
-      className="w-[240px] overflow-hidden rounded-[16px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]"
+      onAnimationEnd={() => { if (closing) onClose(); }}
+      className={`w-[240px] overflow-hidden rounded-[16px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] ${closing ? `${directionClass}-out` : `${directionClass}-in`}`}
     >
       {/* Conta */}
       <div className="px-[16px] pb-[12px] pt-[16px]">
@@ -244,7 +256,7 @@ function AccountDropdown({
       <div className="px-[6px] py-[6px]">
         <Link
           href="/minha-conta"
-          onClick={onClose}
+          onClick={handleClose}
           className="flex items-center rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
         >
           Minha Conta
@@ -253,7 +265,7 @@ function AccountDropdown({
         {user?.is_admin && (
           <Link
             href="/admin"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex items-center gap-[8px] rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
           >
             <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-[#ff4100]" />
@@ -264,7 +276,7 @@ function AccountDropdown({
         {panelProfile.isAdmin && (
           <Link
             href="/labs"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex items-center rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
           >
             Labs
@@ -352,12 +364,20 @@ function SidebarInner({
   const [acctRect, setAcctRect] = useState<DOMRect | null>(null);
   const acctBtnRef = useRef<HTMLButtonElement>(null);
   const acctDropdownRef = useRef<HTMLDivElement>(null);
+  const acctClosingRef = useRef<(() => void) | null>(null);
+
+  function closeAcct() {
+    if (acctClosingRef.current) {
+      acctClosingRef.current();
+    } else {
+      setAcctOpen(false);
+    }
+  }
 
   function toggleAcct() {
-    if (!acctOpen && acctBtnRef.current) {
-      setAcctRect(acctBtnRef.current.getBoundingClientRect());
-    }
-    setAcctOpen((v) => !v);
+    if (acctOpen) { closeAcct(); return; }
+    if (acctBtnRef.current) setAcctRect(acctBtnRef.current.getBoundingClientRect());
+    setAcctOpen(true);
   }
 
   useEffect(() => {
@@ -369,7 +389,7 @@ function SidebarInner({
         acctDropdownRef.current?.contains(target)
       )
         return;
-      setAcctOpen(false);
+      closeAcct();
     }
     window.addEventListener("mousedown", onClickOutside);
     return () => window.removeEventListener("mousedown", onClickOutside);
@@ -497,6 +517,7 @@ function SidebarInner({
       {acctOpen && acctRect && (
         <AccountDropdown
           onClose={() => setAcctOpen(false)}
+          registerClose={(fn) => { acctClosingRef.current = fn; }}
           anchorRect={acctRect}
           dropdownRef={acctDropdownRef}
           placement={dropdownPlacement}

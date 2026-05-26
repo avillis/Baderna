@@ -17,9 +17,21 @@ export default function NotificationBell({
 }) {
   const { notifications, unreadCount, markAsRead, remove } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  function handleClose() {
+    setClosing(true);
+  }
+
+  function handleAnimationEnd() {
+    if (closing) {
+      setIsOpen(false);
+      setClosing(false);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -27,17 +39,17 @@ export default function NotificationBell({
       const target = event.target as Node;
       if (buttonRef.current?.contains(target)) return;
       if (dropdownRef.current?.contains(target)) return;
-      setIsOpen(false);
+      handleClose();
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
   const handleToggle = () => {
-    if (!isOpen && buttonRef.current) {
-      setAnchorRect(buttonRef.current.getBoundingClientRect());
-    }
-    setIsOpen((v) => !v);
+    if (isOpen) { handleClose(); return; }
+    if (buttonRef.current) setAnchorRect(buttonRef.current.getBoundingClientRect());
+    setIsOpen(true);
+    setClosing(false);
   };
 
   const handleNotificationClick = (id: string) => {
@@ -179,7 +191,8 @@ export default function NotificationBell({
       {isOpen && placement === "up" && (
         <div
           ref={dropdownRef}
-          className="absolute bottom-full left-1/2 mb-[12px] w-[320px] -translate-x-1/2 overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] z-[9999]"
+          onAnimationEnd={handleAnimationEnd}
+          className={`absolute bottom-full left-1/2 mb-[12px] w-[320px] -translate-x-1/2 overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] z-[9999] ${closing ? "dropdown-up-out" : "dropdown-up-in"}`}
         >
           {panel}
         </div>
@@ -194,13 +207,14 @@ export default function NotificationBell({
         createPortal(
           <div
             ref={dropdownRef}
+            onAnimationEnd={handleAnimationEnd}
             style={{
               position: "fixed",
               left: 16,
               bottom: window.innerHeight - anchorRect.top + 8,
               zIndex: 9999,
             }}
-            className="w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]"
+            className={`w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] ${closing ? "dropdown-up-out" : "dropdown-up-in"}`}
           >
             {panel}
           </div>,
@@ -215,13 +229,14 @@ export default function NotificationBell({
         createPortal(
           <div
             ref={dropdownRef}
+            onAnimationEnd={handleAnimationEnd}
             style={{
               position: "fixed",
               right: 20,
               top: anchorRect.bottom + 8,
               zIndex: 9999,
             }}
-            className="w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]"
+            className={`w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] ${closing ? "dropdown-down-out" : "dropdown-down-in"}`}
           >
             {panel}
           </div>,
