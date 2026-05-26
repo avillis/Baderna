@@ -202,7 +202,7 @@ export default function MembrosPage() {
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              className="h-[16px] w-[16px]"
+              className="h-[14px] w-[14px]"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path

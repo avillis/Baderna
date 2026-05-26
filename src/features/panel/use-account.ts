@@ -27,6 +27,13 @@ export type Account = {
   primaryLane?: Lane | null;
   secondaryLane?: Lane | null;
   riotIconUrl?: string | null;
+  communityHighlight?: string | null;
+  profileModuleOrder?: string[] | null;
+  favoriteChampionSlugs?: string[] | null;
+  favoriteGameTitle?: string | null;
+  favoriteGameCoverUrl?: string | null;
+  duoUserId?: number | null;
+  memberSince?: string | null;
 };
 
 function buildDefaults(user: AuthUser | null): Account {
@@ -155,6 +162,11 @@ const FIELD_TO_API: Partial<Record<keyof Account, string>> = {
   activeTitleSlugs: "active_title_slugs",
   primaryLane: "primary_lane",
   secondaryLane: "secondary_lane",
+  profileModuleOrder: "profile_module_order",
+  favoriteChampionSlugs: "favorite_champion_slugs",
+  favoriteGameTitle: "favorite_game_title",
+  favoriteGameCoverUrl: "favorite_game_cover_url",
+  duoUserId: "duo_user_id",
 };
 
 export function useCurrentUserId(): string | null {

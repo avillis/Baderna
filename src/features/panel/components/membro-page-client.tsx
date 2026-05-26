@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
@@ -8,6 +9,7 @@ import { GameModeProvider } from "@/features/panel/game-mode-context";
 import { panelProfile, panelStats } from "@/features/panel/panel-data";
 import { getSplashCatalog, type SplashGroup } from "@/features/panel/splash-catalog";
 import { authToken, useAuth } from "@/features/panel/use-auth";
+import { useAccount } from "@/features/panel/use-account";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { useMemberRanks } from "@/features/panel/use-member-ranks";
 import {
@@ -17,17 +19,23 @@ import {
 import { ProfileActions } from "@/features/panel/components/profile-actions";
 import type { BadernaMember } from "@/features/panel/members-data";
 import { LiveFavoriteChampionsCard } from "@/features/panel/components/live-favorite-champions-card";
-import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
 import { LiveHistoryCard } from "@/features/panel/components/live-history-card";
-import { LiveRankCard } from "@/features/panel/components/live-rank-card";
 import { PanelCommentsCard } from "@/features/panel/components/panel-comments-card";
 import { PanelGameModeToggle } from "@/features/panel/components/panel-game-mode-toggle";
-import { PanelLaneSelectorCard } from "@/features/panel/components/panel-lane-selector-card";
 import { PanelMemberWinratesCard } from "@/features/panel/components/panel-member-winrates-card";
 import { PanelProfileSummary } from "@/features/panel/components/panel-profile-summary";
 import { PanelShell } from "@/features/panel/components/panel-shell";
-import { PanelStatCard } from "@/features/panel/components/panel-stat-card";
 import { ProfileLoadingOverlay } from "@/features/panel/components/profile-loading-overlay";
+import { ChampionPickerModal } from "@/features/panel/components/champion-picker-modal";
+import { GamePickerModal } from "@/features/panel/components/game-picker-modal";
+import { ProfileModuleSelectorModal } from "@/features/panel/components/profile-module-selector-modal";
+import {
+  ProfileModuleCard,
+  resolveTopSlots,
+  type ProfileModuleData,
+} from "@/features/panel/components/profile-modules";
+import { NAME_STYLES } from "@/features/panel/names-data";
+import { useTitles } from "@/features/panel/use-titles";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -40,6 +48,7 @@ type ApiMember = {
   userId: number;
   name: string;
   nickname: string | null;
+  activeNameId: string | null;
   summonerName: string | null;
   tagLine: string | null;
   avatarSrc: string | null;
@@ -51,6 +60,19 @@ type ApiMember = {
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   secondaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   activeTitleSlugs: string[] | null;
+  communityHighlight: string | null;
+  profileModuleOrder: string[] | null;
+  favoriteChampionSlugs: string[] | null;
+  favoriteGameTitle: string | null;
+  favoriteGameCoverUrl: string | null;
+  duoUserId: number | null;
+  memberSince: string | null;
+  postsCount: number;
+  authoredCommentsCount: number;
+  profileCommentsCount: number;
+  unlockedTitlesCount: number;
+  unlockedBannersCount: number;
+  unlockedNamesCount: number;
 };
 
 async function fetchMembersList(): Promise<ApiMember[]> {
@@ -67,6 +89,27 @@ async function fetchMembersList(): Promise<ApiMember[]> {
     return (await res.json()) as ApiMember[];
   } catch {
     return [];
+  }
+}
+
+async function resolveSlugAlias(slug: string): Promise<string | null> {
+  try {
+    const token = authToken();
+    if (!token) return null;
+    const res = await fetch(
+      `${API_BASE}/members/resolve-slug/${encodeURIComponent(slug)}`,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { slug?: string } | null;
+    return data?.slug ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -98,12 +141,19 @@ function findMemberInList(
 }
 
 export function MembroPageClient({ slug }: { slug: string }) {
+  const router = useRouter();
   const [members, setMembers] = useState<ApiMember[] | null>(null);
   const [splashGroups, setSplashGroups] = useState<SplashGroup[]>([]);
+  const [resolving, setResolving] = useState(false);
   const allMembers = useBadernaMembers();
   const ranks = useMemberRanks();
   const { user } = useAuth();
+  const { account, updateField } = useAccount();
   const [showCompare, setShowCompare] = useState(false);
+  const [showModuleEditor, setShowModuleEditor] = useState(false);
+  const [showGamePicker, setShowGamePicker] = useState(false);
+  const [showChampionPicker, setShowChampionPicker] = useState(false);
+  const { titles: allTitles } = useTitles();
 
   useEffect(() => {
     let cancelled = false;
@@ -119,9 +169,30 @@ export function MembroPageClient({ slug }: { slug: string }) {
     };
   }, []);
 
+  // Slug pode ser antiga (user trocou o nick). Quando a lista chega e não
+  // bate com ninguém, tenta resolver via alias e redireciona pra slug atual.
+  useEffect(() => {
+    if (members === null) return;
+    const { member } = findMemberInList(members, slug);
+    if (member) return;
+    let cancelled = false;
+    setResolving(true);
+    resolveSlugAlias(slug).then((canonical) => {
+      if (cancelled) return;
+      if (canonical && canonical !== slug) {
+        router.replace(`/membro/${canonical}`);
+      } else {
+        setResolving(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [members, slug, router]);
+
   // Loading inicial: enquanto não chegou a lista de membros, mostra só o
   // shell com overlay (sem flash de "não encontrado").
-  if (members === null) {
+  if (members === null || resolving) {
     return (
       <PanelShell showBanner={false}>
         <ProfileLoadingOverlay />
@@ -191,6 +262,102 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
   const targetUserId = member.userId;
   const riotId = member.riotId;
+  const hasRiotId = Boolean(riotId);
+  const isOwnProfile = user != null && targetUserId === user.id;
+
+  // Duo: resolve user_id em nome + avatar olhando na lista de membros.
+  const duoMember =
+    apiMember?.duoUserId != null
+      ? members.find((m) => m.userId === apiMember.duoUserId)
+      : null;
+
+  const totalBannerCount = splashGroups.reduce(
+    (sum, group) => sum + group.variants.length,
+    0,
+  );
+
+  const moduleData: ProfileModuleData = {
+    hasRiotId,
+    isOwnProfile,
+    riotId,
+    targetUserId,
+    primaryLane: apiMember?.primaryLane ?? null,
+    secondaryLane: apiMember?.secondaryLane ?? null,
+    badernaRank,
+    fallbackRankEyebrow: stats[2].eyebrow,
+    fallbackRankValue: stats[2].value,
+    fallbackRankFrameSrc: profile.rankFrameSrc,
+    fallbackFeaturedEyebrow: stats[3].eyebrow,
+    fallbackFeaturedValue: stats[3].value,
+    fallbackFeaturedSrc: profile.featuredChampionSrc,
+    favoriteChampionSlugs: isOwnProfile
+      ? (account.favoriteChampionSlugs ?? apiMember?.favoriteChampionSlugs ?? [])
+      : (apiMember?.favoriteChampionSlugs ?? []),
+    onUpdateFavoriteChampions: isOwnProfile
+      ? (champions) => updateField("favoriteChampionSlugs", champions)
+      : null,
+    communityHighlight: apiMember?.communityHighlight ?? null,
+    duoSlug: duoMember?.id ?? null,
+    duoFullName: duoMember?.name ?? null,
+    duoName: duoMember?.nickname ?? duoMember?.name ?? null,
+    duoAvatarSrc: duoMember?.avatarSrc ?? null,
+    duoStyleId: duoMember?.activeNameId ?? null,
+    favoriteGameTitle: isOwnProfile
+      ? (account.favoriteGameTitle ?? apiMember?.favoriteGameTitle ?? null)
+      : (apiMember?.favoriteGameTitle ?? null),
+    favoriteGameCoverUrl: isOwnProfile
+      ? (account.favoriteGameCoverUrl ?? apiMember?.favoriteGameCoverUrl ?? null)
+      : (apiMember?.favoriteGameCoverUrl ?? null),
+    onEditFavoriteGame: isOwnProfile ? () => setShowGamePicker(true) : undefined,
+    onEditTopChampions: isOwnProfile ? () => setShowChampionPicker(true) : undefined,
+    memberSince: apiMember?.memberSince ?? null,
+    unlockedBanners: apiMember?.unlockedBannersCount ?? 0,
+    unlockedTitles: apiMember?.unlockedTitlesCount ?? 0,
+    unlockedNames: apiMember?.unlockedNamesCount ?? 0,
+    totalBanners: totalBannerCount || 1,
+    totalTitles: allTitles.length || 1,
+    totalNames: NAME_STYLES.length,
+    postsCount: apiMember?.postsCount ?? 0,
+    authoredCommentsCount: apiMember?.authoredCommentsCount ?? 0,
+    profileCommentsCount: apiMember?.profileCommentsCount ?? 0,
+    showcaseItems: [],
+  };
+
+  // No próprio perfil usa o account (update otimista após salvar no modal).
+  // Em perfis alheios usa o que veio do fetch da lista.
+  const effectiveModuleOrder = isOwnProfile
+    ? (account.profileModuleOrder ?? apiMember?.profileModuleOrder)
+    : apiMember?.profileModuleOrder;
+
+  // Layout de 4 slots:
+  //   lol user:     [lane-FIXO] [baderna-FIXO] [config[0]] [config[1]]
+  //   Não-lol user: [config[0]] [baderna-FIXO] [config[1]] [config[2]]
+  const configurableSlots = resolveTopSlots({
+    profileModuleOrder: effectiveModuleOrder,
+    hasRiotId,
+  });
+
+  const baderna = <ProfileModuleCard key="baderna-rank" moduleId="baderna-rank" data={moduleData} />;
+  const renderConfig = (i: number) => {
+    const id = configurableSlots[i];
+    return id ? <ProfileModuleCard key={id} moduleId={id} data={moduleData} /> : null;
+  };
+
+  // lol:     [baderna-FIXO] [lane-FIXO] [config0] [config1] → 4 cards
+  // Não-lol: [config0]      [baderna-FIXO] [config1] [config2] → 4 cards
+  const topSlots = hasRiotId
+    ? [
+        baderna,
+        <ProfileModuleCard key="lane-selector" moduleId="lane-selector" data={moduleData} />,
+        renderConfig(0),
+        renderConfig(1),
+      ]
+    : [
+        renderConfig(0),
+        baderna,
+        renderConfig(1),
+        renderConfig(2),
+      ];
 
   const buildSide = (m: BadernaMember): CompareSide => {
     const idx = allMembers.findIndex((x) => x.id === m.id);
@@ -228,6 +395,28 @@ export function MembroPageClient({ slug }: { slug: string }) {
     onCompare: handleCompare,
   };
 
+  const canEditModules = isOwnProfile;
+  const editCardsButton = canEditModules ? (
+    <button
+      type="button"
+      onClick={() => setShowModuleEditor(true)}
+      className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className="h-[15px] w-[15px]"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M16 5.00007L16 19.0001M10 4.00007L10 20.0001M3 12.0001H21M3 5.98924L3 18.0109C3 19.3749 3 20.0569 3.28134 20.5297C3.52803 20.9442 3.9162 21.2556 4.37434 21.4065C4.89685 21.5785 5.56262 21.4306 6.89418 21.1347L18.4942 18.5569C19.3883 18.3582 19.8354 18.2589 20.1691 18.0185C20.4634 17.8064 20.6945 17.5183 20.8377 17.1849C21 16.807 21 16.3491 21 15.4331V8.56702C21 7.65109 21 7.19312 20.8377 6.8152C20.6945 6.48186 20.4634 6.19373 20.1691 5.98168C19.8354 5.74126 19.3883 5.64191 18.4942 5.44322L6.89418 2.86544C5.56262 2.56954 4.89685 2.42159 4.37434 2.59368C3.9162 2.74457 3.52803 3.05596 3.28134 3.47045C3 3.94318 3 4.6252 3 5.98924Z" />
+      </svg>
+      Editar cards
+    </button>
+  ) : null;
+
   return (
     <PanelShell
       splashGroups={splashGroups}
@@ -237,6 +426,31 @@ export function MembroPageClient({ slug }: { slug: string }) {
       targetUserId={targetUserId}
     >
       <ProfileLoadingOverlay />
+      {showModuleEditor && (
+        <ProfileModuleSelectorModal
+          currentOrder={effectiveModuleOrder ?? []}
+          hasRiotId={hasRiotId}
+          onSave={(order) => updateField("profileModuleOrder", order)}
+          onClose={() => setShowModuleEditor(false)}
+        />
+      )}
+      {showGamePicker && isOwnProfile && (
+        <GamePickerModal
+          currentTitle={account.favoriteGameTitle ?? null}
+          onSelect={({ title, coverUrl }) => {
+            updateField("favoriteGameTitle", title);
+            updateField("favoriteGameCoverUrl", coverUrl ?? null);
+          }}
+          onClose={() => setShowGamePicker(false)}
+        />
+      )}
+      {showChampionPicker && isOwnProfile && (
+        <ChampionPickerModal
+          current={account.favoriteChampionSlugs ?? apiMember?.favoriteChampionSlugs ?? []}
+          onSave={(slugs) => updateField("favoriteChampionSlugs", slugs)}
+          onClose={() => setShowChampionPicker(false)}
+        />
+      )}
       <GameModeProvider>
         <div className="2xl:hidden">
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-[277px_minmax(0,1fr)] xl:items-start">
@@ -260,48 +474,30 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 badernaRank={badernaRank}
                 bannerSrc={profile.bannerSrc}
               />
+              {canEditModules && (
+                <div className="mt-[10px] flex px-[16px] sm:px-0 sm:pl-[42px] xl:hidden">
+                  {editCardsButton}
+                </div>
+              )}
             </div>
 
             <div className="xl:pr-[26px]">
-              <div className="grid gap-6 md:grid-cols-2">
-                <PanelLaneSelectorCard
-                  primaryLane={apiMember?.primaryLane ?? null}
-                  secondaryLane={apiMember?.secondaryLane ?? null}
-                  targetUserId={targetUserId}
-                />
-                <PanelStatCard
-                  eyebrow={stats[1].eyebrow}
-                  value={stats[1].value}
-                  tone="rank-baderna"
-                  placeholder={stats[1].placeholder}
-                />
-                <LiveRankCard
-                  riotId={riotId}
-                  fallbackEyebrow={stats[2].eyebrow}
-                  fallbackValue={stats[2].value}
-                  fallbackFrameSrc={profile.rankFrameSrc}
-                />
-                <LiveFeaturedChampionCard
-                  riotId={riotId}
-                  fallbackEyebrow={stats[3].eyebrow}
-                  fallbackValue={stats[3].value}
-                  fallbackSrc={profile.featuredChampionSrc}
-                />
-              </div>
+              <div className="grid gap-6 md:grid-cols-2">{topSlots}</div>
             </div>
           </div>
 
           <div className="mt-[20px] xl:mt-[24px]">
-            <div className="mb-6 hidden xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-center xl:gap-[32px]">
+            <div className="mb-6 hidden flex-wrap items-center gap-[10px] xl:flex">
               <ProfileActions
-                className="col-span-2 flex flex-wrap items-center gap-[10px]"
+                className="flex flex-wrap items-center gap-[10px]"
+                editButton={editCardsButton}
                 {...actionProps}
               />
-              <div className="flex justify-end">
+              <div className="ml-auto hidden xl:flex">
                 <PanelGameModeToggle />
               </div>
             </div>
-            <div className="mt-[72px] mb-4 flex justify-center xl:hidden">
+            <div className="mt-[24px] mb-4 flex justify-center xl:hidden">
               <PanelGameModeToggle />
             </div>
             <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
@@ -317,7 +513,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
         <div className="hidden 2xl:block">
           <div>
-            <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
+            <div className="grid grid-cols-[1.67fr_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="pl-0">
                 <PanelProfileSummary
                   avatarSrc={profile.avatarSrc}
@@ -340,34 +536,12 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 />
               </div>
 
-              <PanelLaneSelectorCard
-                  primaryLane={apiMember?.primaryLane ?? null}
-                  secondaryLane={apiMember?.secondaryLane ?? null}
-                  targetUserId={targetUserId}
-                />
-              <PanelStatCard
-                eyebrow={stats[1].eyebrow}
-                value={stats[1].value}
-                tone="rank-baderna"
-                placeholder={stats[1].placeholder}
-              />
-              <LiveRankCard
-                riotId={riotId}
-                fallbackEyebrow={stats[2].eyebrow}
-                fallbackValue={stats[2].value}
-                fallbackFrameSrc={profile.rankFrameSrc}
-              />
-              <LiveFeaturedChampionCard
-                riotId={riotId}
-                fallbackEyebrow={stats[3].eyebrow}
-                fallbackValue={stats[3].value}
-                fallbackSrc={profile.featuredChampionSrc}
-              />
+              {topSlots}
             </div>
-
-            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
+            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
               <ProfileActions
                 className="col-start-1 col-span-3 flex flex-wrap items-center gap-[10px]"
+                editButton={editCardsButton}
                 {...actionProps}
               />
               <div className="col-start-4 col-span-2 flex justify-end">

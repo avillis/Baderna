@@ -8,7 +8,10 @@ class Comment extends Model
 {
     protected $fillable = [
         'body',
-        'user_id'
+        'user_id',
+        'image_url',
+        'gif_url',
+        'parent_id',
     ];
 
     public function commentable()
@@ -19,5 +22,15 @@ class Comment extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function replies()
+    {
+        return $this->hasMany(Comment::class, 'parent_id');
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(CommentLike::class);
     }
 }

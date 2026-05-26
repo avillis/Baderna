@@ -1,6 +1,5 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -13,16 +12,26 @@ export function CreateTitleModal() {
   const { addTitle, removeTitle, titles, isRemovable } = useTitles();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [name, setName] = useState("");
   const [rarity, setRarity] = useState<TitleRarity>("comum");
   const toast = useToast();
 
   useEffect(() => setMounted(true), []);
 
+  function handleClose() {
+    setClosing(true);
+  }
+
+  function handleCloseImmediate() {
+    setIsOpen(false);
+    setClosing(false);
+  }
+
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key === "Escape") handleClose();
     };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -59,20 +68,31 @@ export function CreateTitleModal() {
         isOpen &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
-            onClick={() => setIsOpen(false)}
+            className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}
+            onClick={handleClose}
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative flex max-h-[86vh] w-full max-w-[520px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+              className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative flex max-h-[86vh] w-full max-w-[520px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
+              onAnimationEnd={() => { if (closing) handleCloseImmediate(); }}
             >
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 aria-label="Fechar"
                 className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
               >
-                <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+                <svg
+                  viewBox="0 0 10 10"
+                  fill="none"
+                  className="h-[12px] w-[12px]"
+                  stroke="currentColor"
+                  strokeWidth={1.4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+                </svg>
               </button>
 
               <div className="border-b border-[#f3ebe8] px-[28px] pt-[28px] pb-[20px]">
@@ -199,7 +219,17 @@ export function CreateTitleModal() {
                             aria-label={`Remover ${title.label}`}
                             className="ml-auto flex h-[30px] w-[30px] items-center justify-center rounded-full text-[#c53030] opacity-50 transition-opacity hover:bg-[#fff0f0] hover:opacity-100"
                           >
-                            <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+                            <svg
+                              viewBox="0 0 10 10"
+                              fill="none"
+                              className="h-[9px] w-[9px]"
+                              stroke="currentColor"
+                              strokeWidth={1.4}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+                            </svg>
                           </button>
                         )}
                       </li>

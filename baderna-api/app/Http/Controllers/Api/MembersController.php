@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserSlugAlias;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,24 +12,9 @@ use Illuminate\Validation\ValidationException;
 
 class MembersController extends Controller
 {
-    /**
-     * Slug usado nas URLs (/membro/{slug}). Bate com getMemberSlug do front:
-     * lowercase + espaços viram hífen.
-     */
     private function slugify(?string $nick, int $userId): string
     {
-        if (!$nick) return (string)$userId;
-        $trimmed = trim($nick);
-        // Transliterate (acentos) + strip de CJK/símbolos. Tem que bater
-        // com getMemberSlug do front.
-        $ascii = @transliterator_transliterate('Any-Latin; Latin-ASCII;', $trimmed);
-        if (!$ascii) $ascii = $trimmed;
-        $lower = strtolower($ascii);
-        $cleaned = preg_replace('/[^a-z0-9\s-]/', '', $lower) ?? '';
-        $hyphenated = preg_replace('/\s+/', '-', $cleaned) ?? '';
-        $dedupHyphen = preg_replace('/-+/', '-', $hyphenated) ?? '';
-        $slug = trim($dedupHyphen, '-');
-        return $slug !== '' ? $slug : (string)$userId;
+        return User::slugifyNick($nick, $userId);
     }
 
     /**
@@ -39,6 +25,14 @@ class MembersController extends Controller
     {
         $users = User::where('is_deleted', false)
             ->where('approval_status', 'approved')
+            ->withCount([
+                'posts as postsCount',
+                'authoredComments as authoredCommentsCount',
+                'profileComments as profileCommentsCount',
+                'memberUnlocks as unlockedTitlesCount' => fn ($q) => $q->where('kind', 'title'),
+                'memberUnlocks as unlockedBannersCount' => fn ($q) => $q->where('kind', 'capa'),
+                'memberUnlocks as unlockedNamesCount' => fn ($q) => $q->where('kind', 'name'),
+            ])
             ->orderBy('id')
             ->get();
 
@@ -63,10 +57,23 @@ class MembersController extends Controller
                 'teamName'        => $u->team_name,
                 'primaryLane'     => $u->primary_lane,
                 'secondaryLane'   => $u->secondary_lane,
+                'communityHighlight' => $u->community_highlight,
+                'profileModuleOrder' => $u->profile_module_order ?? [],
+                'favoriteChampionSlugs' => $u->favorite_champion_slugs ?? [],
+                'favoriteGameTitle' => $u->favorite_game_title,
+                'favoriteGameCoverUrl' => $u->favorite_game_cover_url,
+                'duoUserId'       => $u->duo_user_id,
+                'memberSince'     => optional($u->created_at)->toIso8601String(),
                 'activeNameId'    => $u->active_name_id,
                 'cachedRankTier'      => $u->cached_rank_tier,
                 'cachedRankDivision'  => $u->cached_rank_division,
                 'cachedRankLp'        => $u->cached_rank_lp,
+                'postsCount'      => (int)($u->postsCount ?? 0),
+                'authoredCommentsCount' => (int)($u->authoredCommentsCount ?? 0),
+                'profileCommentsCount' => (int)($u->profileCommentsCount ?? 0),
+                'unlockedTitlesCount' => (int)($u->unlockedTitlesCount ?? 0),
+                'unlockedBannersCount' => (int)($u->unlockedBannersCount ?? 0),
+                'unlockedNamesCount' => (int)($u->unlockedNamesCount ?? 0),
             ];
             if ($viewerIsAdmin) {
                 $row['isAdmin'] = (bool)$u->is_admin;
@@ -121,6 +128,25 @@ class MembersController extends Controller
             'tagLine'      => $user->tagLine,
             'pending'      => true,
         ], 201);
+    }
+
+    /**
+     * Resolve uma slug que pode ser antiga (de quando o user tinha outro
+     * nick). Front bate aqui quando o /membro/{slug} não acha membro atual
+     * com a slug — se o alias existir, redireciona pra slug canônica.
+     */
+    public function resolveSlug(Request $request, string $slug)
+    {
+        $alias = UserSlugAlias::where('slug', $slug)->first();
+        if (!$alias) return response()->json(null, 404);
+        $user = User::where('id', $alias->user_id)
+            ->where('is_deleted', false)
+            ->first();
+        if (!$user) return response()->json(null, 404);
+        return response()->json([
+            'slug'   => $user->currentSlug(),
+            'userId' => $user->id,
+        ]);
     }
 
     /**

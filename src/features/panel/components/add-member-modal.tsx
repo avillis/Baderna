@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -13,6 +13,7 @@ const API_BASE =
 export function AddMemberModal() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [name, setName] = useState("");
   const [nick, setNick] = useState("");
   const [tag, setTag] = useState("");
@@ -21,10 +22,19 @@ export function AddMemberModal() {
 
   useEffect(() => setMounted(true), []);
 
+  function handleClose() {
+    setClosing(true);
+  }
+
+  function handleCloseImmediate() {
+    setOpen(false);
+    setClosing(false);
+  }
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") handleClose();
     };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -77,7 +87,7 @@ export function AddMemberModal() {
         /* ignore */
       }
       window.dispatchEvent(new Event("baderna:members-updated"));
-      setOpen(false);
+      handleClose();
       reset();
     } catch (err) {
       toast.show(err instanceof Error ? err.message : "Erro ao adicionar membro.");
@@ -101,20 +111,31 @@ export function AddMemberModal() {
         open &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
-            onClick={() => setOpen(false)}
+            className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}
+            onClick={handleClose}
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative flex w-full max-w-[440px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+              className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative flex w-full max-w-[440px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
+              onAnimationEnd={() => { if (closing) handleCloseImmediate(); }}
             >
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 aria-label="Fechar"
                 className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
               >
-                <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+                <svg
+                  viewBox="0 0 10 10"
+                  fill="none"
+                  className="h-[12px] w-[12px]"
+                  stroke="currentColor"
+                  strokeWidth={1.4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+                </svg>
               </button>
 
               <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
@@ -199,7 +220,7 @@ export function AddMemberModal() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setOpen(false)}
+                    onClick={handleClose}
                     disabled={submitting}
                     className="h-[50px] flex-1 basis-0 rounded-[18px] bg-[#ededed] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e0e0e0] disabled:opacity-40"
                   >

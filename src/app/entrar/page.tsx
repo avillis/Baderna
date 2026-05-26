@@ -115,7 +115,7 @@ function EntrarPageInner() {
                   </div>
                   <div>
                     <p className="mb-2 px-2 text-xs font-medium text-gray-400">
-                      Riot ID (opcional) — só se você joga LoL
+                      Riot ID (opcional) — só se você joga Lol
                     </p>
                     <div className="flex gap-2">
                       <input

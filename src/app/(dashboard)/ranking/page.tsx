@@ -63,16 +63,28 @@ function eloScore(rank: MemberRank | undefined): number {
 export default function RankingPage() {
   const members = useBadernaMembers();
   const ranks = useMemberRanks();
-  const [mode, setMode] = useState<"flex" | "inhouse">("flex");
+  const [mode, setMode] = useState<"baderna" | "flex" | "inhouse">("baderna");
 
-  const sorted = useMemo(() => {
-    return members
-      .map((member) => {
-        const rank = member.userId != null ? ranks[member.userId] : undefined;
-        return { member, rank, score: eloScore(rank) };
-      })
-      .sort((a, b) => b.score - a.score);
+  // Baderna: ordem natural da API (ranking oficial da Baderna)
+  const badernaList = useMemo(() => {
+    return members.map((member) => {
+      const rank = member.userId != null ? ranks[member.userId] : undefined;
+      return { member, rank, score: eloScore(rank) };
+    });
   }, [members, ranks]);
+
+  // Flex: ordenado por elo
+  const sorted = useMemo(() => {
+    return [...badernaList].sort((a, b) => b.score - a.score);
+  }, [badernaList]);
+
+  const TABS = [
+    { key: "baderna", label: "Baderna" },
+    { key: "flex",    label: "Flex"    },
+    { key: "inhouse", label: "Inhouse" },
+  ] as const;
+
+  const tabIndex = TABS.findIndex((t) => t.key === mode);
 
   return (
     <PanelShell showBanner={false}>
@@ -82,26 +94,22 @@ export default function RankingPage() {
             Ranking da Baderna
           </h1>
           <p className="text-[14px] font-medium text-[#8d8d8d]">
-            Classificação dos membros por elo da ranqueada.
+            Baderna, Flex e Inhouse — veja quem tá na frente.
           </p>
         </div>
 
-        {/* Toggle Flex / Inhouse */}
+        {/* Toggle Baderna / Flex / Inhouse */}
         <div className="relative mb-5 flex h-[40px] w-full items-center rounded-[25px] bg-[#ededed] p-[4px]">
           {/* Sliding pill */}
           <div
             aria-hidden
-            className="pointer-events-none absolute top-[4px] bottom-[4px] w-[calc((100%-8px)/2)] rounded-[25px] bg-white"
+            className="pointer-events-none absolute top-[4px] bottom-[4px] w-[calc((100%-8px)/3)] rounded-[25px] bg-white"
             style={{
-              transform: `translateX(${mode === "inhouse" ? "100%" : "0%"})`,
-              transition:
-                "transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+              transform: `translateX(${tabIndex * 100}%)`,
+              transition: "transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
             }}
           />
-          {([
-            ["flex", "Flex"],
-            ["inhouse", "Inhouse"],
-          ] as const).map(([key, label]) => (
+          {TABS.map(({ key, label }) => (
             <button
               key={key}
               type="button"
@@ -132,7 +140,7 @@ export default function RankingPage() {
           </div>
         ) : (
         <div className="overflow-hidden rounded-[25px] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-          {sorted.map(({ member, rank, score }, index) => {
+          {(mode === "baderna" ? badernaList : sorted).map(({ member, rank, score }, index) => {
             const position = index + 1;
             const isPodium = score >= 0 && position <= 3;
             const posColor = isPodium ? POSITION_COLOR[position] : undefined;

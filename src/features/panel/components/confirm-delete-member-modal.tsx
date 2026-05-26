@@ -1,6 +1,5 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -18,13 +17,21 @@ export function ConfirmDeleteMemberModal({
   onConfirm,
 }: ConfirmDeleteMemberModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  function handleClose() {
+    setClosing(true);
+  }
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setClosing(false);
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -33,26 +40,37 @@ export function ConfirmDeleteMemberModal({
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
-      onClick={onClose}
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}
+      onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-[440px] overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative w-full max-w-[440px] overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
         onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={() => { if (closing) onClose(); }}
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Fechar"
           className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
         >
-          <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+          <svg
+            viewBox="0 0 10 10"
+            fill="none"
+            className="h-[12px] w-[12px]"
+            stroke="currentColor"
+            strokeWidth={1.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+          </svg>
         </button>
 
         <div className="px-[28px] pt-[28px] pb-[20px]">
@@ -72,7 +90,7 @@ export function ConfirmDeleteMemberModal({
             type="button"
             onClick={() => {
               onConfirm();
-              onClose();
+              handleClose();
             }}
             className="rounded-full px-5 py-2.5 text-[13px] font-bold tracking-[-0.02em] text-[#6f6f6f] transition-colors hover:bg-[#f5f3f2]"
           >

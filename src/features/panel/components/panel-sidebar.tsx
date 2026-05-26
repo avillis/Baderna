@@ -3,9 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, MoreHorizontal, X } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 
 function LogOutIcon({ className }: { className?: string }) {
   return (
@@ -40,21 +40,25 @@ import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { useMemberCoins } from "@/features/panel/use-member-coins";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/ui/notification-bell";
+import { useMobileNav } from "@/features/panel/components/mobile-nav";
 
 function MenuItem({
   label,
   tone,
   href,
   mobile = false,
+  onClick,
 }: {
   label: string;
   tone: "active" | "default";
   href: string;
   mobile?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
         "flex min-h-[39px] w-full items-center rounded-[var(--panel-radius-chip)] px-[14px] text-left text-[16px] font-bold tracking-[-0.03em] transition-colors duration-200",
         tone === "active"
@@ -65,6 +69,79 @@ function MenuItem({
     >
       {label}
     </Link>
+  );
+}
+
+/**
+ * Nav com pill laranja que desliza pro item hoverado e fica fixo no clique.
+ */
+function SlidingNav({
+  menuItems,
+  pathname,
+  onNavigate,
+}: {
+  menuItems: { label: string; href: string }[];
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [pill, setPill] = useState<{ top: number; height: number } | null>(null);
+  const [ready, setReady] = useState(false);
+
+  const activeIdx = menuItems.findIndex((item) => pathname === item.href);
+  const targetIdx = hoveredIdx ?? activeIdx;
+
+  useLayoutEffect(() => {
+    const el = itemRefs.current[targetIdx < 0 ? 0 : targetIdx];
+    if (!el) return;
+    const next = { top: el.offsetTop, height: el.offsetHeight };
+    setPill(next);
+    // Primeira renderização: posiciona sem transição
+    if (!ready) setTimeout(() => setReady(true), 0);
+  }, [targetIdx, ready]);
+
+  return (
+    <div className="relative px-[14px]" onMouseLeave={() => setHoveredIdx(null)}>
+      {/* Pill deslizante */}
+      {pill && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-[14px] right-[14px] rounded-[var(--panel-radius-chip)] bg-[#ededed]"
+          style={{
+            top: pill.top,
+            height: pill.height,
+            transition: ready
+              ? "top 0.32s cubic-bezier(0.4, 0, 0.2, 1)"
+              : "none",
+          }}
+        />
+      )}
+
+      <div className="space-y-[15px]">
+        {menuItems.map((item, index) => {
+          const isTarget = index === targetIdx;
+          return (
+            <div
+              key={item.label}
+              ref={(el) => { itemRefs.current[index] = el; }}
+              onMouseEnter={() => setHoveredIdx(index)}
+            >
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  "relative z-[1] flex min-h-[39px] w-full items-center rounded-[var(--panel-radius-chip)] px-[14px] text-left text-[16px] font-bold tracking-[-0.03em] transition-colors duration-150",
+                  "text-[#0f0f0f]",
+                )}
+              >
+                {item.label}
+              </Link>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -94,17 +171,18 @@ function SidebarIconButton({
 
 function AccountDropdown({
   onClose,
+  registerClose,
   anchorRect,
   dropdownRef,
   placement = "right",
 }: {
   onClose: () => void;
+  registerClose?: (fn: () => void) => void;
   anchorRect: DOMRect;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
-  /** "right": cresce pra direita do anchor (desktop sidebar). "below":
-   *  cresce pra baixo do anchor, alinhado à direita do anchor (mobile). */
-  placement?: "right" | "below";
+  placement?: "right" | "below" | "above";
 }) {
+  const mobileDrawerDropdownLeft = 20;
   const positionStyle =
     placement === "right"
       ? {
@@ -113,30 +191,51 @@ function AccountDropdown({
           bottom: window.innerHeight - anchorRect.bottom,
           zIndex: 9999,
         }
-      : {
-          // Alinhado à margem direita do viewport (mesma usada no header).
-          position: "fixed" as const,
-          right: 20,
-          top: anchorRect.bottom + 8,
-          zIndex: 9999,
-        };
+      : placement === "above"
+        ? {
+            position: "fixed" as const,
+            left: mobileDrawerDropdownLeft,
+            bottom: window.innerHeight - anchorRect.top + 8,
+            zIndex: 9999,
+          }
+        : {
+            // Alinhado à margem direita do viewport (mesma usada no header).
+            position: "fixed" as const,
+            right: 20,
+            top: anchorRect.bottom + 8,
+            zIndex: 9999,
+          };
   const router = useRouter();
   const { user, logout } = useAuth();
   const { account } = useAccount();
   const displayFullName = account.name || user?.name || panelProfile.fullName;
   const displayEmail = account.email || user?.email || panelProfile.email;
 
+  function handleClose() {
+    setClosing(true);
+  }
+
   async function handleLogout() {
-    onClose();
+    handleClose();
     await logout();
     router.push("/entrar");
   }
+
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    registerClose?.(() => setClosing(true));
+  }, [registerClose]);
+
+  const directionClass =
+    placement === "below" ? "dropdown-down" : "dropdown-up";
 
   return createPortal(
     <div
       ref={dropdownRef}
       style={positionStyle}
-      className="w-[240px] overflow-hidden rounded-[16px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]"
+      onAnimationEnd={() => { if (closing) onClose(); }}
+      className={`w-[240px] overflow-hidden rounded-[16px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] ${closing ? `${directionClass}-out` : `${directionClass}-in`}`}
     >
       {/* Conta */}
       <div className="px-[16px] pb-[12px] pt-[16px]">
@@ -157,7 +256,7 @@ function AccountDropdown({
       <div className="px-[6px] py-[6px]">
         <Link
           href="/minha-conta"
-          onClick={onClose}
+          onClick={handleClose}
           className="flex items-center rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
         >
           Minha Conta
@@ -166,7 +265,7 @@ function AccountDropdown({
         {user?.is_admin && (
           <Link
             href="/admin"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex items-center gap-[8px] rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
           >
             <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-[#ff4100]" />
@@ -177,7 +276,7 @@ function AccountDropdown({
         {panelProfile.isAdmin && (
           <Link
             href="/labs"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex items-center rounded-[10px] px-[10px] py-[9px] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] transition-colors duration-150 hover:bg-[#fff4f4]"
           >
             Labs
@@ -235,9 +334,205 @@ function slugify(value: string): string {
     .replace(/[^a-z0-9-]/g, "");
 }
 
-export function PanelSidebar() {
-  const pathname = usePathname();
+/**
+ * Conteúdo interno da sidebar (logo, navegação e bloco de conta). É reusado
+ * tanto na sidebar fixa do desktop quanto no drawer deslizante do mobile.
+ */
+function SidebarInner({
+  menuItems,
+  pathname,
+  isOnFeed,
+  showLogo = true,
+  dropdownPlacement = "right",
+  onNavigate,
+}: {
+  menuItems: { label: string; href: string }[];
+  pathname: string;
+  isOnFeed: boolean;
+  /** No drawer mobile o logo fica no header flutuante, então escondemos aqui. */
+  showLogo?: boolean;
+  dropdownPlacement?: "right" | "above";
+  /** Chamado ao clicar num link (no mobile serve pra fechar o drawer). */
+  onNavigate?: () => void;
+}) {
   const router = useRouter();
+  const { user } = useAuth();
+  const { account } = useAccount();
+  const profileSlugSource = account.gameNick.split("#")[0] || user?.name || "";
+
+  const [acctOpen, setAcctOpen] = useState(false);
+  const [acctRect, setAcctRect] = useState<DOMRect | null>(null);
+  const acctBtnRef = useRef<HTMLButtonElement>(null);
+  const acctDropdownRef = useRef<HTMLDivElement>(null);
+  const acctClosingRef = useRef<(() => void) | null>(null);
+
+  function closeAcct() {
+    if (acctClosingRef.current) {
+      acctClosingRef.current();
+    } else {
+      setAcctOpen(false);
+    }
+  }
+
+  function toggleAcct() {
+    if (acctOpen) { closeAcct(); return; }
+    if (acctBtnRef.current) setAcctRect(acctBtnRef.current.getBoundingClientRect());
+    setAcctOpen(true);
+  }
+
+  useEffect(() => {
+    if (!acctOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        acctBtnRef.current?.contains(target) ||
+        acctDropdownRef.current?.contains(target)
+      )
+        return;
+      closeAcct();
+    }
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [acctOpen]);
+
+  return (
+    <div className="flex h-full flex-col">
+      {showLogo && (
+        <div className="flex items-center justify-between px-[14px] pt-[12px]">
+          <Link
+            href="/"
+            aria-label="Baderna"
+            onClick={onNavigate}
+            className="inline-flex text-[#0f0f0f] transition-colors duration-200 hover:text-[#ff4100]"
+          >
+            <span
+              className="block h-[44px] w-[64px] bg-current"
+              style={{
+                maskImage: "url('/logo.svg')",
+                maskPosition: "left center",
+                maskRepeat: "no-repeat",
+                maskSize: "contain",
+                WebkitMaskImage: "url('/logo.svg')",
+                WebkitMaskPosition: "left center",
+                WebkitMaskRepeat: "no-repeat",
+                WebkitMaskSize: "contain",
+              }}
+            />
+          </Link>
+
+          {!isOnFeed && (
+            <button
+              type="button"
+              aria-label="Voltar"
+              onClick={() => router.back()}
+              className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-transform duration-150 hover:scale-105 active:scale-95"
+            >
+              <svg
+                viewBox="0 0 10 10"
+                fill="none"
+                className="h-[12px] w-[12px]"
+                stroke="white"
+                strokeWidth={1.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6.5 1.5L3 5l3.5 3.5" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className={showLogo ? "pt-[44px]" : undefined}>
+        <SlidingNav
+          menuItems={menuItems}
+          pathname={pathname}
+          onNavigate={onNavigate}
+        />
+      </div>
+
+      <div className="mt-auto border-t border-[#f3ebe8] px-[6px] pb-[12px] pt-[18px]">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/minha-conta"
+            onClick={onNavigate}
+            className="flex min-w-0 items-center gap-3 px-[2px] py-[2px] text-left transition-opacity duration-200 hover:opacity-80"
+          >
+            <div className="relative h-[30px] w-[30px] shrink-0 overflow-hidden rounded-full ring-1 ring-[#ece1db]">
+              <Image
+                src={
+                  account.avatarSrc ||
+                  panelSidebarAccount.avatarSrc ||
+                  getChampionAvatarSrc(
+                    profileSlugSource ? slugify(profileSlugSource) : "guest",
+                  )
+                }
+                alt={user?.name ?? panelProfile.fullName}
+                fill
+                className="object-cover"
+                sizes="30px"
+                unoptimized
+              />
+            </div>
+            {(() => {
+              const [nick, tag] = account.gameNick.split("#");
+              const fallback = user?.name ?? panelProfile.displayName;
+              return (
+                <span
+                  title={account.gameNick || fallback}
+                  className="max-w-[156px] truncate-glow pr-1 text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#0f0f0f]"
+                >
+                  {nick ? (
+                    <>
+                      <StyledName styleId={account.activeNameId}>
+                        {nick}
+                      </StyledName>
+                      {tag && (
+                        <span className="ml-[4px] text-[#8d8d8d]">#{tag}</span>
+                      )}
+                    </>
+                  ) : (
+                    fallback
+                  )}
+                </span>
+              );
+            })()}
+          </Link>
+
+          <div className="flex items-center gap-1">
+            <NotificationBell
+              placement={dropdownPlacement === "above" ? "above" : "up"}
+            />
+            <SidebarIconButton
+              label="Mais opções"
+              onClick={toggleAcct}
+              buttonRef={acctBtnRef}
+            >
+              <MoreHorizontal className="h-[16px] w-[16px]" strokeWidth={2.1} />
+            </SidebarIconButton>
+          </div>
+        </div>
+      </div>
+
+      {acctOpen && acctRect && (
+        <AccountDropdown
+          onClose={() => setAcctOpen(false)}
+          registerClose={(fn) => { acctClosingRef.current = fn; }}
+          anchorRect={acctRect}
+          dropdownRef={acctDropdownRef}
+          placement={dropdownPlacement}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Resolve a lista de itens do menu (com o "Meu Perfil" apontando pro slug do
+ * próprio user). Compartilhado pela sidebar do desktop e pelo drawer mobile.
+ */
+function usePanelMenuModel() {
+  const pathname = usePathname();
   const { user } = useAuth();
   const { account } = useAccount();
   const members = useBadernaMembers();
@@ -258,268 +553,44 @@ export function PanelSidebar() {
         }
       : item,
   );
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  return { menuItems, pathname, isOnFeed };
+}
 
-  function handleToggle() {
-    if (!menuOpen && buttonRef.current) {
-      setAnchorRect(buttonRef.current.getBoundingClientRect());
-    }
-    setMenuOpen((v) => !v);
-  }
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (buttonRef.current && buttonRef.current.contains(e.target as Node)) return;
-      if (dropdownRef.current && dropdownRef.current.contains(e.target as Node)) return;
-      setMenuOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [menuOpen]);
+export function PanelSidebar() {
+  const { menuItems, pathname, isOnFeed } = usePanelMenuModel();
+  const { open: drawerOpen, setOpen: setDrawerOpen } = useMobileNav();
 
   return (
     <>
+      {/* Desktop: sidebar fixa */}
       <aside className="relative hidden w-[318px] xl:block">
         <div className="sticky top-[45px] z-30 h-[calc(100vh-90px)] w-full">
           <div className="h-full rounded-[var(--panel-radius-card)] bg-white px-[19px] py-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between px-[14px] pt-[12px]">
-                <Link
-                  href="/"
-                  aria-label="Baderna"
-                  className="inline-flex text-[#0f0f0f] transition-colors duration-200 hover:text-[#ff4100]"
-                >
-                  <span
-                    className="block h-[44px] w-[64px] bg-current"
-                    style={{
-                      maskImage: "url('/logo.svg')",
-                      maskPosition: "left center",
-                      maskRepeat: "no-repeat",
-                      maskSize: "contain",
-                      WebkitMaskImage: "url('/logo.svg')",
-                      WebkitMaskPosition: "left center",
-                      WebkitMaskRepeat: "no-repeat",
-                      WebkitMaskSize: "contain",
-                    }}
-                  />
-                </Link>
-
-                {!isOnFeed && (
-                  <button
-                    type="button"
-                    aria-label="Voltar"
-                    onClick={() => router.back()}
-                    className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-transform duration-150 hover:scale-105 active:scale-95"
-                  >
-                    <ArrowLeft className="h-[16px] w-[16px]" strokeWidth={2.4} />
-                  </button>
-                )}
-              </div>
-
-              <div className="pt-[44px]">
-                <div className="space-y-[15px] px-[14px]">
-                  {menuItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <MenuItem
-                        key={item.label}
-                        label={item.label}
-                        tone={isActive ? "active" : "default"}
-                        href={item.href}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="mt-auto border-t border-[#f3ebe8] px-[6px] pb-[12px] pt-[18px]">
-                <div className="flex items-center justify-between gap-3">
-                  <Link
-                    href="/minha-conta"
-                    className="flex min-w-0 items-center gap-3 px-[2px] py-[2px] text-left transition-opacity duration-200 hover:opacity-80"
-                  >
-                    <div className="relative h-[30px] w-[30px] shrink-0 overflow-hidden rounded-full ring-1 ring-[#ece1db]">
-                      <Image
-                        src={
-                          account.avatarSrc ||
-                          panelSidebarAccount.avatarSrc ||
-                          getChampionAvatarSrc(profileSlugSource ? slugify(profileSlugSource) : "guest")
-                        }
-                        alt={user?.name ?? panelProfile.fullName}
-                        fill
-                        className="object-cover"
-                        sizes="30px"
-                        unoptimized
-                      />
-                    </div>
-                    {(() => {
-                      const [nick, tag] = account.gameNick.split("#");
-                      const fallback = user?.name ?? panelProfile.displayName;
-                      return (
-                        <span
-                          title={account.gameNick || fallback}
-                          className="max-w-[156px] truncate-glow pr-1 text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#0f0f0f]"
-                        >
-                          {nick ? (
-                            <>
-                              <StyledName styleId={account.activeNameId}>
-                                {nick}
-                              </StyledName>
-                              {tag && (
-                                <span className="ml-[4px] text-[#8d8d8d]">#{tag}</span>
-                              )}
-                            </>
-                          ) : (
-                            fallback
-                          )}
-                        </span>
-                      );
-                    })()}
-                  </Link>
-
-                  <div className="flex items-center gap-1">
-                    <NotificationBell />
-                    <SidebarIconButton
-                      label="Mais opções"
-                      onClick={handleToggle}
-                      buttonRef={buttonRef}
-                    >
-                      <MoreHorizontal className="h-[16px] w-[16px]" strokeWidth={2.1} />
-                    </SidebarIconButton>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <SidebarInner
+              menuItems={menuItems}
+              pathname={pathname}
+              isOnFeed={isOnFeed}
+            />
           </div>
         </div>
       </aside>
 
-      {menuOpen && anchorRect && (
-        <AccountDropdown onClose={() => setMenuOpen(false)} anchorRect={anchorRect} dropdownRef={dropdownRef} />
-      )}
+      {/* Mobile: header (hamburguer à esquerda, logo à direita) */}
+      <header className="fixed inset-x-0 top-[12px] z-[80] flex h-[64px] items-center justify-between bg-transparent px-[16px] sm:px-[24px] xl:hidden">
+        <button
+          type="button"
+          aria-label={drawerOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={drawerOpen}
+          onClick={() => setDrawerOpen((v) => !v)}
+          className="flex h-[48px] w-[48px] cursor-pointer items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-opacity hover:opacity-85"
+        >
+          <BurgerIcon open={drawerOpen} />
+        </button>
 
-      <MobileHeader />
-    </>
-  );
-}
-
-/**
- * Burger de 2 listras → X. Cada traço fica a 4px do centro; quando `open`,
- * ambos colapsam pro centro e giram pra formar o X.
- */
-function BurgerIcon({ open }: { open: boolean }) {
-  return (
-    <div className="relative h-[18px] w-[18px]">
-      <span
-        className={cn(
-          "absolute left-0 top-1/2 block h-[2px] w-full -translate-y-1/2 rounded-full bg-current transition-transform duration-300 ease-out",
-          open ? "rotate-45" : "-translate-y-[5px]",
-        )}
-      />
-      <span
-        className={cn(
-          "absolute left-0 top-1/2 block h-[2px] w-full -translate-y-1/2 rounded-full bg-current transition-transform duration-300 ease-out",
-          open ? "-rotate-45" : "translate-y-[3px]",
-        )}
-      />
-    </div>
-  );
-}
-
-function MobileHeader() {
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
-  const { account } = useAccount();
-  const members = useBadernaMembers();
-  const profileSlugSource = account.gameNick.split("#")[0] || user?.name || "";
-  const selfMember = profileSlugSource
-    ? members.find((m) => m.nickname === profileSlugSource)
-    : undefined;
-  const meuPerfilSlug =
-    selfMember?.id || (profileSlugSource ? slugify(profileSlugSource) : "");
-  const [open, setOpen] = useState(false);
-  // `mounted` controla se o overlay tá no DOM; `open` controla o estado
-  // ativo. Quando fecha, mantém montado pela duração da animação reversa.
-  const [mounted, setMounted] = useState(false);
-  const [acctOpen, setAcctOpen] = useState(false);
-  const [acctRect, setAcctRect] = useState<DOMRect | null>(null);
-  const acctBtnRef = useRef<HTMLButtonElement>(null);
-  const acctDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (open) {
-      setMounted(true);
-      return;
-    }
-    if (!mounted) return;
-    // Tempo total: 0.4s (animação base) + atraso máximo dos itens.
-    const t = window.setTimeout(() => setMounted(false), 500);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  function toggleAcct() {
-    const rect = acctBtnRef.current?.getBoundingClientRect();
-    if (rect) setAcctRect(rect);
-    setAcctOpen((v) => !v);
-  }
-
-  // Fecha dropdown clicando fora.
-  useEffect(() => {
-    if (!acctOpen) return;
-    function onClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        acctBtnRef.current?.contains(target) ||
-        acctDropdownRef.current?.contains(target)
-      ) return;
-      setAcctOpen(false);
-    }
-    window.addEventListener("mousedown", onClickOutside);
-    return () => window.removeEventListener("mousedown", onClickOutside);
-  }, [acctOpen]);
-
-  // Trava scroll do body quando o menu tá aberto.
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  // Fecha ao trocar de rota.
-  useEffect(() => {
-    setOpen(false);
-    setAcctOpen(false);
-  }, [pathname]);
-
-  const items = panelMenuItems.map((item) =>
-    item.label === "Meu Perfil"
-      ? { ...item, href: meuPerfilSlug ? `/membro/${meuPerfilSlug}` : item.href }
-      : item,
-  );
-
-  return (
-    <>
-      <header className="fixed inset-x-0 top-[12px] z-[70] flex h-[64px] items-center justify-between bg-transparent px-[16px] sm:px-[24px] xl:hidden">
         <Link
           href="/"
           aria-label="Baderna"
-          className={cn(
-            "flex h-[48px] w-[48px] items-center justify-center rounded-full transition-colors duration-300",
-            open ? "bg-white text-[#ff4100]" : "bg-[#ff4100] text-white",
-          )}
+          className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#ff4100] text-white"
         >
           <span
             className="block h-[40px] w-[40px] bg-current"
@@ -535,90 +606,64 @@ function MobileHeader() {
             }}
           />
         </Link>
-
-        <div className="flex items-center gap-[10px]">
-          {!open && user && <NotificationBell placement="below" />}
-          {!open && user && (
-            <button
-              ref={acctBtnRef}
-              type="button"
-              aria-label="Abrir conta"
-              aria-expanded={acctOpen}
-              onClick={toggleAcct}
-              className="relative h-[48px] w-[48px] overflow-hidden rounded-full bg-[#ededed] transition-opacity hover:opacity-85"
-            >
-              {account.avatarSrc ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={account.avatarSrc}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-[14px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                  {(account.name || user.name || "?").charAt(0).toUpperCase()}
-                </span>
-              )}
-            </button>
-          )}
-
-          <button
-            type="button"
-            aria-label={open ? "Fechar menu" : "Abrir menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-            className="flex h-[48px] w-[48px] cursor-pointer flex-col items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-opacity hover:opacity-85"
-          >
-            <BurgerIcon open={open} />
-          </button>
-        </div>
       </header>
-
-      {acctOpen && acctRect && (
-        <AccountDropdown
-          onClose={() => setAcctOpen(false)}
-          anchorRect={acctRect}
-          dropdownRef={acctDropdownRef}
-          placement="below"
-        />
-      )}
 
       {/* Spacer pra reservar o espaço do header fixo (só no mobile). */}
       <div className="h-[76px] xl:hidden" />
-
-      {/* Overlay full-screen — vermelho/laranja da brand, igual o screenshot
-          do Visu Haus que serviu de referência. */}
-      {mounted && (
-        <div
-          className={cn(
-            "fixed inset-0 z-[60] flex flex-col bg-[#ff4100] xl:hidden transition-opacity duration-300",
-            open ? "opacity-100" : "opacity-0",
-          )}
-        >
-          <nav className="flex flex-1 flex-col gap-[20px] overflow-y-auto px-[24px] pb-[32px] pt-[140px]">
-            {items.map((item, i) => {
-              const isActive = pathname === item.href;
-              const delay = open
-                ? 60 + i * 50
-                : (items.length - 1 - i) * 35;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  style={{ animationDelay: `${delay}ms` }}
-                  className={cn(
-                    "w-fit text-[44px] font-bold leading-[1.05] tracking-[-0.04em] text-white transition-opacity",
-                    open ? "mobile-menu-item-in" : "mobile-menu-item-out",
-                    isActive ? "opacity-100" : "opacity-90 hover:opacity-100",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      )}
     </>
+  );
+}
+
+/**
+ * Menu mobile que fica "embaixo" da página: um painel fixo na esquerda, atrás
+ * do card da página (z menor). A página (MobilePushRegion) é que desliza pra
+ * direita e revela este menu — por isso aqui não tem animação de translate.
+ * Renderizado como irmão do card no PanelShell, nunca aninhado dentro dele.
+ */
+export function MobileMenu() {
+  const { menuItems, pathname, isOnFeed } = usePanelMenuModel();
+  const { open, setOpen } = useMobileNav();
+
+  return (
+    <div
+      aria-hidden={!open}
+      className={cn(
+        "fixed inset-y-0 left-0 z-[20] flex w-[280px] flex-col bg-white px-[19px] pb-[24px] pt-[120px] after:pointer-events-none after:absolute after:bottom-0 after:right-[-25px] after:top-0 after:w-[25px] after:bg-white after:content-[''] xl:hidden",
+        open ? "" : "pointer-events-none",
+      )}
+    >
+      <SidebarInner
+        menuItems={menuItems}
+        pathname={pathname}
+        isOnFeed={isOnFeed}
+        showLogo={false}
+        dropdownPlacement="above"
+        onNavigate={() => setOpen(false)}
+      />
+    </div>
+  );
+}
+
+/**
+ * Burger de 2 listras → X. Cada traço fica a 4px do centro; quando `open`,
+ * ambos colapsam pro centro e giram pra formar o X.
+ */
+function BurgerIcon({ open }: { open: boolean }) {
+  return (
+    <div className="relative h-[18px] w-[18px]">
+      <span
+        className={cn(
+          "absolute left-0 top-1/2 block h-[2px] -translate-y-1/2 rounded-full bg-current transition-[width,transform] duration-300 ease-out",
+          open ? "w-full" : "w-[80%]",
+          open ? "rotate-45" : "-translate-y-[5px]",
+        )}
+      />
+      <span
+        className={cn(
+          "absolute left-0 top-1/2 block h-[2px] w-full -translate-y-1/2 rounded-full bg-current transition-transform duration-300 ease-out",
+          open ? "-rotate-45" : "translate-y-[3px]",
+        )}
+      />
+    </div>
   );
 }

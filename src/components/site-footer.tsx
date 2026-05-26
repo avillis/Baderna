@@ -26,10 +26,10 @@ const TEXT_SECTIONS = [
   {
     label: "Sobre",
     items: [
-      { label: "Comunidade", href: "#" },
+      { label: "Comunidade", href: "/comunidade" },
       { label: "Regras", href: "/regras" },
-      { label: "FAQ", href: "#" },
-      { label: "Suporte", href: "#" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Suporte", href: "/suporte" },
     ],
   },
 ];

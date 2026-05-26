@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Listagens da comunidade
     Route::get('/members', [MembersController::class, 'index']);
     Route::get('/members/ranks', [MemberRanksController::class, 'index']);
+    Route::get('/members/resolve-slug/{slug}', [MembersController::class, 'resolveSlug']);
     Route::get('/members/{slug}/comments', [MemberCommentsController::class, 'index']);
     Route::get('/inhouses', [InhousesController::class, 'index']);
     Route::get('/inhouses/{shortCode}', [InhousesController::class, 'show']);
@@ -76,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/posts/{id}/comments', [PostCommentsController::class, 'index'])->whereNumber('id');
     Route::post('/posts/{id}/comments', [PostCommentsController::class, 'store'])->whereNumber('id');
     Route::delete('/posts/{id}/comments/{commentId}', [PostCommentsController::class, 'destroy'])->whereNumber('id');
+    Route::post('/posts/{id}/comments/{commentId}/like', [PostCommentsController::class, 'toggleLike'])->whereNumber('id');
 
     // Perfil (Profile)
     Route::get('/users/{user}', [ProfileController::class, 'show']);

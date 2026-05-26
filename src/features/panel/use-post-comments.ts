@@ -49,6 +49,7 @@ async function postToApi(
   body: string,
   imageUrl?: string | null,
   gifUrl?: string | null,
+  parentId?: string | null,
 ): Promise<Comment | null> {
   const token = authToken();
   if (!token) return null;
@@ -59,7 +60,12 @@ async function postToApi(
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ body, image_url: imageUrl, gif_url: gifUrl }),
+    body: JSON.stringify({
+      body,
+      image_url: imageUrl,
+      gif_url: gifUrl,
+      ...(parentId != null ? { parent_id: parentId } : {}),
+    }),
   });
   if (!res.ok) return null;
   return (await res.json()) as Comment;
@@ -76,6 +82,23 @@ async function deleteFromApi(postId: number, commentId: string): Promise<boolean
     },
   );
   return res.ok;
+}
+
+async function likeCommentApi(
+  postId: number,
+  commentId: string,
+): Promise<{ likesCount: number; likedByMe: boolean } | null> {
+  const token = authToken();
+  if (!token) return null;
+  const res = await fetch(
+    `${API_BASE}/posts/${postId}/comments/${encodeURIComponent(commentId)}/like`,
+    {
+      method: "POST",
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+    },
+  );
+  if (!res.ok) return null;
+  return (await res.json()) as { likesCount: number; likedByMe: boolean };
 }
 
 export function usePostComments(postId: number) {
@@ -123,7 +146,13 @@ export function usePostComments(postId: number) {
     async (id: string) => {
       const ok = await deleteFromApi(postId, id);
       if (!ok) return false;
-      const next = comments.filter((c) => c.id !== id);
+      // Remove from top-level or from any parent's replies array.
+      const next = comments
+        .filter((c) => c.id !== id)
+        .map((c) => ({
+          ...c,
+          replies: c.replies ? c.replies.filter((r) => r.id !== id) : c.replies,
+        }));
       setComments(next);
       writeCache(postId, next);
       return true;
@@ -131,5 +160,93 @@ export function usePostComments(postId: number) {
     [postId, comments],
   );
 
-  return { comments, addComment, removeComment };
+  const toggleLike = useCallback(
+    async (commentId: string, isReply?: boolean, parentId?: string) => {
+      // Optimistic update.
+      const applyLikeToggle = (list: Comment[]): Comment[] =>
+        list.map((c) => {
+          if (c.id === commentId) {
+            const nowLiked = !c.likedByMe;
+            return {
+              ...c,
+              likedByMe: nowLiked,
+              likesCount: (c.likesCount ?? 0) + (nowLiked ? 1 : -1),
+            };
+          }
+          if (isReply && c.id === parentId && c.replies) {
+            return {
+              ...c,
+              replies: c.replies.map((r) => {
+                if (r.id === commentId) {
+                  const nowLiked = !r.likedByMe;
+                  return {
+                    ...r,
+                    likedByMe: nowLiked,
+                    likesCount: (r.likesCount ?? 0) + (nowLiked ? 1 : -1),
+                  };
+                }
+                return r;
+              }),
+            };
+          }
+          return c;
+        });
+
+      const optimistic = applyLikeToggle(comments);
+      setComments(optimistic);
+
+      const result = await likeCommentApi(postId, commentId);
+      if (!result) {
+        // Revert on failure.
+        setComments(comments);
+        return;
+      }
+
+      // Apply server-confirmed values.
+      const confirmed = comments.map((c) => {
+        if (c.id === commentId) {
+          return { ...c, likesCount: result.likesCount, likedByMe: result.likedByMe };
+        }
+        if (isReply && c.id === parentId && c.replies) {
+          return {
+            ...c,
+            replies: c.replies.map((r) =>
+              r.id === commentId
+                ? { ...r, likesCount: result.likesCount, likedByMe: result.likedByMe }
+                : r,
+            ),
+          };
+        }
+        return c;
+      });
+      setComments(confirmed);
+      writeCache(postId, confirmed);
+    },
+    [postId, comments],
+  );
+
+  const addReply = useCallback(
+    async (
+      parentId: string,
+      body: string,
+      imageUrl?: string | null,
+      gifUrl?: string | null,
+    ) => {
+      const trimmed = body.trim();
+      if (!trimmed && !imageUrl && !gifUrl) return null;
+      const fresh = await postToApi(postId, trimmed, imageUrl ?? null, gifUrl ?? null, parentId);
+      if (!fresh) return null;
+      const next = comments.map((c) =>
+        c.id === parentId
+          ? { ...c, replies: [...(c.replies ?? []), fresh] }
+          : c,
+      );
+      setComments(next);
+      writeCache(postId, next);
+      return fresh;
+    },
+    [postId, comments],
+  );
+
+  return { comments, addComment, removeComment, toggleLike, addReply };
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { Share2 } from "lucide-react";
 import { useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { NAME_BY_ID } from "@/features/panel/names-data";
 import type { RankType } from "@/features/panel/rank-utils";
 import { useAccount } from "@/features/panel/use-account";
@@ -47,8 +47,8 @@ type ProfileActionsProps = {
   badernaRank?: number;
   bannerSrc?: string;
   onCompare?: () => void;
-  /** Classe do container dos botões (controla posição/layout). */
   className?: string;
+  editButton?: React.ReactNode;
 };
 
 export function ProfileActions({
@@ -63,10 +63,13 @@ export function ProfileActions({
   bannerSrc,
   onCompare,
   className = "",
+  editButton,
 }: ProfileActionsProps) {
   const { account } = useAccount();
   const { user } = useAuth();
+  const toast = useToast();
   const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isOwnProfile =
     user != null && targetUserId != null && user.id === targetUserId;
@@ -79,6 +82,7 @@ export function ProfileActions({
     isOwnProfile && account.avatarSrc ? account.avatarSrc : avatarSrc;
 
   const effectiveRiotId = riotId || (isOwnProfile ? account.gameNick : "");
+  const hasRiotId = Boolean(effectiveRiotId);
   const riot = useRiotProfile(effectiveRiotId || null);
   const liveTier = riot.status === "ready" ? riot.profile?.rank?.tier ?? "" : "";
   const isUnranked =
@@ -93,8 +97,9 @@ export function ProfileActions({
     "preto",
   );
 
-  async function shareCard() {
-    if (typeof window === "undefined" || sharing) return;
+  function buildCardRequest() {
+    if (typeof window === "undefined") return null;
+
     const rankObj = riot.status === "ready" ? riot.profile.rank : null;
     const elo =
       rankObj && rankObj.tier && rankObj.tier !== "Unranked"
@@ -103,7 +108,7 @@ export function ProfileActions({
           }`
         : "Sem classificação";
     const games = rankObj ? rankObj.wins + rankObj.losses : 0;
-    const wr = games > 0 ? String(Math.round((rankObj!.wins / games) * 100)) : "";
+    const wr = games > 0 ? String(Math.round((rankObj.wins / games) * 100)) : "";
     const abs = (src: string) => {
       try {
         return new URL(src, window.location.origin).toString();
@@ -128,22 +133,71 @@ export function ProfileActions({
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")}.png`;
 
+    return { cardUrl, fileName };
+  }
+
+  async function fetchCardBlob() {
+    const built = buildCardRequest();
+    if (!built) return null;
+
+    const res = await fetch(built.cardUrl);
+    if (!res.ok) throw new Error("falha ao gerar o cartão");
+    const blob = await res.blob();
+    return { ...built, blob };
+  }
+
+  function downloadBlob(blob: Blob, fileName: string) {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+  }
+
+  const profileUrl = memberId
+    ? (typeof window !== "undefined"
+        ? `${window.location.origin}/membro/${memberId}`
+        : `/membro/${memberId}`)
+    : (typeof window !== "undefined" ? window.location.origin : "/");
+
+  async function shareCard() {
+    if (typeof window === "undefined" || sharing) return;
+
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+
+    // Desktop: copia o link e exibe toast
+    if (isDesktop) {
+      try {
+        await navigator.clipboard.writeText(
+          `${window.location.origin}/membro/${memberId ?? ""}`,
+        );
+        setCopied(true);
+        toast.show("Link copiado!", "success");
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        toast.show("Não foi possível copiar o link.");
+      }
+      return;
+    }
+
+    // Mobile/tablet: share nativo com imagem
     setSharing(true);
     try {
-      const res = await fetch(cardUrl);
-      if (!res.ok) throw new Error("falha ao gerar o cartão");
-      const blob = await res.blob();
-      const file = new File([blob], fileName, { type: "image/png" });
-      const profileUrl = memberId
-        ? `${window.location.origin}/membro/${memberId}`
-        : window.location.origin;
+      const card = await fetchCardBlob();
+      if (!card) return;
+
+      const file = new File([card.blob], card.fileName, { type: "image/png" });
       const intro = isOwnProfile
         ? "Esse é o meu perfil na Baderna!"
         : `Confira o perfil de ${liveDisplayName} na Baderna!`;
-      const text = `${intro}\n${profileUrl}`;
+      const text = `${intro}\n${window.location.origin}/membro/${memberId ?? ""}`;
       const nav = navigator as Navigator & {
         canShare?: (data: { files?: File[] }) => boolean;
       };
+
       if (nav.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
@@ -152,68 +206,88 @@ export function ProfileActions({
             title: `Perfil de ${liveDisplayName} · Baderna`,
           });
         } catch {
-          /* usuário cancelou */
+          // usuario cancelou
         }
       } else {
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = objectUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(objectUrl);
+        downloadBlob(card.blob, card.fileName);
       }
     } catch {
-      window.open(cardUrl, "_blank");
+      const built = buildCardRequest();
+      if (built) window.open(built.cardUrl, "_blank");
     } finally {
       setSharing(false);
     }
   }
 
+  const actionButtonClass =
+    "inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60";
+  const compareButtonClass = actionButtonClass;
+
   return (
     <div className={className}>
-      {!isOwnProfile && onCompare && (
+      {!isOwnProfile && onCompare && hasRiotId && (
         <button
           type="button"
           onClick={onCompare}
-          className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-6 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+          className={compareButtonClass}
         >
           <svg
             viewBox="0 0 24 24"
             fill="none"
-            className="h-[16px] w-[16px]"
-            xmlns="http://www.w3.org/2000/svg"
+            className="h-[14px] w-[14px]"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <path
-              d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11" />
           </svg>
           Comparar com você
         </button>
       )}
-      <button
-        type="button"
-        onClick={shareCard}
-        disabled={sharing}
-        className="inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ededed] px-6 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {sharing ? (
-          <svg
-            className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
-            viewBox="25 25 50 50"
-          >
-            <circle r="20" cy="50" cx="50" />
-          </svg>
-        ) : (
-          <Share2 className="h-[16px] w-[16px]" strokeWidth={2.4} />
-        )}
-        {sharing ? "Carregando…" : "Compartilhar"}
-      </button>
+
+        <button
+          type="button"
+          onClick={shareCard}
+          disabled={sharing}
+          className={actionButtonClass}
+        >
+          {sharing ? (
+            <svg
+              className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
+              viewBox="25 25 50 50"
+            >
+              <circle r="20" cy="50" cx="50" />
+            </svg>
+          ) : copied ? (
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[15px] w-[15px]"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          ) : (
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[15px] w-[15px]"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20.7914 12.6074C21.0355 12.3981 21.1575 12.2935 21.2023 12.169C21.2415 12.0598 21.2415 11.9402 21.2023 11.831C21.1575 11.7065 21.0355 11.6018 20.7914 11.3926L12.3206 4.13196C11.9004 3.77176 11.6903 3.59166 11.5124 3.58725C11.3578 3.58342 11.2101 3.65134 11.1124 3.77122C11 3.90915 11 4.18589 11 4.73936V9.03462C8.86532 9.40807 6.91159 10.4897 5.45971 12.1139C3.87682 13.8845 3.00123 16.1759 3 18.551V19.1629C4.04934 17.8989 5.35951 16.8765 6.84076 16.1659C8.1467 15.5394 9.55842 15.1683 11 15.0705V19.2606C11 19.8141 11 20.0908 11.1124 20.2288C11.2101 20.3486 11.3578 20.4166 11.5124 20.4127C11.6903 20.4083 11.9004 20.2282 12.3206 19.868L20.7914 12.6074Z" />
+            </svg>
+          )}
+          {sharing ? "Carregando..." : copied ? "Copiado!" : "Compartilhar"}
+        </button>
+
+      {editButton}
     </div>
   );
 }

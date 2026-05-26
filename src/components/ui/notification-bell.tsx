@@ -8,16 +8,30 @@ import { useNotifications } from "@/features/panel/use-notifications";
 export default function NotificationBell({
   placement = "up",
 }: {
-  /** "up": abre pra cima ancorado ao botão (sidebar do desktop, que fica no
-   *  canto inferior). "below": abre pra baixo via portal, ancorado à direita
-   *  do viewport — igual o dropdown da foto de perfil no header mobile. */
-  placement?: "up" | "below";
+  /** "up": abre pra cima ancorado ao botão, em fluxo (sidebar do desktop, que
+   *  fica no canto inferior). "above": abre pra cima também, mas via portal no
+   *  body — usado no drawer mobile, onde o menu fica num stacking context
+   *  abaixo do card da página, então um dropdown em fluxo ficaria atrás dele.
+   *  "below": abre pra baixo via portal, ancorado à direita do viewport. */
+  placement?: "up" | "above" | "below";
 }) {
   const { notifications, unreadCount, markAsRead, remove } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  function handleClose() {
+    setClosing(true);
+  }
+
+  function handleAnimationEnd() {
+    if (closing) {
+      setIsOpen(false);
+      setClosing(false);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -25,17 +39,17 @@ export default function NotificationBell({
       const target = event.target as Node;
       if (buttonRef.current?.contains(target)) return;
       if (dropdownRef.current?.contains(target)) return;
-      setIsOpen(false);
+      handleClose();
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
   const handleToggle = () => {
-    if (!isOpen && buttonRef.current) {
-      setAnchorRect(buttonRef.current.getBoundingClientRect());
-    }
-    setIsOpen((v) => !v);
+    if (isOpen) { handleClose(); return; }
+    if (buttonRef.current) setAnchorRect(buttonRef.current.getBoundingClientRect());
+    setIsOpen(true);
+    setClosing(false);
   };
 
   const handleNotificationClick = (id: string) => {
@@ -50,12 +64,8 @@ export default function NotificationBell({
       ? "relative flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#ededed] text-[#0f0f0f] transition-opacity duration-200 hover:opacity-85"
       : "relative flex h-[36px] w-[36px] items-center justify-center rounded-full border border-[#efe6e2] text-[#313131] transition-colors duration-200 hover:bg-[#fff4f4]";
 
-  // Com não-lidas, troca pro sino "tocando" (com as ondinhas) pra dar mais
-  // dinamismo; zerado, fica o sino normal.
   const bellPath =
-    unreadCount > 0
-      ? "M9.35442 21C10.0596 21.6224 10.9858 22 12.0002 22C13.0147 22 13.9409 21.6224 14.6461 21M2.29414 5.81989C2.27979 4.36854 3.06227 3.01325 4.32635 2.3M21.7024 5.8199C21.7167 4.36855 20.9342 3.01325 19.6702 2.3M18.0002 8C18.0002 6.4087 17.3681 4.88258 16.2429 3.75736C15.1177 2.63214 13.5915 2 12.0002 2C10.4089 2 8.88283 2.63214 7.75761 3.75736C6.63239 4.88258 6.00025 6.4087 6.00025 8C6.00025 11.0902 5.22072 13.206 4.34991 14.6054C3.61538 15.7859 3.24811 16.3761 3.26157 16.5408C3.27649 16.7231 3.31511 16.7926 3.46203 16.9016C3.59471 17 4.19284 17 5.3891 17H18.6114C19.8077 17 20.4058 17 20.5385 16.9016C20.6854 16.7926 20.724 16.7231 20.7389 16.5408C20.7524 16.3761 20.3851 15.7859 19.6506 14.6054C18.7798 13.206 18.0002 11.0902 18.0002 8Z"
-      : "M9.35419 21C10.0593 21.6224 10.9856 22 12 22C13.0145 22 13.9407 21.6224 14.6458 21M18 8C18 6.4087 17.3679 4.88258 16.2427 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.8826 2.63214 7.75738 3.75736C6.63216 4.88258 6.00002 6.4087 6.00002 8C6.00002 11.0902 5.22049 13.206 4.34968 14.6054C3.61515 15.7859 3.24788 16.3761 3.26134 16.5408C3.27626 16.7231 3.31488 16.7926 3.46179 16.9016C3.59448 17 4.19261 17 5.38887 17H18.6112C19.8074 17 20.4056 17 20.5382 16.9016C20.6852 16.7926 20.7238 16.7231 20.7387 16.5408C20.7522 16.3761 20.3849 15.7859 19.6504 14.6054C18.7795 13.206 18 11.0902 18 8Z";
+    "M9.35419 21C10.0593 21.6224 10.9856 22 12 22C13.0145 22 13.9407 21.6224 14.6458 21M18 8C18 6.4087 17.3679 4.88258 16.2427 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.8826 2.63214 7.75738 3.75736C6.63216 4.88258 6.00002 6.4087 6.00002 8C6.00002 11.0902 5.22049 13.206 4.34968 14.6054C3.61515 15.7859 3.24788 16.3761 3.26134 16.5408C3.27626 16.7231 3.31488 16.7926 3.46179 16.9016C3.59448 17 4.19261 17 5.38887 17H18.6112C19.8074 17 20.4056 17 20.5382 16.9016C20.6852 16.7926 20.7238 16.7231 20.7387 16.5408C20.7522 16.3761 20.3849 15.7859 19.6504 14.6054C18.7795 13.206 18 11.0902 18 8Z";
 
   const panel = (
     <>
@@ -168,8 +178,10 @@ export default function NotificationBell({
         </svg>
 
         {unreadCount > 0 && (
-          <span className="absolute right-[2px] top-[2px] flex h-[16px] w-[16px] items-center justify-center rounded-full border-2 border-white bg-[#ff4100] text-[9px] font-bold text-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
+          <span className="absolute right-0 top-0 flex h-[16px] min-w-[16px] -translate-y-[2px] translate-x-[2px] items-center justify-center rounded-full border border-white bg-[#ededed] px-[3px] text-center text-[9px] font-bold leading-none text-[#0f0f0f] tabular-nums">
+            <span className="relative -top-px">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
           </span>
         )}
       </button>
@@ -179,11 +191,35 @@ export default function NotificationBell({
       {isOpen && placement === "up" && (
         <div
           ref={dropdownRef}
-          className="absolute bottom-full left-1/2 mb-[12px] w-[320px] -translate-x-1/2 overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] z-[9999]"
+          onAnimationEnd={handleAnimationEnd}
+          className={`absolute bottom-full left-1/2 mb-[12px] w-[320px] -translate-x-1/2 overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] z-[9999] ${closing ? "dropdown-up-out" : "dropdown-up-in"}`}
         >
           {panel}
         </div>
       )}
+
+      {/* Drawer mobile: abre pra cima via portal (left alinhado à margem do
+          drawer), pra escapar do stacking context do menu e ficar sobre o
+          card da página. */}
+      {isOpen &&
+        placement === "above" &&
+        anchorRect &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            onAnimationEnd={handleAnimationEnd}
+            style={{
+              position: "fixed",
+              left: 16,
+              bottom: window.innerHeight - anchorRect.top + 8,
+              zIndex: 9999,
+            }}
+            className={`w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] ${closing ? "dropdown-up-out" : "dropdown-up-in"}`}
+          >
+            {panel}
+          </div>,
+          document.body,
+        )}
 
       {/* Header mobile: abre pra baixo via portal, ancorado à direita do
           viewport — mesmo posicionamento do dropdown da foto de perfil. */}
@@ -193,13 +229,14 @@ export default function NotificationBell({
         createPortal(
           <div
             ref={dropdownRef}
+            onAnimationEnd={handleAnimationEnd}
             style={{
               position: "fixed",
               right: 20,
               top: anchorRect.bottom + 8,
               zIndex: 9999,
             }}
-            className="w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]"
+            className={`w-[320px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[16px] border border-[#f0e9e5] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)] ${closing ? "dropdown-down-out" : "dropdown-down-in"}`}
           >
             {panel}
           </div>,

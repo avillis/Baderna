@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { useAccount } from "@/features/panel/use-account";
+import { useGameMode } from "@/features/panel/game-mode-context";
 import { useRiotProfile, type RiotMatch } from "@/features/panel/use-riot-profile";
 
 // Riot queue ids → display label. Only the ones we care about.
@@ -104,7 +105,12 @@ function MatchRow({ match, dimmed }: { match: RiotMatch; dimmed: boolean }) {
  */
 export function LiveHistoryCard({ riotId }: { riotId?: string } = {}) {
   const { account } = useAccount();
-  const state = useRiotProfile(riotId || account.gameNick);
+  const { mode } = useGameMode();
+  // Se riotId foi fornecido explicitamente (mesmo vazio), respeita — não sobrescreve
+  // com a conta do usuário logado. Fallback pro account só no uso standalone (undefined).
+  const effectiveRiotId = riotId !== undefined ? riotId : account.gameNick;
+  const hasRiotId = Boolean(effectiveRiotId);
+  const state = useRiotProfile(effectiveRiotId);
 
   return (
     <section className="flex h-full min-h-[471px] flex-col rounded-[var(--panel-radius-card)] bg-white px-[28px] py-[34px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
@@ -116,7 +122,9 @@ export function LiveHistoryCard({ riotId }: { riotId?: string } = {}) {
       </p>
 
       <div className="mt-[28px] flex flex-1 flex-col border-t border-[#efebe8] pt-[12px]">
-        {state.status === "loading" || state.status === "idle" ? (
+        {!hasRiotId ? (
+          <div className="my-auto" />
+        ) : state.status === "loading" || state.status === "idle" ? (
           <div className="my-auto flex items-center justify-center">
             <svg className="capas-spinner h-[40px] w-[40px]" viewBox="25 25 50 50">
               <circle r="20" cy="50" cx="50" />
@@ -131,20 +139,31 @@ export function LiveHistoryCard({ riotId }: { riotId?: string } = {}) {
               {state.message}
             </p>
           </div>
-        ) : state.profile.matches.length === 0 ? (
+        ) : mode === "Inhouse" ? (
           <p className="my-auto text-center text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
-            Nenhuma partida recente encontrada.
+            Histórico de Inhouses em breve.
           </p>
         ) : (
-          <div className="space-y-[14px]">
-            {state.profile.matches.slice(0, 10).map((match, index) => (
-              <MatchRow
-                key={match.matchId}
-                match={match}
-                dimmed={index % 2 === 1}
-              />
-            ))}
-          </div>
+          (() => {
+            const filtered = mode === "Flex"
+              ? state.profile.matches.filter((m) => m.queueId === 440)
+              : state.profile.matches;
+            return filtered.length === 0 ? (
+              <p className="my-auto text-center text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
+                Nenhuma partida {mode === "Flex" ? "Flex" : "recente"} encontrada.
+              </p>
+            ) : (
+              <div className="space-y-[14px]">
+                {filtered.slice(0, 10).map((match, index) => (
+                  <MatchRow
+                    key={match.matchId}
+                    match={match}
+                    dimmed={index % 2 === 1}
+                  />
+                ))}
+              </div>
+            );
+          })()
         )}
       </div>
     </section>

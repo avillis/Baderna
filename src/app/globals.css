@@ -1190,3 +1190,75 @@ button {
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
 }
+
+/* Modal entrance — backdrop fade + panel slide-up com perspectiva */
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-backdrop-in {
+  animation: modal-backdrop-in 0.22s ease both;
+}
+
+.modal-panel-in {
+  animation: modal-panel-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes modal-backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes modal-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+}
+
+.modal-backdrop-out {
+  animation: modal-backdrop-out 0.22s ease both;
+}
+
+.modal-panel-out {
+  animation: modal-panel-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* Dropdown entrance/exit — abre pra cima (sidebar) */
+@keyframes dropdown-up-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+@keyframes dropdown-up-out {
+  from { opacity: 1; transform: scale(1)    translateY(0);   }
+  to   { opacity: 0; transform: scale(0.95) translateY(8px); }
+}
+/* Dropdown entrance/exit — abre pra baixo */
+@keyframes dropdown-down-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+@keyframes dropdown-down-out {
+  from { opacity: 1; transform: scale(1)    translateY(0);    }
+  to   { opacity: 0; transform: scale(0.95) translateY(-8px); }
+}
+.dropdown-up-in   { animation: dropdown-up-in   0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dropdown-up-out  { animation: dropdown-up-out  0.14s cubic-bezier(0.4, 0, 1, 1)     both; }
+.dropdown-down-in { animation: dropdown-down-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dropdown-down-out{ animation: dropdown-down-out 0.14s cubic-bezier(0.4, 0, 1, 1)    both; }

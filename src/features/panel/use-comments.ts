@@ -20,6 +20,11 @@ export type Comment = {
   imageUrl?: string | null;
   gifUrl?: string | null;
   createdAt: number;
+  /** Like/reply fields — only present in post comments, all optional. */
+  likesCount?: number;
+  likedByMe?: boolean;
+  parentId?: string | null;
+  replies?: Comment[];
 };
 
 function cacheKey(memberId: string) {
