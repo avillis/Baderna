@@ -737,13 +737,15 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       setReveal({ idx: WIN_INDEX, rarity });
       setTranslateX((tx) => tx - WINNER_SIDE_MARGIN);
       if (rarity === "epico" || rarity === "exclusivo" || rarity === "lendaria") {
+        playWinAudio();
+      }
+      if (rarity === "exclusivo" || rarity === "lendaria") {
         const ind = indicatorRef.current;
         if (ind) {
           const r = ind.getBoundingClientRect();
           setBurstPos({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
         }
         window.setTimeout(() => setConfettiBurst((n) => n + 1), 300);
-        playWinAudio();
       }
     }, duration + 100);
   }
