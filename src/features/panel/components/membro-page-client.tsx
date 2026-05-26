@@ -299,7 +299,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
   };
 
   // lol:     [baderna-FIXO] [lane-FIXO] [config0] [config1] → 4 cards
-  // Não-lol: [config0]      [baderna-FIXO] [config1] [config2] → 4 cards
+  // Não-lol: [baderna-FIXO] [config0]  [config1] [config2] → 4 cards
   const topSlots = hasRiotId
     ? [
         baderna,
@@ -308,8 +308,8 @@ export function MembroPageClient({ slug }: { slug: string }) {
         renderConfig(1),
       ]
     : [
-        renderConfig(0),
         baderna,
+        renderConfig(0),
         renderConfig(1),
         renderConfig(2),
       ];
@@ -452,10 +452,18 @@ export function MembroPageClient({ slug }: { slug: string }) {
               <PanelGameModeToggle />
             </div>
             <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
-              <div className="min-w-0 max-w-full"><LiveHistoryCard riotId={riotId} /></div>
-              <div className="min-w-0 max-w-full"><PanelMemberWinratesCard targetUserId={targetUserId} /></div>
+              {hasRiotId ? (
+                <>
+                  <div className="min-w-0 max-w-full"><LiveHistoryCard riotId={riotId} /></div>
+                  <div className="min-w-0 max-w-full"><PanelMemberWinratesCard targetUserId={targetUserId} /></div>
+                </>
+              ) : (
+                <p className="py-[40px] text-center text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0] xl:col-span-2">
+                  Essa pessoa não joga lol
+                </p>
+              )}
               <div className="flex min-w-0 max-w-full flex-col gap-8 pb-[32px] xl:pb-0">
-                <LiveFavoriteChampionsCard riotId={riotId} />
+                {hasRiotId && <LiveFavoriteChampionsCard riotId={riotId} />}
                 <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
               </div>
             </div>
@@ -500,16 +508,22 @@ export function MembroPageClient({ slug }: { slug: string }) {
               </div>
             </div>
             <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
-              <div className="col-start-1 col-span-1">
-                <PanelMemberWinratesCard targetUserId={targetUserId} />
-              </div>
-
-              <div className="col-start-2 col-span-2">
-                <LiveHistoryCard riotId={riotId} />
-              </div>
-
+              {hasRiotId ? (
+                <>
+                  <div className="col-start-1 col-span-1">
+                    <PanelMemberWinratesCard targetUserId={targetUserId} />
+                  </div>
+                  <div className="col-start-2 col-span-2">
+                    <LiveHistoryCard riotId={riotId} />
+                  </div>
+                </>
+              ) : (
+                <p className="col-start-1 col-span-3 py-[40px] text-center text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0]">
+                  Essa pessoa não joga lol
+                </p>
+              )}
               <div className="col-start-4 col-span-2 flex flex-col gap-[42px]">
-                <LiveFavoriteChampionsCard riotId={riotId} />
+                {hasRiotId && <LiveFavoriteChampionsCard riotId={riotId} />}
                 <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
               </div>
             </div>
