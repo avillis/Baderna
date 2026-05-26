@@ -3,30 +3,57 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Comment;
+use App\Models\CommentLike;
 use App\Models\Post;
 use Illuminate\Http\Request;
 
 class PostCommentsController extends Controller
 {
-    public function index(int $id)
+    /** Serializa um único comentário (sem replies) para JSON. */
+    private function serializeComment(Comment $c, int $viewerId, ?string $parentId = null): array
+    {
+        $author = $c->author;
+        return [
+            'id'           => 'c-' . $c->id,
+            'parentId'     => $parentId,
+            'authorId'     => $author?->id,
+            'author'       => $author?->display_name ?: ($author?->summoner_name ?: $author?->name ?: 'Membro'),
+            'authorAvatar' => $author?->avatar_src,
+            'body'         => $c->body,
+            'imageUrl'     => $c->image_url,
+            'gifUrl'       => $c->gif_url,
+            'createdAt'    => $c->created_at?->getTimestampMs() ?? 0,
+            'likesCount'   => $c->likes->count(),
+            'likedByMe'    => $c->likes->contains('user_id', $viewerId),
+        ];
+    }
+
+    public function index(Request $request, int $id)
     {
         $post = Post::find($id);
         if (!$post) return response()->json([], 200);
 
+        $viewerId = $request->user()?->id ?? 0;
+
         $comments = $post->comments()
-            ->with('author:id,name,summoner_name,display_name,avatar_src')
+            ->whereNull('parent_id')
+            ->with([
+                'author:id,name,summoner_name,display_name,avatar_src',
+                'likes',
+                'replies.author:id,name,summoner_name,display_name,avatar_src',
+                'replies.likes',
+            ])
             ->latest()
             ->get()
-            ->map(function ($c) {
-                $author = $c->author;
-                return [
-                    'id'           => 'c-' . $c->id,
-                    'authorId'     => $author?->id,
-                    'author'       => $author?->display_name ?: ($author?->summoner_name ?: $author?->name ?: 'Membro'),
-                    'authorAvatar' => $author?->avatar_src,
-                    'body'         => $c->body,
-                    'createdAt'    => $c->created_at?->getTimestampMs() ?? 0,
-                ];
+            ->map(function ($c) use ($viewerId) {
+                $row = $this->serializeComment($c, $viewerId, null);
+                $row['replies'] = $c->replies
+                    ->sortBy('created_at')
+                    ->values()
+                    ->map(fn ($r) => $this->serializeComment($r, $viewerId, 'c-' . $c->id))
+                    ->all();
+                return $row;
             });
 
         return response()->json($comments);
@@ -38,26 +65,47 @@ class PostCommentsController extends Controller
         if (!$post) {
             return response()->json(['error' => 'Post não encontrado.'], 404);
         }
+
         $data = $request->validate([
-            'body' => 'required|string|max:1000',
+            'body'      => 'nullable|string|max:1000',
+            'image_url' => 'nullable|string|max:2048',
+            'gif_url'   => 'nullable|string|max:2048',
+            'parent_id' => 'nullable|string',
         ]);
+
+        $body     = trim($data['body'] ?? '');
+        $imageUrl = $data['image_url'] ?? null;
+        $gifUrl   = $data['gif_url'] ?? null;
+
+        if (!$body && !$imageUrl && !$gifUrl) {
+            return response()->json(['error' => 'Comentário não pode ser vazio.'], 422);
+        }
+
+        // parent_id vem como "c-123" — strip prefix.
+        $parentId = null;
+        if (!empty($data['parent_id'])) {
+            $parentId = (int) preg_replace('/^c-/', '', $data['parent_id']);
+            // Verifica que o parent pertence a este post.
+            $parent = $post->comments()->where('id', $parentId)->first();
+            if (!$parent) {
+                return response()->json(['error' => 'Comentário pai não encontrado.'], 404);
+            }
+        }
 
         $comment = $post->comments()->create([
-            'body'    => $data['body'],
-            'user_id' => $request->user()->id,
+            'body'      => $body ?: null,
+            'user_id'   => $request->user()->id,
+            'parent_id' => $parentId,
+            'image_url' => $imageUrl,
+            'gif_url'   => $gifUrl,
         ]);
 
-        $comment->load('author:id,name,summoner_name,display_name,avatar_src');
-        $author = $comment->author;
+        $comment->load('author:id,name,summoner_name,display_name,avatar_src', 'likes');
+        $parentKey = $parentId ? 'c-' . $parentId : null;
+        $row = $this->serializeComment($comment, $request->user()->id, $parentKey);
+        $row['replies'] = [];
 
-        return response()->json([
-            'id'           => 'c-' . $comment->id,
-            'authorId'     => $author?->id,
-            'author'       => $author?->display_name ?: ($author?->summoner_name ?: $author?->name ?: 'Membro'),
-            'authorAvatar' => $author?->avatar_src,
-            'body'         => $comment->body,
-            'createdAt'    => $comment->created_at?->getTimestampMs() ?? 0,
-        ], 201);
+        return response()->json($row, 201);
     }
 
     public function destroy(Request $request, int $id, string $commentId)
@@ -67,19 +115,73 @@ class PostCommentsController extends Controller
             return response()->json(['error' => 'Post não encontrado.'], 404);
         }
         $cid = (int) preg_replace('/^c-/', '', $commentId);
-        $comment = $post->comments()->where('id', $cid)->first();
+
+        // Pode ser um comentário direto ou uma reply.
+        $comment = Comment::where('id', $cid)
+            ->where(function ($q) use ($post) {
+                $q->whereHasMorph('commentable', [Post::class], fn ($q2) => $q2->where('id', $post->id))
+                  ->orWhereHas('commentable', fn ($q2) => $q2->where('commentable_type', Post::class))
+                  ->orWhereIn('parent_id', $post->comments()->select('id'));
+            })
+            ->first();
+
+        // Fallback: busca diretamente pelo post morph.
+        if (!$comment) {
+            $comment = $post->comments()->where('id', $cid)->first();
+        }
+        if (!$comment) {
+            // Tenta como reply de algum comentário do post.
+            $postCommentIds = $post->comments()->pluck('id');
+            $comment = Comment::where('id', $cid)
+                ->whereIn('parent_id', $postCommentIds)
+                ->first();
+        }
+
         if (!$comment) return response()->json(null, 204);
 
-        // Autor do comentário, dono do post ou admin podem apagar.
         $authUser = $request->user();
         $canDelete =
             $comment->user_id === $authUser->id ||
-            $post->user_id === $authUser->id ||
+            $post->user_id    === $authUser->id ||
             $authUser->is_admin;
+
         if (!$canDelete) {
             return response()->json(['error' => 'Sem permissão.'], 403);
         }
         $comment->delete();
         return response()->json(null, 204);
+    }
+
+    public function toggleLike(Request $request, int $id, string $commentId)
+    {
+        $post = Post::find($id);
+        if (!$post) return response()->json(['error' => 'Post não encontrado.'], 404);
+
+        $cid = (int) preg_replace('/^c-/', '', $commentId);
+
+        // Aceita tanto comentário direto quanto reply.
+        $postCommentIds = $post->comments()->pluck('id');
+        $comment = Comment::where('id', $cid)
+            ->where(function ($q) use ($postCommentIds) {
+                $q->whereIn('id', $postCommentIds)
+                  ->orWhereIn('parent_id', $postCommentIds);
+            })
+            ->first();
+
+        if (!$comment) return response()->json(['error' => 'Comentário não encontrado.'], 404);
+
+        $userId  = $request->user()->id;
+        $existing = CommentLike::where('comment_id', $cid)->where('user_id', $userId)->first();
+
+        if ($existing) {
+            $existing->delete();
+            $likedByMe = false;
+        } else {
+            CommentLike::create(['comment_id' => $cid, 'user_id' => $userId]);
+            $likedByMe = true;
+        }
+
+        $likesCount = CommentLike::where('comment_id', $cid)->count();
+        return response()->json(['likesCount' => $likesCount, 'likedByMe' => $likedByMe]);
     }
 }

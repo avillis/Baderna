@@ -80,6 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/posts/{id}/comments', [PostCommentsController::class, 'index'])->whereNumber('id');
     Route::post('/posts/{id}/comments', [PostCommentsController::class, 'store'])->whereNumber('id');
     Route::delete('/posts/{id}/comments/{commentId}', [PostCommentsController::class, 'destroy'])->whereNumber('id');
+    Route::post('/posts/{id}/comments/{commentId}/like', [PostCommentsController::class, 'toggleLike'])->whereNumber('id');
 
     // Perfil (Profile)
     Route::get('/users/{user}', [ProfileController::class, 'show']);

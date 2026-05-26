@@ -12,6 +12,7 @@ const UPDATE_EVENT = "baderna:comments-updated";
 
 export type Comment = {
   id: string;
+  parentId?: string | null;
   authorId?: number;
   author: string;
   authorAvatar?: string;
@@ -20,6 +21,10 @@ export type Comment = {
   imageUrl?: string | null;
   gifUrl?: string | null;
   createdAt: number;
+  likesCount?: number;
+  likedByMe?: boolean;
+  /** Respostas aninhadas (apenas 1 nível). Só existe em post comments. */
+  replies?: Comment[];
 };
 
 function cacheKey(memberId: string) {
