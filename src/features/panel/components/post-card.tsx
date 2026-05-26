@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -260,24 +260,30 @@ export function PostCard({
           </div>
         )}
 
-        {/* Linha de ações: like + comentários + reações. */}
-        <div className="relative mt-[18px] flex flex-wrap items-center gap-x-[14px] gap-y-[10px]">
-          <LikeButton
-            liked={post.liked}
-            count={post.likesCount}
-            onClick={() => onLike?.(post.id)}
-          />
-          <CommentButton
-            count={post.commentsCount}
-            href={`/post/${post.shortCode || post.id}`}
-          />
-          <PostReactions postId={post.id} />
-          <BookmarkButton />
-          {expanded && (
-            <span className="basis-full pt-[2px] text-left text-[12px] text-[#8d8d8d] sm:ml-auto sm:basis-auto sm:pt-0 sm:text-right">
-              {formatPostDateLong(post.createdAt)}
-            </span>
-          )}
+        {/* Linha de ações em 2 fileiras:
+            1. Like + comentário (+ data se expanded)
+            2. Reações (scroll horizontal com setinhas) + bookmark */}
+        <div className="relative mt-[18px] space-y-[10px]">
+          <div className="flex items-center gap-x-[14px]">
+            <LikeButton
+              liked={post.liked}
+              count={post.likesCount}
+              onClick={() => onLike?.(post.id)}
+            />
+            <CommentButton
+              count={post.commentsCount}
+              href={`/post/${post.shortCode || post.id}`}
+            />
+            {expanded && (
+              <span className="ml-auto text-[12px] text-[#8d8d8d]">
+                {formatPostDateLong(post.createdAt)}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-[6px]">
+            <PostReactions postId={post.id} />
+            <BookmarkButton />
+          </div>
         </div>
       </div>
 
@@ -636,29 +642,105 @@ function PostReactions({ postId }: { postId: number }) {
     .sort(([, a], [, b]) => b - a)
     .map(([e]) => e);
 
+  // Scroll horizontal pra lista de pills (sem wrap). Setinhas aparecem
+  // só quando há overflow real (não polui a UI quando tem poucas reações).
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  function updateScrollIndicators() {
+    const el = scrollRef.current;
+    if (!el) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    setCanScrollLeft(el.scrollLeft > 1);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }
+
+  useEffect(() => {
+    updateScrollIndicators();
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => updateScrollIndicators();
+    el.addEventListener("scroll", onScroll);
+    const ro = new ResizeObserver(updateScrollIndicators);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
+  }, []);
+
+  // Recalcula quando a lista de reações muda (adicionar/remover).
+  useEffect(() => {
+    updateScrollIndicators();
+  }, [active.length]);
+
+  function scrollByDir(dir: -1 | 1) {
+    scrollRef.current?.scrollBy({ left: dir * 140, behavior: "smooth" });
+  }
+
   return (
-    <div className="flex flex-wrap items-center gap-[5px]">
-      {active.map((emoji) => (
+    <div className="flex min-w-0 flex-1 items-center gap-[4px]">
+      {/* Setinha esquerda — aparece quando já rolei pra direita */}
+      {canScrollLeft && (
         <button
-          key={emoji}
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            react(emoji);
+            scrollByDir(-1);
           }}
-          className={`flex h-[24px] items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
-            mine.includes(emoji)
-              ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
-              : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
-          }`}
+          aria-label="Rolar reações para a esquerda"
+          className="flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-colors hover:bg-[#f4f4f4] hover:text-[#ff4100]"
         >
-          <span className="text-[14px] leading-none">{emoji}</span>
-          <span>{counts[emoji]}</span>
+          <ChevronLeft className="h-[16px] w-[16px]" strokeWidth={2.5} />
         </button>
-      ))}
+      )}
 
-      {/* Botão smiley que abre o picker */}
-      <div className="relative">
+      {/* Lista scroll horizontal das pills */}
+      <div
+        ref={scrollRef}
+        className="flex min-w-0 flex-1 items-center gap-[5px] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+      >
+        {active.map((emoji) => (
+          <button
+            key={emoji}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              react(emoji);
+            }}
+            className={`flex h-[24px] flex-shrink-0 items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
+              mine.includes(emoji)
+                ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
+                : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
+            }`}
+          >
+            <span className="text-[14px] leading-none">{emoji}</span>
+            <span>{counts[emoji]}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Setinha direita — aparece quando ainda tem conteúdo pra direita */}
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            scrollByDir(1);
+          }}
+          aria-label="Rolar reações para a direita"
+          className="flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-colors hover:bg-[#f4f4f4] hover:text-[#ff4100]"
+        >
+          <ChevronRight className="h-[16px] w-[16px]" strokeWidth={2.5} />
+        </button>
+      )}
+
+      {/* Botão smiley fixo, abre o picker */}
+      <div className="relative flex-shrink-0">
         <button
           type="button"
           onClick={(e) => {
