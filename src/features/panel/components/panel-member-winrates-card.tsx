@@ -153,17 +153,22 @@ export function PanelMemberWinratesCard({
             const styleId = styleByMemberId.get(row.memberId);
             const member = memberById.get(row.memberId);
             const slug = member ? getMemberSlug(member) : null;
+            // Prefere o nickname LIVE da lista de membros (resolvido por
+            // userId, que é estável) ao invés do snapshot que veio com
+            // o cache de winrate — assim, se o user trocar de nick, o
+            // card atualiza sem esperar o cache expirar.
+            const displayName = member?.nickname ?? row.summonerName ?? row.name;
             const content = (
               <>
                 <MemberAvatar
-                  avatarSrc={row.avatarSrc}
+                  avatarSrc={member?.avatarSrc ?? row.avatarSrc}
                   id={String(row.memberId)}
-                  nickname={row.summonerName ?? row.name}
+                  nickname={displayName}
                 />
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate-glow text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
                     <StyledName styleId={styleId}>
-                      {row.summonerName ?? row.name}
+                      {displayName}
                     </StyledName>
                   </h3>
                   <p className="mt-[2px] text-[13px] font-semibold tracking-[-0.02em] text-[#b0a09a]">

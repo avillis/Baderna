@@ -121,4 +121,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Post::class);
     }
+
+    /**
+     * Hook: quando o summoner_name muda (e por consequência o slug),
+     * reescreve todas as menções `@old-slug` → `@new-slug` em posts e
+     * comentários. Sem isso, mentions de histórico ficam órfãs após
+     * a pessoa trocar de nick.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (User $user) {
+            if (! $user->isDirty('summoner_name')) {
+                return;
+            }
+            $oldName = $user->getOriginal('summoner_name');
+            $newName = $user->summoner_name;
+            \App\Services\MentionRewriter::rewriteSlugChange($oldName, $newName);
+        });
+    }
 }
