@@ -313,9 +313,9 @@ export default function MembrosPage() {
 
       {/* Barra de comparação */}
       {compareMode && selectedIds.length > 0 && (
-        <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
-          <div className="flex items-center gap-[12px] rounded-[20px] border border-[#f0f0f0] bg-white py-[10px] pl-[20px] pr-[10px] shadow-[0px_8px_40px_rgba(0,0,0,0.14)]">
-            <span className="text-[13px] font-semibold tracking-[-0.02em] text-[#0f0f0f]">
+        <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center px-4 xl:left-[423px] xl:right-[45px] 2xl:left-[443px]">
+          <div className="flex items-center gap-[12px] rounded-[20px] bg-[#0f0f0f] py-[10px] pl-[20px] pr-[10px] shadow-[0px_8px_40px_rgba(0,0,0,0.22)]">
+            <span className="text-[13px] font-semibold tracking-[-0.02em] text-white">
               {selectedIds.length}/2 selecionados
             </span>
             <button
