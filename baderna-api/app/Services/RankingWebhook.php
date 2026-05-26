@@ -42,23 +42,20 @@ class RankingWebhook
 
     /**
      * Custom emojis do servidor da Baderna (formato Discord: <:nome:id>).
-     * Preenche os IDs depois que o usuário enviar `\:emoji:` no Discord
-     * e mandar o código cru. Strings vazias = sem emoji custom (cai num
-     * fallback simples no formatLine).
-     *
-     * Esmeralda não tem emoji ainda → usa PLATINUM como fallback.
+     * Nomes são case-sensitive — bate exatamente como cadastrado no servidor.
+     * Esmeralda usa PLATINUM como fallback (asset ainda não subido).
      */
     private const TIER_EMOJI = [
-        'IRON'        => '<:ferro:0>',
-        'BRONZE'      => '<:bronze:0>',
-        'SILVER'      => '<:prata:0>',
-        'GOLD'        => '<:ouro:0>',
-        'PLATINUM'    => '<:platina:0>',
-        // 'EMERALD'  → resolveTierEmoji() cai pra PLATINUM
-        'DIAMOND'     => '<:diamante:0>',
-        'MASTER'      => '<:mestre:0>',
-        'GRANDMASTER' => '<:grao_mestre:0>',
-        'CHALLENGER'  => '<:desafiante:0>',
+        'IRON'        => '<:Ferro:1508925584456290404>',
+        'BRONZE'      => '<:Bronze:1508925626193674314>',
+        'SILVER'      => '<:Prata:1508925665658011698>',
+        'GOLD'        => '<:Ouro:1508925694464229520>',
+        'PLATINUM'    => '<:Platina:1508925748587663390>',
+        // 'EMERALD'  → tierEmoji() cai pra PLATINUM
+        'DIAMOND'     => '<:Diamante:1508925818183749642>',
+        'MASTER'      => '<:Mestre:1508925858017186064>',
+        'GRANDMASTER' => '<:Grao_mestre:1508925928770637976>',
+        'CHALLENGER'  => '<:Desafiante:1508925959406092288>',
     ];
 
     /** Pega o emoji do tier; Esmeralda cai pra Platina (até o user subir o asset). */
