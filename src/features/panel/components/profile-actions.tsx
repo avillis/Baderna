@@ -108,7 +108,7 @@ export function ProfileActions({
           }`
         : "Sem classificação";
     const games = rankObj ? rankObj.wins + rankObj.losses : 0;
-    const wr = games > 0 ? String(Math.round((rankObj.wins / games) * 100)) : "";
+    const wr = games > 0 && rankObj ? String(Math.round((rankObj.wins / games) * 100)) : "";
     const abs = (src: string) => {
       try {
         return new URL(src, window.location.origin).toString();
