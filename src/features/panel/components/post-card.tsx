@@ -606,16 +606,15 @@ function PostReactions({ postId }: { postId: number }) {
       },
       body: JSON.stringify({ emoji }),
     })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((body) => {
-        if (body) {
-          setCounts(body.reactions ?? {});
-          setMine(parseMine(body.mine));
-        }
-      })
       .catch(() => {})
       .finally(() => {
         pendingRef.current.delete(emoji);
+        // Quando TODOS os requests em voo terminarem, faz um GET final pra
+        // sincronizar com o estado canônico do servidor — evita race condition
+        // onde respostas chegam fora de ordem e sobrescrevem umas às outras.
+        if (pendingRef.current.size === 0) {
+          sync();
+        }
       });
   }
 
