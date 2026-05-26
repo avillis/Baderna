@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Copy, Flag, MoreHorizontal, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Flag, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -310,7 +310,17 @@ export function PostCard({
                       }}
                       className="flex w-full items-center gap-[8px] border-t border-[#f4f4f4] px-[14px] py-[10px] text-[13px] font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f4f4f4]"
                     >
-                      <User className="h-[14px] w-[14px]" strokeWidth={2} />
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="h-[14px] w-[14px]"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M16 18L19 15M19 15L22 18M19 15V21M12 15.5H7.5C6.10444 15.5 5.40665 15.5 4.83886 15.6722C3.56045 16.06 2.56004 17.0605 2.17224 18.3389C2 18.9067 2 19.6044 2 21M14.5 7.5C14.5 9.98528 12.4853 12 10 12C7.51472 12 5.5 9.98528 5.5 7.5C5.5 5.01472 7.51472 3 10 3C12.4853 3 14.5 5.01472 14.5 7.5Z" />
+                      </svg>
                       Ver perfil do autor
                     </Link>
                   )}
