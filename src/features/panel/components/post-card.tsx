@@ -359,24 +359,19 @@ const REACTION_EMOJIS = ["👍", "🔥", "😂", "😮", "😢"];
 const REACTIONS_API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
-type ReactionsState = { reactions: Record<string, number>; mine: string[] };
+type ReactionsState = { reactions: Record<string, number>; mine: string | null };
 
 /**
- * Reações persistentes. Hidrata via GET /posts/{id}/reactions; cada clique
- * faz POST com optimistic toggle e sincroniza com a resposta do server
- * (counts canônicos). Falha silenciosa: se a API cair, mantém o estado local.
+ * Reações persistentes. Uma por usuário por post — clicar em outro emoji
+ * troca, clicar no mesmo remove. Hidrata via GET; cada clique é otimista
+ * e sincroniza com a resposta canônica do server.
  */
 function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [mine, setMine] = useState<string[]>([]);
+  const [mine, setMine] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  // Guarda contra race: se o GET inicial demorar e o user clicar antes,
-  // a resposta do GET (estado antigo) NÃO sobrescreve o estado otimista
-  // que ja foi confirmado pelo POST.
   const interactedRef = useRef(false);
 
-  // Hidrata na montagem. Cancela se o componente desmontar antes da resposta
-  // (evita warn de setState em unmounted).
   useEffect(() => {
     let cancelled = false;
     const token = authToken();
@@ -389,33 +384,35 @@ function PostReactions({ postId }: { postId: number }) {
         if (!res.ok || cancelled || interactedRef.current) return;
         const body = (await res.json()) as ReactionsState;
         setCounts(body.reactions ?? {});
-        setMine(body.mine ?? []);
+        // Aceita tanto string quanto array (compat com posts antigos no cache)
+        const rawMine = body.mine;
+        setMine(Array.isArray(rawMine) ? (rawMine[0] ?? null) : rawMine);
       } catch {
         /* mantém estado local */
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [postId]);
 
   function react(emoji: string) {
-    // Marca que o user ja interagiu — bloqueia override do GET tardio.
     interactedRef.current = true;
-    // Optimistic: toggle independente por emoji (sem remover outros).
-    const alreadyReacted = mine.includes(emoji);
-    setCounts((prev) => {
-      const next = { ...prev };
-      if (alreadyReacted) {
+    const prev = mine;
+    const same = prev === emoji;
+
+    // Optimistic: uma reação por user.
+    setCounts((c) => {
+      const next = { ...c };
+      // Remove contagem anterior se havia outra reação
+      if (prev && !same) next[prev] = Math.max(0, (next[prev] ?? 1) - 1);
+      // Toggle no emoji clicado
+      if (same) {
         next[emoji] = Math.max(0, (next[emoji] ?? 1) - 1);
       } else {
         next[emoji] = (next[emoji] ?? 0) + 1;
       }
       return next;
     });
-    setMine((m) =>
-      alreadyReacted ? m.filter((e) => e !== emoji) : [...m, emoji],
-    );
+    setMine(same ? null : emoji);
     setOpen(false);
 
     const token = authToken();
@@ -432,11 +429,10 @@ function PostReactions({ postId }: { postId: number }) {
           body: JSON.stringify({ emoji }),
         });
         if (!res.ok) return;
-        // Resposta é a verdade final — substitui o estado pra alinhar contagens
-        // entre todos os usuários (caso outro tenha reagido em paralelo).
         const body = (await res.json()) as ReactionsState;
         setCounts(body.reactions ?? {});
-        setMine(body.mine ?? []);
+        const rawMine = body.mine;
+        setMine(Array.isArray(rawMine) ? (rawMine[0] ?? null) : rawMine);
       } catch {
         /* mantém otimista */
       }
@@ -456,7 +452,7 @@ function PostReactions({ postId }: { postId: number }) {
             react(emoji);
           }}
           className={`flex h-[22px] items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
-            mine.includes(emoji)
+            mine === emoji
               ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
               : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
           }`}

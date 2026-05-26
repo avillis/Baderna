@@ -34,12 +34,10 @@ class PostReactionsController extends Controller
             $reactions[$row->emoji] = (int) $row->cnt;
         }
 
-        // Emojis do user logado neste post
+        // Emoji do user logado neste post (máx 1)
         $mine = PostReaction::where('post_id', $id)
             ->where('user_id', $userId)
-            ->pluck('emoji')
-            ->values()
-            ->toArray();
+            ->value('emoji'); // null se não reagiu
 
         return response()->json(['reactions' => $reactions, 'mine' => $mine]);
     }
@@ -47,10 +45,10 @@ class PostReactionsController extends Controller
     /**
      * POST /posts/{id}/reactions
      * Corpo: { emoji: "👍" }
-     * Toggle: adiciona se não existe, remove se já existe.
-     * Permite múltiplos emojis por usuário por post.
+     * Uma reação por usuário por post. Clicar no mesmo emoji remove; clicar
+     * em outro troca (remove o anterior, adiciona o novo).
      *
-     * Response: { reactions: { ... }, mine: [...] }
+     * Response: { reactions: { ... }, mine: string|null }
      */
     public function toggle(Request $request, int $id)
     {
@@ -59,23 +57,23 @@ class PostReactionsController extends Controller
             return response()->json(['error' => 'Post não encontrado.'], 404);
         }
 
-        $data  = $request->validate(['emoji' => 'required|string|max:16']);
+        $data   = $request->validate(['emoji' => 'required|string|max:16']);
         $emoji  = $data['emoji'];
         $userId = $request->user()->id;
 
         $existing = PostReaction::where('user_id', $userId)
             ->where('post_id', $id)
-            ->where('emoji', $emoji)
             ->first();
 
-        if ($existing) {
+        if ($existing && $existing->emoji === $emoji) {
+            // Clicou no mesmo — remove.
             $existing->delete();
         } else {
-            PostReaction::create([
-                'user_id' => $userId,
-                'post_id' => $id,
-                'emoji'   => $emoji,
-            ]);
+            // Clicou em outro (ou não tinha) — substitui/cria.
+            PostReaction::updateOrCreate(
+                ['user_id' => $userId, 'post_id' => $id],
+                ['emoji' => $emoji],
+            );
         }
 
         // Retorna estado canônico pós-operação
@@ -91,9 +89,7 @@ class PostReactionsController extends Controller
 
         $mine = PostReaction::where('post_id', $id)
             ->where('user_id', $userId)
-            ->pluck('emoji')
-            ->values()
-            ->toArray();
+            ->value('emoji'); // null se não existe
 
         return response()->json(['reactions' => $reactions, 'mine' => $mine]);
     }
