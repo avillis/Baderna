@@ -366,6 +366,26 @@ function parseMine(raw: unknown): string[] {
   return [];
 }
 
+/**
+ * Aplica reactions do servidor preservando a ordem de inserção do estado
+ * local. Emojis que ainda existem no servidor mantêm sua posição; emojis
+ * novos (não presentes no local) vão pro fim; emojis que sumiram do servidor
+ * (count=0) caem fora.
+ */
+function mergeReactions(
+  prev: Record<string, number>,
+  server: Record<string, number>,
+): Record<string, number> {
+  const merged: Record<string, number> = {};
+  for (const key of Object.keys(prev)) {
+    if (server[key] !== undefined) merged[key] = server[key];
+  }
+  for (const key of Object.keys(server)) {
+    if (!(key in merged)) merged[key] = server[key];
+  }
+  return merged;
+}
+
 /* ─── Categorias de emoji para o picker completo ─────────────────────────── */
 const EMOJI_CATS = [
   {
@@ -600,7 +620,7 @@ function PostReactions({ postId }: { postId: number }) {
       .then((body) => {
         if (!body) return;
         if (genRef.current !== expectedGen) return; // resposta velha, descarta
-        setCounts(body.reactions ?? {});
+        setCounts((prev) => mergeReactions(prev, body.reactions ?? {}));
         setMine(parseMine(body.mine));
       })
       .catch(() => {});
@@ -662,7 +682,7 @@ function PostReactions({ postId }: { postId: number }) {
         // aconteceu depois deste clique. Caso contrário a resposta pode estar
         // "atrasada" e o sync no .finally vai pegar o estado canônico.
         if (!body || hadConcurrent || genRef.current !== myGen) return;
-        setCounts(body.reactions ?? {});
+        setCounts((prev) => mergeReactions(prev, body.reactions ?? {}));
         setMine(parseMine(body.mine));
       })
       .catch(() => {})
@@ -676,10 +696,11 @@ function PostReactions({ postId }: { postId: number }) {
       });
   }
 
-  // Emojis com pelo menos 1 reação, ordenados por contagem
+  // Emojis com pelo menos 1 reação. NÃO ordena por contagem — preserva a
+  // ordem de inserção (chaves de objeto em JS mantêm ordem de inserção)
+  // pra que um emoji clicado não "pule de lugar" quando o count muda.
   const active = Object.entries(counts)
     .filter(([, c]) => c > 0)
-    .sort(([, a], [, b]) => b - a)
     .map(([e]) => e);
 
   // Scroll horizontal pra lista de pills (sem wrap). Setinhas aparecem
