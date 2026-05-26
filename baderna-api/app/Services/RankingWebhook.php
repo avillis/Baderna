@@ -225,11 +225,11 @@ class RankingWebhook
         $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n\n" . self::formatList($lists['baderna'], includeRank: false);
         $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n\n" . self::formatList($lists['flex'], includeRank: true);
 
-        // Linha invisível (ZWS) entre os dois blocos pra criar um respiro
-        // visível — Discord colapsa newlines sucessivas, mas uma linha com
-        // caractere zero-width permanece visível.
-        // No início, também ZWS pra separar do título do embed.
-        $description = "\u{200B}\n\n{$bademaBlock}\n\n\u{200B}\n\n{$flexBlock}";
+        // Linhas invisíveis (ZWS) entre os dois blocos pra criar um respiro
+        // visível — Discord colapsa newlines sucessivas, mas linhas com
+        // caractere zero-width permanecem visíveis. Duas linhas = gap maior.
+        // No início, ZWS pra separar do título do embed.
+        $description = "\u{200B}\n\n{$bademaBlock}\n\n\u{200B}\n\u{200B}\n\n{$flexBlock}";
 
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
