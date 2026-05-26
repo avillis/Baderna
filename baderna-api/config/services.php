@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'discord' => [
+        // Webhook do canal #-inhouse- pro bot "Baderna Inhouse" anunciar
+        // quando alguém cria um lobby novo. No-op se vazio.
+        'inhouse_webhook' => env('DISCORD_INHOUSE_WEBHOOK_URL'),
+    ],
+
 ];

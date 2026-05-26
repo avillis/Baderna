@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inhouse;
+use App\Services\DiscordWebhook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -41,6 +42,11 @@ class InhousesController extends Controller
             'payload' => $data['payload'],
             'created_by_user_id' => $request->user()->id,
         ]);
+
+        // Dispara webhook do Discord (no-op se DISCORD_INHOUSE_WEBHOOK_URL
+        // não estiver no .env). Defensivo: nunca derruba a resposta da API
+        // se o Discord estiver fora.
+        DiscordWebhook::notifyInhouseCreated($inhouse, $request->user());
 
         return response()->json($this->serialize($inhouse), 201);
     }
