@@ -132,9 +132,10 @@ class DiscordWebhook
                 ?: ($leaderNick ? "Time {$leaderNick}" : "Time {$defaultLabel}");
             $leaderLine = $leaderNick ? "Líder · **{$leaderNick}**" : '';
 
-            // Na primeira mensagem (sem membros), só nome do time + líder.
+            // Na primeira mensagem (sem membros), só nome do time + líder +
+            // indicador visível de "draft pendente" embaixo de cada time.
             if (! $includeMembers) {
-                return "{$colorEmoji} **{$name}**\n\n{$leaderLine}";
+                return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n⏳ _Aguardando draft..._";
             }
 
             // Versão completa: + lista dos membros (excluindo o líder, que
