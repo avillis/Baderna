@@ -243,6 +243,63 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     return titlePoolIds[Math.floor(Math.random() * titlePoolIds.length)];
   }, [titlesByRarity, titlePoolIds]);
 
+  // ── Áudio da roleta ──────────────────────────────────────────────────────
+  const audioCtxRef   = useRef<AudioContext | null>(null);
+  const audioBuffRef  = useRef<AudioBuffer  | null>(null);
+  const audioSrcRef   = useRef<AudioBufferSourceNode | null>(null);
+  const audioRafRef   = useRef<number>(0);
+
+  useEffect(() => {
+    // Carrega e decodifica o MP3 uma vez. AudioContext é criado lazy pra
+    // respeitar a política de autoplay (será resumido no clique do usuário).
+    const ctx = new AudioContext();
+    audioCtxRef.current = ctx;
+    fetch("/sounds/roulette-spin.mp3")
+      .then((r) => r.arrayBuffer())
+      .then((buf) => ctx.decodeAudioData(buf))
+      .then((decoded) => { audioBuffRef.current = decoded; })
+      .catch(() => {/* sem áudio */});
+    return () => { ctx.close(); };
+  }, []);
+
+  function playSpinAudio(duration: number) {
+    const ctx = audioCtxRef.current;
+    const buf = audioBuffRef.current;
+    if (!ctx || !buf) return;
+
+    // Garante que o contexto sai do estado suspended (política de autoplay).
+    ctx.resume().catch(() => {});
+
+    // Para qualquer áudio anterior.
+    cancelAnimationFrame(audioRafRef.current);
+    try { audioSrcRef.current?.stop(); } catch {}
+
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    src.playbackRate.value = 1.0;
+    src.connect(ctx.destination);
+    src.start();
+    audioSrcRef.current = src;
+
+    const startTime = performance.now();
+
+    function frame() {
+      const t = Math.min((performance.now() - startTime) / duration, 1);
+      // Aproxima a derivada do cubic-bezier(0.2, 0.72, 0.28, 1):
+      // velocidade começa em 1 e desacelera até quase 0 no fim.
+      const rate = Math.max(0.06, Math.pow(1 - t, 1.6));
+      src.playbackRate.value = rate;
+      if (t < 0.99) {
+        audioRafRef.current = requestAnimationFrame(frame);
+      } else {
+        try { src.stop(); } catch {}
+      }
+    }
+    audioRafRef.current = requestAnimationFrame(frame);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [tab, setTab] = useState<"capas" | "titulos" | "nomes">("capas");
   const [spinning, setSpinning] = useState(false);
   // Briefly suppresses the transition so the strip can snap back to 0
@@ -607,6 +664,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     const finalX = -(winnerCenter - getIndicatorOffset());
 
     const duration = fastMode ? SPIN_DURATION_FAST_MS : SPIN_DURATION_MS;
+
+    // Inicia o áudio sincronizado com a animação.
+    playSpinAudio(duration);
 
     // Trigger animation on next tick. The first RAF lets the snap-back
     // (translateX=0 with transition:none) commit, then we re-enable the
