@@ -193,10 +193,8 @@ class RankingWebhook
             $rankPart = " · _sem rank_";
         }
 
-        // Top 3 leva medalha (substitui o número); 4+ usa número em mono.
-        $prefix = $medal !== ''
-            ? $medal
-            : "`" . str_pad((string) $position, 2, ' ', STR_PAD_LEFT) . ".`";
+        // Top 3 leva medalha (substitui o número); 4+ usa número plano.
+        $prefix = $medal !== '' ? $medal : "{$position}.";
 
         return "{$prefix} **{$r['nickname']}**{$rankPart}";
     }
@@ -216,7 +214,10 @@ class RankingWebhook
         $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n" . self::formatList($lists['baderna']);
         $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n" . self::formatList($lists['flex']);
 
-        $description = "{$bademaBlock}\n\n{$flexBlock}";
+        // Linha vazia com zero-width-space entre as duas seções pra dar respiro.
+        // Discord colapsa \n\n\n em um único parágrafo; o caractere invisível
+        // força uma "linha" extra entre os blocos.
+        $description = "{$bademaBlock}\n\n\u{200B}\n\n{$flexBlock}";
 
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
