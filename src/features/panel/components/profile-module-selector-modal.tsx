@@ -329,8 +329,8 @@ export function ProfileModuleSelectorModal({
         { fixed: false, configIdx: 1 },
       ]
     : [
-        { fixed: false, configIdx: 0 },
         { fixed: true, label: "Rank da Baderna", reason: "Sempre fixo", configIdx: null },
+        { fixed: false, configIdx: 0 },
         { fixed: false, configIdx: 1 },
         { fixed: false, configIdx: 2 },
       ];

@@ -393,7 +393,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
       <ProfileLoadingOverlay />
       {showModuleEditor && (
         <ProfileModuleSelectorModal
-          currentOrder={effectiveModuleOrder ?? []}
+          currentOrder={configurableSlots}
           hasRiotId={hasRiotId}
           onSave={(order) => updateField("profileModuleOrder", order)}
           onClose={() => setShowModuleEditor(false)}
