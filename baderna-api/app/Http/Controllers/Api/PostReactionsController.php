@@ -94,7 +94,9 @@ class PostReactionsController extends Controller
 
         $mine = PostReaction::where('post_id', $id)
             ->where('user_id', $userId)
-            ->value('emoji'); // null se não existe
+            ->pluck('emoji')
+            ->values()
+            ->toArray();
 
         return response()->json(['reactions' => $reactions, 'mine' => $mine]);
     }
