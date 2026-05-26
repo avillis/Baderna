@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { getMemberSlug } from "@/features/panel/members-data";
 import { ImageLightbox } from "@/features/panel/components/image-lightbox";
@@ -478,6 +478,9 @@ const EMOJI_CATS = [
 ];
 
 /* ─── Picker de emoji completo com categorias ────────────────────────────── */
+const PICKER_WIDTH = 360;
+const VIEWPORT_MARGIN = 8;
+
 function EmojiPicker({
   onSelect,
   onClose,
@@ -486,6 +489,30 @@ function EmojiPicker({
   onClose: () => void;
 }) {
   const [catIdx, setCatIdx] = useState(0);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  // opacity:0 inicial pra não dar flash antes do useLayoutEffect posicionar
+  const [pos, setPos] = useState<React.CSSProperties>({
+    right: 0,
+    opacity: 0,
+  });
+
+  // Mede o anchor (botão smiley = parent) e decide se o picker cabe abrindo
+  // pra dentro (right-aligned) ou se precisa "encostar" na esquerda do viewport.
+  useLayoutEffect(() => {
+    const el = pickerRef.current;
+    const anchor = el?.parentElement;
+    if (!el || !anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    // Posição que o picker teria com right:0 (right edge = anchor right edge)
+    const wouldBeLeft = rect.right - PICKER_WIDTH;
+    if (wouldBeLeft < VIEWPORT_MARGIN) {
+      // Não cabe → alinha à esquerda do viewport com margem
+      const offsetLeft = VIEWPORT_MARGIN - rect.left;
+      setPos({ left: offsetLeft, right: "auto", opacity: 1 });
+    } else {
+      setPos({ right: 0, left: "auto", opacity: 1 });
+    }
+  }, []);
 
   return (
     <>
@@ -498,7 +525,9 @@ function EmojiPicker({
         }}
       />
       <div
-        className="absolute bottom-full left-0 z-[40] mb-[10px] w-[360px] overflow-hidden rounded-[18px] bg-white shadow-[0px_12px_48px_rgba(0,0,0,0.18)]"
+        ref={pickerRef}
+        style={pos}
+        className="absolute bottom-full z-[40] mb-[10px] w-[360px] overflow-hidden rounded-[18px] bg-white shadow-[0px_12px_48px_rgba(0,0,0,0.18)] transition-opacity"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Tabs de categoria */}
@@ -680,25 +709,29 @@ function PostReactions({ postId }: { postId: number }) {
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-[4px]">
-      {/* Setinha esquerda — aparece quando já rolei pra direita */}
-      {canScrollLeft && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            scrollByDir(-1);
-          }}
-          aria-label="Rolar reações para a esquerda"
-          className="flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-colors hover:bg-[#f4f4f4] hover:text-[#ff4100]"
-        >
-          <ChevronLeft className="h-[16px] w-[16px]" strokeWidth={2.5} />
-        </button>
-      )}
+      {/* Setinha esquerda — SEMPRE renderizada, opacity controla visibilidade
+          pra não causar layout shift quando aparece/some. */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          scrollByDir(-1);
+        }}
+        aria-label="Rolar reações para a esquerda"
+        aria-hidden={!canScrollLeft}
+        tabIndex={canScrollLeft ? 0 : -1}
+        className={`flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
+          canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
+        <ChevronLeft className="h-[16px] w-[16px]" strokeWidth={2.5} />
+      </button>
 
-      {/* Lista scroll horizontal das pills */}
+      {/* Lista scroll horizontal das pills — scroll-snap garante que nunca
+          fica um emoji cortado pela metade na borda. */}
       <div
         ref={scrollRef}
-        className="flex min-w-0 flex-1 items-center gap-[5px] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        className="flex min-w-0 flex-1 snap-x snap-mandatory items-center gap-[5px] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
         {active.map((emoji) => (
           <button
@@ -708,7 +741,7 @@ function PostReactions({ postId }: { postId: number }) {
               e.stopPropagation();
               react(emoji);
             }}
-            className={`flex h-[24px] flex-shrink-0 items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
+            className={`flex h-[24px] flex-shrink-0 snap-start items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
               mine.includes(emoji)
                 ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
                 : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
@@ -720,20 +753,22 @@ function PostReactions({ postId }: { postId: number }) {
         ))}
       </div>
 
-      {/* Setinha direita — aparece quando ainda tem conteúdo pra direita */}
-      {canScrollRight && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            scrollByDir(1);
-          }}
-          aria-label="Rolar reações para a direita"
-          className="flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-colors hover:bg-[#f4f4f4] hover:text-[#ff4100]"
-        >
-          <ChevronRight className="h-[16px] w-[16px]" strokeWidth={2.5} />
-        </button>
-      )}
+      {/* Setinha direita — mesma lógica da esquerda */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          scrollByDir(1);
+        }}
+        aria-label="Rolar reações para a direita"
+        aria-hidden={!canScrollRight}
+        tabIndex={canScrollRight ? 0 : -1}
+        className={`flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
+          canScrollRight ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
+        <ChevronRight className="h-[16px] w-[16px]" strokeWidth={2.5} />
+      </button>
 
       {/* Botão smiley fixo, abre o picker */}
       <div className="relative flex-shrink-0">
