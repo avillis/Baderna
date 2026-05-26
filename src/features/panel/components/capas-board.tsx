@@ -277,23 +277,25 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.loop = true;
-    src.playbackRate.value = 1.0;
+    src.playbackRate.value = 2.8; // começa acelerado
     src.connect(ctx.destination);
     src.start();
     audioSrcRef.current = src;
 
     const startTime = performance.now();
+    const START_RATE = 2.8; // velocidade inicial (roleta rápida)
+    // Velocidade final = 1.0 (o áudio natural já soa como roleta lenta)
 
     function frame() {
       const t = Math.min((performance.now() - startTime) / duration, 1);
-      // Aproxima a derivada do cubic-bezier(0.2, 0.72, 0.28, 1):
-      // velocidade começa em 1 e desacelera até quase 0 no fim.
-      const rate = Math.max(0.06, Math.pow(1 - t, 1.6));
+      // Começa em START_RATE e desacelera até 1.0 seguindo ease-out.
+      const rate = 1.0 + (START_RATE - 1.0) * Math.pow(1 - t, 1.6);
       src.playbackRate.value = rate;
       if (t < 0.99) {
         audioRafRef.current = requestAnimationFrame(frame);
       } else {
-        try { src.stop(); } catch {}
+        // Deixa tocar mais ~600ms no ritmo natural antes de parar.
+        window.setTimeout(() => { try { src.stop(); } catch {} }, 600);
       }
     }
     audioRafRef.current = requestAnimationFrame(frame);
