@@ -271,7 +271,6 @@ export function PostCard({
             count={post.commentsCount}
             href={`/post/${post.shortCode || post.id}`}
           />
-          <PostReactions postId={post.id} />
           <BookmarkButton />
           {expanded && (
             <span className="basis-full pt-[2px] text-left text-[12px] text-[#8d8d8d] sm:ml-auto sm:basis-auto sm:pt-0 sm:text-right">
