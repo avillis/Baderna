@@ -39,7 +39,7 @@ class DiscordWebhook
         $players    = is_array($payload['players'] ?? null) ? $payload['players'] : [];
         $playerCount = count($players);
         $isLeaderMode = ($payload['mode'] ?? null) === 'leader';
-        $modeLabel  = $isLeaderMode ? 'Líderes escolhem' : 'Aleatório';
+        $modeLabel  = $isLeaderMode ? 'Líder' : 'Aleatório';
 
         // Resolve líderes — players têm id + nickname + side; os leaderIds
         // referenciam o player.id. Faz um mapinha p/ lookup O(1).
@@ -91,7 +91,9 @@ class DiscordWebhook
             $leaderLine = $leader
                 ? "Líder · **{$leader['nickname']}**\n"
                 : '';
-            return "{$colorEmoji} **{$name}**\n{$leaderLine}{$memberLine}";
+            // Linha em branco entre o nome do time e a linha do líder pra dar
+            // respiro (Discord renderiza '\n\n' como parágrafo separado).
+            return "{$colorEmoji} **{$name}**\n\n{$leaderLine}{$memberLine}";
         };
 
         $blueBlock = $teamBlock('🔵', 'Azul', $blueLeader, $bluePlayers);
