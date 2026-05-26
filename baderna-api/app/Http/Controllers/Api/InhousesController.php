@@ -113,41 +113,41 @@ class InhousesController extends Controller
     }
 
     /**
-     * Dispara o webhook do Discord se (a) o inhouse está completo (ninguém
-     * no side='pool') E (b) ainda não foi notificado. Marca o flag
-     * `discordNotified` no payload pra garantir idempotência — mesmo que
-     * o líder mova players pra/do pool depois, não notifica de novo.
+     * Orquestra os dois disparos do webhook (idempotente por flags no payload):
+     *
+     *  1. discordCreatedFired — sempre dispara na criação ("Novo Inhouse criado!").
+     *     No random mode já mostra membros (porque está completo).
+     *     No leader mode mostra só líderes (espera draft).
+     *
+     *  2. discordReadyFired — só dispara depois do draft fechar, no leader mode.
+     *     ("Times prontos!" com membros). No random mode já fica marcado junto
+     *     com o created pra nunca disparar.
      */
     private function maybeNotifyDiscord(Inhouse $inhouse, $creator): void
     {
         $payload = is_array($inhouse->payload) ? $inhouse->payload : [];
-        if (! empty($payload['discordNotified'])) {
-            return; // já notificado, evita spam no canal
-        }
-        if (! $this->isInhouseComplete($payload)) {
-            return; // ainda tem player no pool
+        $complete = $inhouse->isComplete();
+
+        // Fase 1: anúncio de criação. Só rola uma vez.
+        if (empty($payload['discordCreatedFired'])) {
+            DiscordWebhook::notifyInhouseCreated($inhouse, $creator, 'created');
+            $payload['discordCreatedFired'] = true;
+            // Random mode já vem completo, então a mensagem "created" já
+            // mostrou membros → marca ready também pra não disparar de novo
+            // se o admin mover algum player pra pool e voltar.
+            if ($complete) {
+                $payload['discordReadyFired'] = true;
+            }
+            $inhouse->update(['payload' => $payload]);
+            return;
         }
 
-        DiscordWebhook::notifyInhouseCreated($inhouse, $creator);
-
-        // Marca como notificado (idempotência). Não usa updated_at fresh
-        // pra não disparar listeners do model — saveQuietly seria ideal,
-        // mas update direto também funciona.
-        $inhouse->update([
-            'payload' => array_merge($payload, ['discordNotified' => true]),
-        ]);
-    }
-
-    /** Inhouse "completo" = nenhum player em side='pool'. */
-    private function isInhouseComplete(array $payload): bool
-    {
-        $players = $payload['players'] ?? [];
-        if (! is_array($players) || empty($players)) return false;
-        foreach ($players as $p) {
-            if (! is_array($p)) continue;
-            if (($p['side'] ?? null) === 'pool') return false;
+        // Fase 2: anúncio de "times prontos" — só dispara depois do draft.
+        if (empty($payload['discordReadyFired']) && $complete) {
+            DiscordWebhook::notifyInhouseCreated($inhouse->fresh(), $creator, 'ready');
+            $payload['discordReadyFired'] = true;
+            $inhouse->update(['payload' => $payload]);
         }
-        return true;
     }
 
     private function generateShortCode(): string

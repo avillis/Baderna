@@ -28,13 +28,25 @@ class DiscordWebhook
      * Lê a URL do webhook de `services.discord.inhouse_webhook` (que vem do
      * .env via DISCORD_INHOUSE_WEBHOOK_URL). Se não estiver configurada,
      * faz no-op silencioso — útil pra ambientes de dev/teste.
+     *
+     * $kind:
+     *   - 'created' → "🎮 Novo Inhouse criado!" (mostra membros só se
+     *     o time já tá completo; caso contrário só líderes + código + modo)
+     *   - 'ready'   → "⚔️ Times prontos!" (sempre com membros completos —
+     *     usado quando o leader-mode termina o draft)
      */
-    public static function notifyInhouseCreated(Inhouse $inhouse, ?User $creator): void
+    public static function notifyInhouseCreated(Inhouse $inhouse, ?User $creator, string $kind = 'created'): void
     {
         $url = config('services.discord.inhouse_webhook');
         if (! $url) {
             return;
         }
+
+        $isReady = $kind === 'ready';
+        $title = $isReady ? '⚔️ Times prontos!' : '🎮 Novo Inhouse criado!';
+        // Mostra membros sempre que 'ready', ou no 'created' quando o time já
+        // foi totalmente montado (random mode = completo desde a criação).
+        $includeMembers = $isReady || $inhouse->isComplete();
 
         $payload    = is_array($inhouse->payload) ? $inhouse->payload : [];
         $players    = is_array($payload['players'] ?? null) ? $payload['players'] : [];
@@ -113,29 +125,37 @@ class DiscordWebhook
             string $defaultLabel,
             ?array $leader,
             array $teamPlayers,
-        ) use ($resolveNick, $resolveTeamName): string {
+        ) use ($resolveNick, $resolveTeamName, $includeMembers): string {
             $leaderNick = $leader ? $resolveNick($leader) : null;
             $customName = $resolveTeamName($leader);
             $name = $customName
                 ?: ($leaderNick ? "Time {$leaderNick}" : "Time {$defaultLabel}");
-            // Lista os membros que NÃO são o líder (o líder já tá destacado)
+            $leaderLine = $leaderNick ? "Líder · **{$leaderNick}**" : '';
+
+            // Na primeira mensagem (sem membros), só nome do time + líder.
+            if (! $includeMembers) {
+                return "{$colorEmoji} **{$name}**\n\n{$leaderLine}";
+            }
+
+            // Versão completa: + lista dos membros (excluindo o líder, que
+            // já tá destacado na linha de cima)
             $others = array_values(array_filter(
                 $teamPlayers,
                 fn ($p) => ! $leader || ($p['id'] ?? null) !== ($leader['id'] ?? null),
             ));
             $names = array_map(fn ($p) => $resolveNick($p), $others);
             $memberLine = empty($names) ? '_(sem membros)_' : implode(' · ', $names);
-            $leaderLine = $leaderNick
-                ? "Líder · **{$leaderNick}**\n"
-                : '';
-            // Linha em branco entre o nome do time e a linha do líder pra dar
-            // respiro (Discord renderiza '\n\n' como parágrafo separado).
-            return "{$colorEmoji} **{$name}**\n\n{$leaderLine}{$memberLine}";
+            return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n{$memberLine}";
         };
 
         $blueBlock = $teamBlock('🔵', 'Azul', $blueLeader, $bluePlayers);
         $redBlock  = $teamBlock('🔴', 'Vermelho', $redLeader, $redPlayers);
         $description = "{$blueBlock}\n\n⚔️ **vs** ⚔️\n\n{$redBlock}";
+
+        // Se ainda falta drafting, deixa claro no topo da descrição.
+        if (! $includeMembers) {
+            $description = "_Aguardando os líderes draftarem os times..._\n\n{$description}";
+        }
 
         // Fields embaixo do bloco vs (compactos, na horizontal): código + modo + total.
         $fields = [
@@ -156,14 +176,19 @@ class DiscordWebhook
             ],
         ];
 
+        // Texto curto fora do embed muda conforme o estágio.
+        $contentText = $isReady
+            ? "⚔️ **Times prontos no inhouse!**"
+            : "@here — **{$creatorName}** abriu um inhouse! 🎮";
+
         $body = [
             'username'   => 'Baderna Inhouse',
             // Logo da Baderna como avatar do webhook (sobrescreve a config no Discord).
             'avatar_url' => "{$siteBase}/logo.svg",
-            'content'    => "@here — **{$creatorName}** abriu um inhouse! 🎮",
+            'content'    => $contentText,
             'allowed_mentions' => ['parse' => ['everyone']],
             'embeds'     => [[
-                'title'       => '🎮 Novo Inhouse criado!',
+                'title'       => $title,
                 'description' => $description,
                 'url'         => $inhouseUrl,
                 'color'       => self::BRAND_COLOR,
