@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 // Beta public key da Giphy. Suficiente pra MVP — tem rate limit baixo mas
@@ -71,14 +72,17 @@ export function GiphyPickerInline({
   return (
     <div className="mt-[12px] overflow-hidden rounded-[16px] border border-[#ededed] bg-[#fafafa]">
       <div className="border-b border-[#ededed] p-[12px]">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar GIFs no Giphy..."
-          autoFocus
-          className="w-full rounded-full border-none bg-white px-[14px] py-[8px] text-[13px] outline-none placeholder:text-[#a89e99] focus:ring-2 focus:ring-[#ff4100]/20"
-        />
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-[18px] top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-[#b0a8a4]" strokeWidth={2} />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar GIFs no Giphy..."
+            autoFocus
+            className="w-full rounded-full border-none bg-white py-[10px] pl-[44px] pr-[16px] text-[13px] font-medium text-[#0f0f0f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#b0a8a4] focus:ring-2 focus:ring-[#ff4100]/20"
+          />
+        </div>
       </div>
 
       <div className="grid max-h-[340px] grid-cols-2 gap-[8px] overflow-y-auto p-[12px] sm:grid-cols-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
