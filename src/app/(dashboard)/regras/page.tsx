@@ -88,7 +88,7 @@ export default function RegrasPage() {
 
           {/* ── Main content ── */}
           <div className="min-w-0 flex-1">
-            <div className="flex flex-col gap-[32px]">
+            <div className="flex flex-col gap-[32px] xl:gap-[40px]">
               {RULES.map((rule, i) => (
                 <section
                   key={rule.id}
@@ -96,15 +96,15 @@ export default function RegrasPage() {
                   ref={(el) => { sectionRefs.current[rule.id] = el; }}
                   className="scroll-mt-[80px]"
                 >
-                  <div className="flex items-baseline gap-[14px]">
-                    <span className="shrink-0 text-[12px] font-bold tabular-nums text-[#c9bfba]">
+                  <div className="flex items-baseline gap-[14px] xl:gap-[20px]">
+                    <span className="shrink-0 text-[12px] font-bold tabular-nums text-[#c9bfba] xl:text-[14px]">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <p className="text-[15px] font-semibold leading-snug tracking-[-0.02em] text-[#0f0f0f]">
+                    <p className="text-[15px] font-semibold leading-snug tracking-[-0.02em] text-[#0f0f0f] xl:text-[20px] xl:tracking-[-0.03em]">
                       {rule.full}
                     </p>
                   </div>
-                  <div className="mt-[20px] h-px bg-[#f0eae7]" />
+                  <div className="mt-[20px] h-px bg-[#f0eae7] xl:mt-[28px]" />
                 </section>
               ))}
             </div>
