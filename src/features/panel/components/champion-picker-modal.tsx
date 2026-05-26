@@ -80,7 +80,7 @@ export function ChampionPickerModal({ current, onSave, onClose }: Props) {
         <div className="flex items-center justify-between px-[24px] pt-[24px] pb-[16px]">
           <div>
             <p className="text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-              Top 3 favoritos
+              Mains
             </p>
             <p className="mt-[2px] text-[12px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
               Escolha até 3 campeões favoritos

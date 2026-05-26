@@ -197,7 +197,7 @@ function TopChampionsModuleCard({
       onKeyDown={onEdit ? (e) => e.key === "Enter" && onEdit() : undefined}
     >
       <div className="flex h-full w-full flex-col">
-        <Eyebrow>Top 3 favoritos</Eyebrow>
+        <Eyebrow>Mains</Eyebrow>
         <div className="mt-auto flex items-end justify-between gap-[10px]">
           {champs.length > 0 ? (
             champs.map((champ) => (

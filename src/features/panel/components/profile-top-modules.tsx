@@ -162,7 +162,7 @@ function TopChampionsModuleCard({
   return cardShell(
     <div className="flex h-full w-full flex-col">
       <p className="text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-        Top 3 favoritos
+        Mains
       </p>
       <div className="mt-auto flex items-end justify-between gap-[10px]">
         {champions.length > 0 ? (
