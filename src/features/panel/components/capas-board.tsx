@@ -158,7 +158,7 @@ const CARD_ASPECT = 1215 / 717;
 const CARD_HEIGHT_DESKTOP = 200;
 const CARD_HEIGHT_MOBILE = 110;
 const CARD_GAP = 12;
-const SPIN_DURATION_MS = 4500;
+const SPIN_DURATION_MS = 6000; // sincronizado com o áudio gambling.mp3 (6 s)
 const SPIN_DURATION_FAST_MS = 1200;
 const WINNER_SCALE = 1.12;
 const MOBILE_BREAKPOINT = 640;
@@ -294,24 +294,16 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.loop = true;
+    // Áudio já tem a desaceleração baked in — toca em 1.0 constante.
     src.playbackRate.value = 1.0;
     src.connect(ctx.destination);
     src.start();
     audioSrcRef.current = src;
 
-    const startTime = performance.now();
-
-    function frame() {
-      const t = Math.min((performance.now() - startTime) / duration, 1);
-      const rate = Math.max(0.06, Math.pow(1 - t, 1.6));
-      src.playbackRate.value = rate;
-      if (t < 0.99) {
-        audioRafRef.current = requestAnimationFrame(frame);
-      } else {
-        try { src.stop(); } catch {}
-      }
-    }
-    audioRafRef.current = requestAnimationFrame(frame);
+    // Para automaticamente ao fim da duração do spin.
+    window.setTimeout(() => {
+      try { src.stop(); } catch {}
+    }, duration + 100);
   }
   // ─────────────────────────────────────────────────────────────────────────
 
