@@ -13,3 +13,8 @@ Artisan::command('inspire', function () {
 Schedule::command('model:prune', ['--model' => [\App\Models\ErrorLog::class]])
     ->daily()
     ->at('03:00');
+
+// Atualiza o "Placar de Liderança da Baderna" no Discord — POST + PATCH
+// in-place (uma mensagem única que vai sendo editada). Roda no minuto 0
+// de cada hora.
+Schedule::command('bdrn:post-ranking')->hourly();
