@@ -170,7 +170,7 @@ export function PanelProfileSummary({
 
   return (
     <section className="w-full max-w-[395px]">
-      <div className="px-[16px] sm:px-0 sm:pl-[42px]">
+      <div className="px-[16px] pb-[20px] sm:px-0 sm:pl-[42px] xl:pb-0">
         <div className="relative mb-[24px] h-[156px] w-[156px]">
           <RankedAvatar
             src={liveAvatarSrc}
