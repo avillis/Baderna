@@ -218,7 +218,7 @@ export function PanelProfileSummary({
           )}
 
           {titles.length > 0 ? (
-            <div className="flex min-w-0 flex-1 items-center gap-[8px] overflow-x-auto touch-pan-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-0 flex-1 items-center gap-[8px] overflow-x-auto touch-pan-x pl-[4px] -ml-[4px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:ml-0 sm:overflow-visible sm:pl-0 sm:flex-wrap">
               {titles.map((title) => (
                 <button
                   key={title.id}
