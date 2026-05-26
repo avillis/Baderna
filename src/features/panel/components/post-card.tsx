@@ -518,7 +518,7 @@ function EmojiPicker({
           ))}
         </div>
         {/* Grid de emojis */}
-        <div className="grid grid-cols-8 gap-[1px] overflow-y-auto p-[8px]" style={{ maxHeight: "190px" }}>
+        <div className="grid grid-cols-8 gap-[1px] overflow-y-auto p-[8px] [&::-webkit-scrollbar]:hidden [scrollbar-width:none]" style={{ maxHeight: "190px" }}>
           {EMOJI_CATS[catIdx].emojis.map((emoji) => (
             <button
               key={emoji}
@@ -545,7 +545,9 @@ function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [mine, setMine] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
-  const pendingRef = useRef(false);
+  // Rastreia quais emojis têm request em voo — impede double-click no MESMO
+  // emoji mas permite reagir com emojis diferentes ao mesmo tempo.
+  const pendingRef = useRef<Set<string>>(new Set());
 
   function sync() {
     const token = authToken();
@@ -568,8 +570,8 @@ function PostReactions({ postId }: { postId: number }) {
   }, [postId]);
 
   function react(emoji: string) {
-    if (pendingRef.current) return;
-    pendingRef.current = true;
+    if (pendingRef.current.has(emoji)) return;
+    pendingRef.current.add(emoji);
     setOpen(false);
 
     const isActive = mine.includes(emoji);
@@ -591,7 +593,7 @@ function PostReactions({ postId }: { postId: number }) {
 
     const token = authToken();
     if (!token) {
-      pendingRef.current = false;
+      pendingRef.current.delete(emoji);
       return;
     }
 
@@ -613,7 +615,7 @@ function PostReactions({ postId }: { postId: number }) {
       })
       .catch(() => {})
       .finally(() => {
-        pendingRef.current = false;
+        pendingRef.current.delete(emoji);
       });
   }
 
