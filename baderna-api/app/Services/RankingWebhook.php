@@ -193,8 +193,10 @@ class RankingWebhook
             ];
         }
 
-        // Baderna = ordem natural (user_id). Flex = clone ordenado por elo.
-        $flex = $rows;
+        // Baderna = ordem natural (user_id), todos os membros (rankeados ou não).
+        // Flex = só quem TEM rank, ordenado por elo descendente. Quem é
+        // "sem rank" simplesmente não aparece nessa lista.
+        $flex = array_values(array_filter($rows, fn ($r) => $r['hasRank']));
         usort($flex, fn ($a, $b) => $b['score'] <=> $a['score']);
 
         return ['baderna' => $rows, 'flex' => $flex];
