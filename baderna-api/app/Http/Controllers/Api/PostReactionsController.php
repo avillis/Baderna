@@ -61,19 +61,20 @@ class PostReactionsController extends Controller
         $emoji  = $data['emoji'];
         $userId = $request->user()->id;
 
-        $existing = PostReaction::where('user_id', $userId)
+        $currentEmoji = PostReaction::where('user_id', $userId)
             ->where('post_id', $id)
-            ->first();
+            ->value('emoji'); // null se não reagiu
 
-        if ($existing && $existing->emoji === $emoji) {
-            // Clicou no mesmo — remove.
-            $existing->delete();
-        } else {
-            // Clicou em outro (ou não tinha) — substitui/cria.
-            PostReaction::updateOrCreate(
-                ['user_id' => $userId, 'post_id' => $id],
-                ['emoji' => $emoji],
-            );
+        // Remove TODAS as reações do user neste post (limpa duplicatas antigas).
+        PostReaction::where('user_id', $userId)->where('post_id', $id)->delete();
+
+        // Só recria se não era o mesmo emoji (toggle off = não recria).
+        if ($currentEmoji !== $emoji) {
+            PostReaction::create([
+                'user_id' => $userId,
+                'post_id' => $id,
+                'emoji'   => $emoji,
+            ]);
         }
 
         // Retorna estado canônico pós-operação
