@@ -454,7 +454,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
             <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
               <div className="min-w-0 max-w-full"><LiveHistoryCard riotId={riotId} /></div>
               <div className="min-w-0 max-w-full"><PanelMemberWinratesCard targetUserId={targetUserId} /></div>
-              <div className="flex min-w-0 max-w-full flex-col gap-8">
+              <div className="flex min-w-0 max-w-full flex-col gap-8 pb-[32px] xl:pb-0">
                 <LiveFavoriteChampionsCard riotId={riotId} />
                 <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
               </div>
