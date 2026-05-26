@@ -138,14 +138,15 @@ class DiscordWebhook
             }
 
             // Versão completa: + lista dos membros (excluindo o líder, que
-            // já tá destacado na linha de cima)
+            // já tá destacado na linha de cima). Linha em branco entre o
+            // líder e a lista pra não ficar grudado.
             $others = array_values(array_filter(
                 $teamPlayers,
                 fn ($p) => ! $leader || ($p['id'] ?? null) !== ($leader['id'] ?? null),
             ));
             $names = array_map(fn ($p) => $resolveNick($p), $others);
             $memberLine = empty($names) ? '_(sem membros)_' : implode(' · ', $names);
-            return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n{$memberLine}";
+            return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n\n{$memberLine}";
         };
 
         $blueBlock = $teamBlock('🔵', 'Azul', $blueLeader, $bluePlayers);
@@ -158,7 +159,15 @@ class DiscordWebhook
         }
 
         // Fields embaixo do bloco vs (compactos, na horizontal): código + modo + total.
+        // Spacer com zero-width-space na frente cria respiro entre o final
+        // da description (Líder · X / lista de membros) e a fileira de fields —
+        // Discord renderiza fields colados na description sem isso.
         $fields = [
+            [
+                'name'   => "\u{200B}",
+                'value'  => "\u{200B}",
+                'inline' => false,
+            ],
             [
                 'name'   => '🔑 Código',
                 'value'  => "`{$inhouse->short_code}`",
