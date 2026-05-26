@@ -259,7 +259,9 @@ function CommentRow({
               strokeWidth={2}
               fill={likedByMe ? "currentColor" : "none"}
             />
-            {likesCount > 0 && <span>{likesCount}</span>}
+            {/* Sempre renderiza o span pra não causar layout shift quando
+                o count muda de 0 → 1. Mostra "0" quando vazio. */}
+            <span>{likesCount}</span>
           </button>
 
           {!isReply && onReply && (
