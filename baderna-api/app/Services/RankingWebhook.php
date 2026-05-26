@@ -163,15 +163,16 @@ class RankingWebhook
     /**
      * Compute as duas listas:
      *  - 'baderna': todos os membros aprovados em ordem natural (user_id),
-     *    bate com a aba "Baderna" do site (ranking oficial / signup order).
-     *  - 'flex': mesmos membros ordenados por elo descendente (Unranked
-     *    sobra no fim).
+     *    com ou sem Riot ID — bate com a aba "Baderna" do site (oficial).
+     *  - 'flex': SÓ quem tem Riot ID conectada (summoner_name + tagLine),
+     *    ordenado por elo descendente. Sem rank fica no fundo (mas só se
+     *    a pessoa tiver Riot ID — sem ID nem aparece).
      */
     private static function computeLists(): array
     {
         $users = User::where('is_deleted', false)
             ->where('approval_status', 'approved')
-            ->select('id', 'summoner_name', 'display_name', 'name', 'cached_rank_tier', 'cached_rank_division', 'cached_rank_lp')
+            ->select('id', 'summoner_name', 'tagLine', 'display_name', 'name', 'cached_rank_tier', 'cached_rank_division', 'cached_rank_lp')
             ->orderBy('id')
             ->get();
 
@@ -180,24 +181,24 @@ class RankingWebhook
             $tierRaw = (string) ($u->cached_rank_tier ?? '');
             $tier = strtoupper($tierRaw);
             $hasRank = $tier !== '' && $tier !== 'UNRANKED' && isset(self::TIER_ORDER[$tier]);
+            $hasRiotId = ! empty($u->summoner_name) && ! empty($u->tagLine);
             $score = $hasRank
                 ? self::eloScore($tier, $u->cached_rank_division, (int) ($u->cached_rank_lp ?? 0))
                 : -1;
             $rows[] = [
-                'nickname' => $u->summoner_name ?: ($u->display_name ?: $u->name),
-                'tier'     => $hasRank ? $tier : null,
-                'division' => $hasRank ? $u->cached_rank_division : null,
-                'lp'       => (int) ($u->cached_rank_lp ?? 0),
-                'score'    => $score,
-                'hasRank'  => $hasRank,
+                'nickname'  => $u->summoner_name ?: ($u->display_name ?: $u->name),
+                'tier'      => $hasRank ? $tier : null,
+                'division'  => $hasRank ? $u->cached_rank_division : null,
+                'lp'        => (int) ($u->cached_rank_lp ?? 0),
+                'score'     => $score,
+                'hasRank'   => $hasRank,
+                'hasRiotId' => $hasRiotId,
             ];
         }
 
-        // Baderna = ordem natural (user_id), todos os membros.
-        // Flex = clone com TODOS os membros ordenado por elo descendente —
-        // quem não tem rank (score = -1) vai pro fundo da lista mas
-        // ainda aparece (só sem nada na coluna direita).
-        $flex = $rows;
+        // Baderna = ordem natural (user_id), TODOS os membros (com/sem Riot ID).
+        // Flex = só quem tem Riot ID, ordenado por elo descendente.
+        $flex = array_values(array_filter($rows, fn ($r) => $r['hasRiotId']));
         usort($flex, fn ($a, $b) => $b['score'] <=> $a['score']);
 
         return ['baderna' => $rows, 'flex' => $flex];
