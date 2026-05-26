@@ -50,20 +50,23 @@ class DiscordWebhook
             }
         }
 
-        // Resolve nicknames CANÔNICOS do banco — o payload pode ter ficado
-        // stale se o user trocou de nick depois, ou ter sido truncado em
-        // algum ponto. Usa Str::slug(summoner_name) pra bater com o id (slug).
+        // Resolve dados CANÔNICOS do banco pelos players do payload:
+        //  - nickname (summoner_name): preserva nome completo / atualizado
+        //  - team_name (custom): nome de time setado pelo user na Minha Conta
+        // Match por Str::slug(summoner_name) === player.id.
         $allSlugs = array_keys($playerById);
         $slugToNickname = [];
+        $slugToTeamName = [];
         if (! empty($allSlugs)) {
-            $users = User::select('id', 'summoner_name', 'display_name', 'name')->get();
+            $users = User::select('id', 'summoner_name', 'display_name', 'name', 'team_name')->get();
             foreach ($users as $u) {
                 $slug = Str::slug((string) ($u->summoner_name ?? ''));
                 if ($slug !== '' && in_array($slug, $allSlugs, true)) {
-                    // Preferência: summoner_name (o "@handle" original) →
-                    // display_name → name. Fallback pro que vier no payload.
                     $slugToNickname[$slug] = $u->summoner_name
                         ?: ($u->display_name ?: $u->name);
+                    if (! empty($u->team_name)) {
+                        $slugToTeamName[$slug] = $u->team_name;
+                    }
                 }
             }
         }
@@ -72,6 +75,12 @@ class DiscordWebhook
         $resolveNick = function (array $p) use ($slugToNickname): string {
             $id = $p['id'] ?? null;
             return $slugToNickname[$id] ?? ($p['nickname'] ?? '?');
+        };
+        // Custom team_name do líder se ele setou na conta; senão null.
+        $resolveTeamName = function (?array $leader) use ($slugToTeamName): ?string {
+            if (! $leader) return null;
+            $id = $leader['id'] ?? null;
+            return $id ? ($slugToTeamName[$id] ?? null) : null;
         };
 
         $blueLeader = $playerById[$payload['blueLeaderId'] ?? ''] ?? null;
@@ -96,17 +105,19 @@ class DiscordWebhook
         $inhouseUrl = "{$siteBase}/inhouse/{$inhouse->short_code}";
 
         // Monta o bloco de cada time em Markdown — convenção do site:
-        // "Time {leaderNickname}" no leader-mode, "Time Azul/Vermelho" no random.
+        //  1. Se o líder configurou um team_name custom na Minha Conta → usa ele.
+        //  2. Senão: "Time {leaderNickname}" (leader-mode) ou
+        //     "Time Azul/Vermelho" (random/sem líder).
         $teamBlock = function (
             string $colorEmoji,
             string $defaultLabel,
             ?array $leader,
             array $teamPlayers,
-        ) use ($resolveNick): string {
+        ) use ($resolveNick, $resolveTeamName): string {
             $leaderNick = $leader ? $resolveNick($leader) : null;
-            $name = $leaderNick
-                ? "Time {$leaderNick}"
-                : "Time {$defaultLabel}";
+            $customName = $resolveTeamName($leader);
+            $name = $customName
+                ?: ($leaderNick ? "Time {$leaderNick}" : "Time {$defaultLabel}");
             // Lista os membros que NÃO são o líder (o líder já tá destacado)
             $others = array_values(array_filter(
                 $teamPlayers,
