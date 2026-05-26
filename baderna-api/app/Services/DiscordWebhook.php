@@ -6,6 +6,7 @@ use App\Models\Inhouse;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -41,14 +42,38 @@ class DiscordWebhook
         $isLeaderMode = ($payload['mode'] ?? null) === 'leader';
         $modeLabel  = $isLeaderMode ? 'Líder' : 'Aleatório';
 
-        // Resolve líderes — players têm id + nickname + side; os leaderIds
-        // referenciam o player.id. Faz um mapinha p/ lookup O(1).
+        // Mapa player.id → player do payload (lookup O(1) pelos leaders).
         $playerById = [];
         foreach ($players as $p) {
             if (is_array($p) && isset($p['id'])) {
                 $playerById[$p['id']] = $p;
             }
         }
+
+        // Resolve nicknames CANÔNICOS do banco — o payload pode ter ficado
+        // stale se o user trocou de nick depois, ou ter sido truncado em
+        // algum ponto. Usa Str::slug(summoner_name) pra bater com o id (slug).
+        $allSlugs = array_keys($playerById);
+        $slugToNickname = [];
+        if (! empty($allSlugs)) {
+            $users = User::select('id', 'summoner_name', 'display_name', 'name')->get();
+            foreach ($users as $u) {
+                $slug = Str::slug((string) ($u->summoner_name ?? ''));
+                if ($slug !== '' && in_array($slug, $allSlugs, true)) {
+                    // Preferência: summoner_name (o "@handle" original) →
+                    // display_name → name. Fallback pro que vier no payload.
+                    $slugToNickname[$slug] = $u->summoner_name
+                        ?: ($u->display_name ?: $u->name);
+                }
+            }
+        }
+
+        // Substitui o nickname de cada player pelo canonical (se achou no banco).
+        $resolveNick = function (array $p) use ($slugToNickname): string {
+            $id = $p['id'] ?? null;
+            return $slugToNickname[$id] ?? ($p['nickname'] ?? '?');
+        };
+
         $blueLeader = $playerById[$payload['blueLeaderId'] ?? ''] ?? null;
         $redLeader  = $playerById[$payload['redLeaderId'] ?? ''] ?? null;
 
@@ -77,19 +102,20 @@ class DiscordWebhook
             string $defaultLabel,
             ?array $leader,
             array $teamPlayers,
-        ): string {
-            $name = $leader
-                ? 'Time ' . ($leader['nickname'] ?? $defaultLabel)
-                : 'Time ' . $defaultLabel;
+        ) use ($resolveNick): string {
+            $leaderNick = $leader ? $resolveNick($leader) : null;
+            $name = $leaderNick
+                ? "Time {$leaderNick}"
+                : "Time {$defaultLabel}";
             // Lista os membros que NÃO são o líder (o líder já tá destacado)
             $others = array_values(array_filter(
                 $teamPlayers,
                 fn ($p) => ! $leader || ($p['id'] ?? null) !== ($leader['id'] ?? null),
             ));
-            $names = array_map(fn ($p) => $p['nickname'] ?? '?', $others);
+            $names = array_map(fn ($p) => $resolveNick($p), $others);
             $memberLine = empty($names) ? '_(sem membros)_' : implode(' · ', $names);
-            $leaderLine = $leader
-                ? "Líder · **{$leader['nickname']}**\n"
+            $leaderLine = $leaderNick
+                ? "Líder · **{$leaderNick}**\n"
                 : '';
             // Linha em branco entre o nome do time e a linha do líder pra dar
             // respiro (Discord renderiza '\n\n' como parágrafo separado).
