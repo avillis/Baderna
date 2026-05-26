@@ -118,6 +118,16 @@ function findMemberInList(
   };
 }
 
+function NoLolCard() {
+  return (
+    <div className="flex min-h-[140px] items-center justify-center rounded-[var(--panel-radius-card)] bg-white px-[22px] py-[18px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+      <p className="text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0]">
+        Essa pessoa não joga lol
+      </p>
+    </div>
+  );
+}
+
 export function MembroPageClient({ slug }: { slug: string }) {
   const [members, setMembers] = useState<ApiMember[] | null>(null);
   const [splashGroups, setSplashGroups] = useState<SplashGroup[]>([]);
@@ -452,18 +462,14 @@ export function MembroPageClient({ slug }: { slug: string }) {
               <PanelGameModeToggle />
             </div>
             <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
-              {hasRiotId ? (
-                <>
-                  <div className="min-w-0 max-w-full"><LiveHistoryCard riotId={riotId} /></div>
-                  <div className="min-w-0 max-w-full"><PanelMemberWinratesCard targetUserId={targetUserId} /></div>
-                </>
-              ) : (
-                <p className="py-[40px] text-center text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0] xl:col-span-2">
-                  Essa pessoa não joga lol
-                </p>
-              )}
+              <div className="min-w-0 max-w-full">
+                {hasRiotId ? <LiveHistoryCard riotId={riotId} /> : <NoLolCard />}
+              </div>
+              <div className="min-w-0 max-w-full">
+                {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
+              </div>
               <div className="flex min-w-0 max-w-full flex-col gap-8 pb-[32px] xl:pb-0">
-                {hasRiotId && <LiveFavoriteChampionsCard riotId={riotId} />}
+                {hasRiotId ? <LiveFavoriteChampionsCard riotId={riotId} /> : <NoLolCard />}
                 <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
               </div>
             </div>
@@ -508,22 +514,14 @@ export function MembroPageClient({ slug }: { slug: string }) {
               </div>
             </div>
             <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
-              {hasRiotId ? (
-                <>
-                  <div className="col-start-1 col-span-1">
-                    <PanelMemberWinratesCard targetUserId={targetUserId} />
-                  </div>
-                  <div className="col-start-2 col-span-2">
-                    <LiveHistoryCard riotId={riotId} />
-                  </div>
-                </>
-              ) : (
-                <p className="col-start-1 col-span-3 py-[40px] text-center text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0]">
-                  Essa pessoa não joga lol
-                </p>
-              )}
+              <div className="col-start-1 col-span-1">
+                {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
+              </div>
+              <div className="col-start-2 col-span-2">
+                {hasRiotId ? <LiveHistoryCard riotId={riotId} /> : <NoLolCard />}
+              </div>
               <div className="col-start-4 col-span-2 flex flex-col gap-[42px]">
-                {hasRiotId && <LiveFavoriteChampionsCard riotId={riotId} />}
+                {hasRiotId ? <LiveFavoriteChampionsCard riotId={riotId} /> : <NoLolCard />}
                 <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
               </div>
             </div>
