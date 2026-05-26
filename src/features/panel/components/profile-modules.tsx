@@ -241,12 +241,14 @@ function DuoModuleCard({
   duoAvatarSrc,
   duoSlug,
   duoStyleId,
+  onEdit,
 }: {
   duoName: string | null;
   duoFullName: string | null;
   duoAvatarSrc: string | null;
   duoSlug: string | null;
   duoStyleId: string | null;
+  onEdit?: () => void;
 }) {
   const nameColor = duoStyleId
     ? (NAME_BY_ID[duoStyleId]?.color ?? "#0f0f0f")
@@ -254,15 +256,31 @@ function DuoModuleCard({
 
   if (!duoSlug) {
     // Estado vazio
+    const editableClass = onEdit
+      ? "cursor-pointer transition-opacity hover:opacity-90 active:opacity-75"
+      : "";
     return (
-      <CardShell>
+      <article
+        className={`relative flex ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-white px-[22px] py-[18px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${editableClass}`}
+        onClick={onEdit}
+        role={onEdit ? "button" : undefined}
+        tabIndex={onEdit ? 0 : undefined}
+        onKeyDown={onEdit ? (e) => e.key === "Enter" && onEdit() : undefined}
+      >
         <div className="flex h-full w-full items-center gap-[14px]">
           <div className="h-[52px] w-[52px] shrink-0 rounded-full bg-[#f0f0f0]" />
-          <p className="text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0]">
-            Sem duo escolhido
-          </p>
+          <div>
+            <p className="text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0]">
+              Sem duo escolhido
+            </p>
+            {onEdit && (
+              <p className="mt-[4px] text-[11px] font-medium tracking-[-0.02em] text-[#c0c0c0]">
+                Clique para escolher
+              </p>
+            )}
+          </div>
         </div>
-      </CardShell>
+      </article>
     );
   }
 
@@ -270,6 +288,30 @@ function DuoModuleCard({
     <article
       className={`relative flex h-[122px] overflow-hidden rounded-[var(--panel-radius-card)] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]`}
     >
+      {/* Botão de editar (só no próprio perfil) */}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onEdit();
+          }}
+          className="absolute right-[10px] top-[10px] z-20 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-black/10 text-[#0f0f0f] backdrop-blur-[4px] transition-colors hover:bg-black/20"
+          title="Editar duo"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="h-[12px] w-[12px]"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M2.87601 18.1156C2.92195 17.7021 2.94493 17.4954 3.00748 17.3022C3.06298 17.1307 3.1414 16.9676 3.24061 16.8171C3.35242 16.6475 3.49952 16.5005 3.7937 16.2063L17 3C18.1046 1.89543 19.8954 1.89543 21 3C22.1046 4.10457 22.1046 5.89543 21 7L7.7937 20.2063C7.49951 20.5005 7.35242 20.6475 7.18286 20.7594C7.03242 20.8586 6.86926 20.937 6.69782 20.9925C6.50457 21.055 6.29783 21.078 5.88434 21.124L2.49997 21.5L2.87601 18.1156Z" />
+          </svg>
+        </button>
+      )}
       <Link
         href={`/membro/${duoSlug}`}
         className="flex h-full w-full items-center gap-[14px] px-[22px] py-[18px] transition-opacity hover:opacity-75"
@@ -567,6 +609,8 @@ export type ProfileModuleData = {
   onEditFavoriteGame?: () => void;
   /** Abre o modal de seleção de campeões favoritos (só no próprio perfil). */
   onEditTopChampions?: () => void;
+  /** Abre o modal de seleção de duo (só no próprio perfil). */
+  onEditDuo?: () => void;
   memberSince: string | null;
   unlockedBanners: number;
   unlockedTitles: number;
@@ -676,6 +720,7 @@ export function ProfileModuleCard({
           duoAvatarSrc={data.duoAvatarSrc}
           duoSlug={data.duoSlug}
           duoStyleId={data.duoStyleId}
+          onEdit={data.onEditDuo}
         />
       );
 

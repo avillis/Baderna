@@ -26,6 +26,7 @@ import { PanelProfileSummary } from "@/features/panel/components/panel-profile-s
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { ProfileLoadingOverlay } from "@/features/panel/components/profile-loading-overlay";
 import { ChampionPickerModal } from "@/features/panel/components/champion-picker-modal";
+import { DuoPickerModal, type DuoCandidate } from "@/features/panel/components/duo-picker-modal";
 import { GamePickerModal } from "@/features/panel/components/game-picker-modal";
 import { ProfileModuleSelectorModal } from "@/features/panel/components/profile-module-selector-modal";
 import {
@@ -139,6 +140,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const [showModuleEditor, setShowModuleEditor] = useState(false);
   const [showGamePicker, setShowGamePicker] = useState(false);
   const [showChampionPicker, setShowChampionPicker] = useState(false);
+  const [showDuoPicker, setShowDuoPicker] = useState(false);
   const { titles: allTitles } = useTitles();
 
   useEffect(() => {
@@ -230,10 +232,17 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const hasRiotId = Boolean(riotId);
   const isOwnProfile = user != null && targetUserId === user.id;
 
-  // Duo: resolve user_id em nome + avatar olhando na lista de membros.
+  // Duo: usa account.duoUserId (otimista) quando no próprio perfil, senão o da API.
+  // account.duoUserId === undefined → ainda não foi tocado, usa API.
+  // account.duoUserId === null     → usuário limpou o duo.
+  // account.duoUserId === N        → usuário escolheu o membro N.
+  const effectiveDuoUserId = isOwnProfile
+    ? (account.duoUserId !== undefined ? account.duoUserId : (apiMember?.duoUserId ?? null))
+    : (apiMember?.duoUserId ?? null);
+
   const duoMember =
-    apiMember?.duoUserId != null
-      ? members.find((m) => m.userId === apiMember.duoUserId)
+    effectiveDuoUserId != null
+      ? members.find((m) => m.userId === effectiveDuoUserId)
       : null;
 
   const totalBannerCount = splashGroups.reduce(
@@ -275,6 +284,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
       : (apiMember?.favoriteGameCoverUrl ?? null),
     onEditFavoriteGame: isOwnProfile ? () => setShowGamePicker(true) : undefined,
     onEditTopChampions: isOwnProfile ? () => setShowChampionPicker(true) : undefined,
+    onEditDuo: isOwnProfile ? () => setShowDuoPicker(true) : undefined,
     memberSince: apiMember?.memberSince ?? null,
     unlockedBanners: apiMember?.unlockedBannersCount ?? 0,
     unlockedTitles: apiMember?.unlockedTitlesCount ?? 0,
@@ -414,6 +424,24 @@ export function MembroPageClient({ slug }: { slug: string }) {
           current={account.favoriteChampionSlugs ?? apiMember?.favoriteChampionSlugs ?? []}
           onSave={(slugs) => updateField("favoriteChampionSlugs", slugs)}
           onClose={() => setShowChampionPicker(false)}
+        />
+      )}
+      {showDuoPicker && isOwnProfile && (
+        <DuoPickerModal
+          currentDuoUserId={effectiveDuoUserId}
+          candidates={members
+            .filter((m) => m.userId !== targetUserId)
+            .map<DuoCandidate>((m) => ({
+              userId: m.userId,
+              nickname: m.nickname ?? m.name,
+              name: m.name,
+              avatarSrc: m.avatarSrc,
+              activeNameId: m.activeNameId ?? null,
+            }))}
+          onSave={async (userId) => {
+            await updateField("duoUserId", userId);
+          }}
+          onClose={() => setShowDuoPicker(false)}
         />
       )}
       <GameModeProvider>
