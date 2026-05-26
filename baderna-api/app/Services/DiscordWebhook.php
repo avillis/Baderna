@@ -42,6 +42,19 @@ class DiscordWebhook
             ? 'Líderes escolhem'
             : 'Aleatório';
 
+        // Resolve líderes — players têm id + nickname + side; os leaderIds
+        // referenciam o player.id. Faz um mapinha p/ lookup O(1).
+        $playerById = [];
+        if (is_array($players)) {
+            foreach ($players as $p) {
+                if (is_array($p) && isset($p['id'])) {
+                    $playerById[$p['id']] = $p;
+                }
+            }
+        }
+        $blueLeader = $playerById[$payload['blueLeaderId'] ?? ''] ?? null;
+        $redLeader  = $playerById[$payload['redLeaderId'] ?? ''] ?? null;
+
         $creatorName = $creator
             ? ($creator->display_name ?: ($creator->summoner_name ?: $creator->name))
             : 'Alguém';
@@ -49,6 +62,52 @@ class DiscordWebhook
 
         $siteBase  = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
         $inhouseUrl = "{$siteBase}/inhouse/{$inhouse->short_code}";
+
+        // Fields base (sempre presentes)
+        $fields = [
+            [
+                'name'   => '🔑 Código',
+                'value'  => "`{$inhouse->short_code}`",
+                'inline' => true,
+            ],
+            [
+                'name'   => '⚔️ Modo',
+                'value'  => $modeLabel,
+                'inline' => true,
+            ],
+            [
+                'name'   => '👥 Jogadores',
+                'value'  => (string) $playerCount,
+                'inline' => true,
+            ],
+        ];
+
+        // Líderes — só aparece quando rolou pick de líder na criação.
+        // Discord renderiza 3 fields inline por linha, então essas 2 ficam
+        // na linha de baixo com um padding "invisível" no final pra alinhar.
+        if ($blueLeader || $redLeader) {
+            if ($blueLeader) {
+                $fields[] = [
+                    'name'   => '🔵 Líder Azul',
+                    'value'  => '**' . ($blueLeader['nickname'] ?? '?') . '**',
+                    'inline' => true,
+                ];
+            }
+            if ($redLeader) {
+                $fields[] = [
+                    'name'   => '🔴 Líder Vermelho',
+                    'value'  => '**' . ($redLeader['nickname'] ?? '?') . '**',
+                    'inline' => true,
+                ];
+            }
+            // Espaço invisível na 3ª coluna pra alinhar a linha de líderes
+            // com a linha de cima (zero-width space dentro de uma field).
+            $fields[] = [
+                'name'   => "\u{200B}",
+                'value'  => "\u{200B}",
+                'inline' => true,
+            ];
+        }
 
         $body = [
             'username'   => 'Baderna Inhouse',
@@ -65,23 +124,7 @@ class DiscordWebhook
                     'name'     => $creatorName,
                     'icon_url' => $creatorAvatar,
                 ]),
-                'fields' => [
-                    [
-                        'name'   => '🔑 Código',
-                        'value'  => "`{$inhouse->short_code}`",
-                        'inline' => true,
-                    ],
-                    [
-                        'name'   => '⚔️ Modo',
-                        'value'  => $modeLabel,
-                        'inline' => true,
-                    ],
-                    [
-                        'name'   => '👥 Jogadores',
-                        'value'  => (string) $playerCount,
-                        'inline' => true,
-                    ],
-                ],
+                'fields' => $fields,
                 'footer' => [
                     'text' => 'bdrn.com.br',
                 ],
