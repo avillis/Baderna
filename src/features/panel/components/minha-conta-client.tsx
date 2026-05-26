@@ -35,7 +35,7 @@ export function MinhaContaClient({
   namesTotal: number;
   splashGroups: SplashGroup[];
 }) {
-  const { account, updateField } = useAccount();
+  const { account, updateField, updateSlug } = useAccount();
   const { user } = useAuth();
   const userId = useCurrentUserId() ?? "__guest__";
   const { unlocked: unlockedBanners } = useUnlockedBanners(userId);
@@ -50,6 +50,7 @@ export function MinhaContaClient({
       <BasicInfoCard
         account={account}
         updateField={updateField}
+        updateSlug={updateSlug}
         email={user?.email ?? panelProfile.email}
         avatarSrc={
           account.avatarSrc ||
@@ -109,6 +110,7 @@ export function MinhaContaClient({
 function BasicInfoCard({
   account,
   updateField,
+  updateSlug,
   email,
   avatarSrc,
   onChangeAvatar,
@@ -116,6 +118,7 @@ function BasicInfoCard({
 }: {
   account: ReturnType<typeof useAccount>["account"];
   updateField: ReturnType<typeof useAccount>["updateField"];
+  updateSlug: ReturnType<typeof useAccount>["updateSlug"];
   email: string;
   avatarSrc: string;
   onChangeAvatar: (src: string) => void;
@@ -254,6 +257,9 @@ function BasicInfoCard({
               maxLength={150}
             />
           </div>
+          <div className="md:col-span-2">
+            <SlugField value={account.slug} onCommit={updateSlug} />
+          </div>
           <PasswordFields />
         </div>
       </div>
@@ -332,6 +338,95 @@ function Field({
       {help && (
         <span className="text-[11px] font-medium tracking-[-0.02em] text-[#b0a8a4]">
           {help}
+        </span>
+      )}
+    </label>
+  );
+}
+
+function SlugField({
+  value,
+  onCommit,
+}: {
+  value: string;
+  onCommit: (slug: string) => Promise<string | null>;
+}) {
+  const [local, setLocal] = useState(value);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setLocal(value);
+  }, [value]);
+
+  // Strip qualquer char que não é a-z 0-9 - e força lowercase.
+  const sanitize = (raw: string) =>
+    raw.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 30);
+
+  const validate = (s: string): string | null => {
+    if (s.length < 3) return "Mínimo de 3 caracteres.";
+    if (s.length > 30) return "Máximo de 30 caracteres.";
+    if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(s)) {
+      return "Use só letras, números e hífen (sem hífen no começo/fim).";
+    }
+    return null;
+  };
+
+  const commit = async () => {
+    if (local === value) {
+      setError(null);
+      return;
+    }
+    const formatErr = validate(local);
+    if (formatErr) {
+      setError(formatErr);
+      return;
+    }
+    setSaving(true);
+    const apiErr = await onCommit(local);
+    setSaving(false);
+    if (apiErr) {
+      setError(apiErr);
+    } else {
+      setError(null);
+    }
+  };
+
+  const inputClasses =
+    "flex-1 border-none bg-transparent text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400";
+  const wrapperClasses = `flex items-center gap-[2px] rounded-full bg-[#ededed] pl-6 pr-4 py-4 focus-within:ring-2 ${
+    error ? "focus-within:ring-red-300 ring-1 ring-red-300" : "focus-within:ring-[#ff4100]/20"
+  }`;
+
+  return (
+    <label className="flex flex-col gap-[8px]">
+      <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+        Endereço do perfil
+      </span>
+      <div className={wrapperClasses}>
+        <span className="text-[14px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+          bdrn.com.br/membro/
+        </span>
+        <input
+          type="text"
+          value={local}
+          onChange={(e) => {
+            setLocal(sanitize(e.target.value));
+            if (error) setError(null);
+          }}
+          onBlur={() => void commit()}
+          disabled={saving}
+          maxLength={30}
+          className={inputClasses}
+          placeholder="seu-nick"
+        />
+      </div>
+      {error ? (
+        <span className="text-[11px] font-medium tracking-[-0.02em] text-red-500">
+          {error}
+        </span>
+      ) : (
+        <span className="text-[11px] font-medium tracking-[-0.02em] text-[#b0a8a4]">
+          Letras minúsculas, números e hífen. Trocar não redireciona links antigos.
         </span>
       )}
     </label>

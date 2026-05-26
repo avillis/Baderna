@@ -15,6 +15,7 @@ export type Lane = "TOP" | "JG" | "MID" | "ADC" | "SUP";
 
 export type Account = {
   name: string;
+  slug: string;
   gameNick: string;
   bio: string;
   teamName: string;
@@ -43,6 +44,7 @@ function buildDefaults(user: AuthUser | null): Account {
   const nickname = summoner || user?.name || "";
   return {
     name: user?.name || nickname,
+    slug: "",
     gameNick,
     bio: "",
     teamName: nickname ? `Time ${nickname}` : "",
@@ -246,7 +248,46 @@ export function useAccount() {
     [account, userId],
   );
 
-  return { account, updateField };
+  // Slug é separado porque precisa retornar erro de validação (formato +
+  // unicidade) pro componente exibir inline. Os outros campos são fire-
+  // and-forget.
+  const updateSlug = useCallback(
+    async (newSlug: string): Promise<string | null> => {
+      const token = authToken();
+      if (!token) return "Sem autenticação.";
+      const res = await fetch(`${API_BASE}/account`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ slug: newSlug }),
+      });
+      if (!res.ok) {
+        try {
+          const body = (await res.json()) as {
+            errors?: Record<string, string[]>;
+            message?: string;
+          };
+          if (body.errors?.slug?.[0]) return body.errors.slug[0];
+          if (body.message) return body.message;
+        } catch {
+          /* ignore */
+        }
+        return "Não foi possível salvar o endereço.";
+      }
+      const fresh = (await res.json()) as Account;
+      const merged = { ...defaults, ...fresh };
+      setAccount(merged);
+      writeCache(userId, merged);
+      return null;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userId],
+  );
+
+  return { account, updateField, updateSlug };
 }
 
 // Read-only helper (inhouse views).

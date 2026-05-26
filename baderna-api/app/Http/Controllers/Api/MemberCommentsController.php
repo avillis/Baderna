@@ -9,15 +9,15 @@ use Illuminate\Http\Request;
 class MemberCommentsController extends Controller
 {
     /**
-     * Resolve um membro pelo "slug" — primeiro tenta encontrar como user_id
-     * (rota /membro/1), depois como summoner_name (rota /membro/avillis).
+     * Resolve um membro pelo slug canônico (users.slug). Fallback por
+     * summoner_name pra URLs legadas (de antes do users.slug existir).
      */
     private function resolveUser(string $slug): ?User
     {
-        if (ctype_digit($slug)) {
-            return User::find((int)$slug);
-        }
-        // O slug do front é lowercase com hífens em vez de espaços.
+        $byCanonical = User::where('slug', $slug)->first();
+        if ($byCanonical) return $byCanonical;
+
+        // Legacy: slug derivado de summoner_name (pré-backfill).
         $lower = strtolower($slug);
         $withSpaces = str_replace('-', ' ', $lower);
         return User::whereRaw('LOWER(summoner_name) IN (?, ?)', [$lower, $withSpaces])->first();

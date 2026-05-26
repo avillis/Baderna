@@ -16,6 +16,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'slug',
         'email',
         'password',
         'is_admin',
@@ -120,69 +121,5 @@ class User extends Authenticatable
     public function posts()
     {
         return $this->hasMany(Post::class);
-    }
-
-    public function slugAliases()
-    {
-        return $this->hasMany(UserSlugAlias::class);
-    }
-
-    /**
-     * Slug usado nas URLs (/membro/{slug}). Bate com getMemberSlug do front:
-     * transliterate + lowercase + espaços viram hífen. Fallback: id como
-     * string se o nick ficar vazio depois de limpar.
-     */
-    public static function slugifyNick(?string $nick, int $userId): string
-    {
-        if (!$nick) return (string)$userId;
-        $trimmed = trim($nick);
-        $ascii = @transliterator_transliterate('Any-Latin; Latin-ASCII;', $trimmed);
-        if (!$ascii) $ascii = $trimmed;
-        $lower = strtolower($ascii);
-        $cleaned = preg_replace('/[^a-z0-9\s-]/', '', $lower) ?? '';
-        $hyphenated = preg_replace('/\s+/', '-', $cleaned) ?? '';
-        $dedupHyphen = preg_replace('/-+/', '-', $hyphenated) ?? '';
-        $slug = trim($dedupHyphen, '-');
-        return $slug !== '' ? $slug : (string)$userId;
-    }
-
-    public function currentSlug(): string
-    {
-        $nick = $this->summoner_name ?: $this->name;
-        return self::slugifyNick($nick, $this->id);
-    }
-
-    /**
-     * Quando o nick (summoner_name) ou o name muda, registra o slug antigo
-     * como alias → user.id. Assim a URL /membro/{slug-antigo} continua
-     * resolvendo e o front redireciona pra slug nova.
-     */
-    protected static function booted(): void
-    {
-        static::updating(function (User $user) {
-            $oldSummoner = $user->getOriginal('summoner_name');
-            $oldName = $user->getOriginal('name');
-            $newSummoner = $user->summoner_name;
-            $newName = $user->name;
-
-            $nickChanged = $oldSummoner !== $newSummoner || $oldName !== $newName;
-            if (!$nickChanged) return;
-
-            $oldNick = $oldSummoner ?: $oldName;
-            $newNick = $newSummoner ?: $newName;
-            $oldSlug = self::slugifyNick($oldNick, $user->id);
-            $newSlug = self::slugifyNick($newNick, $user->id);
-            if ($oldSlug === $newSlug || $oldSlug === (string)$user->id) return;
-
-            UserSlugAlias::updateOrCreate(
-                ['slug' => $oldSlug],
-                ['user_id' => $user->id],
-            );
-            // Se a slug NOVA estiver registrada como alias apontando pra
-            // outro user, limpa — o membro atual tem precedência.
-            UserSlugAlias::where('slug', $newSlug)
-                ->where('user_id', '!=', $user->id)
-                ->delete();
-        });
     }
 }

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\UserSlugAlias;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -12,9 +11,23 @@ use Illuminate\Validation\ValidationException;
 
 class MembersController extends Controller
 {
+    /**
+     * Slug usado nas URLs (/membro/{slug}). Bate com getMemberSlug do front:
+     * lowercase + espaços viram hífen. Só usado como fallback enquanto a
+     * coluna users.slug não foi populada (backfill).
+     */
     private function slugify(?string $nick, int $userId): string
     {
-        return User::slugifyNick($nick, $userId);
+        if (!$nick) return (string)$userId;
+        $trimmed = trim($nick);
+        $ascii = @transliterator_transliterate('Any-Latin; Latin-ASCII;', $trimmed);
+        if (!$ascii) $ascii = $trimmed;
+        $lower = strtolower($ascii);
+        $cleaned = preg_replace('/[^a-z0-9\s-]/', '', $lower) ?? '';
+        $hyphenated = preg_replace('/\s+/', '-', $cleaned) ?? '';
+        $dedupHyphen = preg_replace('/-+/', '-', $hyphenated) ?? '';
+        $slug = trim($dedupHyphen, '-');
+        return $slug !== '' ? $slug : (string)$userId;
     }
 
     /**
@@ -44,7 +57,7 @@ class MembersController extends Controller
         return response()->json($users->map(function ($u) use ($viewerIsAdmin) {
             $nick = $u->summoner_name ?: $u->name;
             $row = [
-                'id'              => $this->slugify($nick, $u->id),
+                'id'              => $u->slug ?: $this->slugify($nick, $u->id),
                 'userId'          => $u->id,
                 'name'            => $u->display_name ?: $u->name,
                 'nickname'        => $nick,
@@ -128,25 +141,6 @@ class MembersController extends Controller
             'tagLine'      => $user->tagLine,
             'pending'      => true,
         ], 201);
-    }
-
-    /**
-     * Resolve uma slug que pode ser antiga (de quando o user tinha outro
-     * nick). Front bate aqui quando o /membro/{slug} não acha membro atual
-     * com a slug — se o alias existir, redireciona pra slug canônica.
-     */
-    public function resolveSlug(Request $request, string $slug)
-    {
-        $alias = UserSlugAlias::where('slug', $slug)->first();
-        if (!$alias) return response()->json(null, 404);
-        $user = User::where('id', $alias->user_id)
-            ->where('is_deleted', false)
-            ->first();
-        if (!$user) return response()->json(null, 404);
-        return response()->json([
-            'slug'   => $user->currentSlug(),
-            'userId' => $user->id,
-        ]);
     }
 
     /**
