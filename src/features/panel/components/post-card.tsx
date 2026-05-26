@@ -349,7 +349,7 @@ function CommentButton({ count, href }: { count: number; href: string }) {
           />
         </svg>
       </span>
-      <span className="inline-block min-w-[1ch] text-center">{count > 0 ? count : ""}</span>
+      <span className={count === 0 ? "invisible" : ""}>{count}</span>
     </Link>
   );
 }
@@ -647,8 +647,8 @@ function LikeButton({
           </svg>
         )}
       </span>
-      <span className={`inline-block min-w-[1ch] text-center${liked ? " text-[#ff4100]" : ""}`}>
-        {count > 0 ? count : ""}
+      <span className={`${liked ? "text-[#ff4100]" : ""}${count === 0 ? " invisible" : ""}`}>
+        {count}
       </span>
     </button>
   );
