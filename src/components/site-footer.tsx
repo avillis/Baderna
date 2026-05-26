@@ -30,6 +30,7 @@ const TEXT_SECTIONS = [
       { label: "Regras", href: "/regras" },
       { label: "FAQ", href: "/faq" },
       { label: "Suporte", href: "/suporte" },
+      { label: "Logs", href: "/logs" },
     ],
   },
 ];
