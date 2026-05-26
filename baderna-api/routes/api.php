@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\PostReactionsController;
 use App\Http\Controllers\Api\PostCommentsController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AccountController;
@@ -72,6 +73,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/error-logs', [ErrorLogsController::class, 'store']);
     Route::delete('/posts/{id}', [PostController::class, 'destroy'])->whereNumber('id');
     Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->whereNumber('id');
+    Route::get('/posts/{id}/reactions', [PostReactionsController::class, 'show'])->whereNumber('id');
+    Route::post('/posts/{id}/reactions', [PostReactionsController::class, 'toggle'])->whereNumber('id');
 
     // Comentários em posts (mesma shape do MemberCommentsController)
     Route::get('/posts/{id}/comments', [PostCommentsController::class, 'index'])->whereNumber('id');

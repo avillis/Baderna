@@ -359,7 +359,7 @@ const REACTION_EMOJIS = ["👍", "🔥", "😂", "😮", "😢"];
 const REACTIONS_API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
-type ReactionsState = { reactions: Record<string, number>; mine: string | null };
+type ReactionsState = { reactions: Record<string, number>; mine: string[] };
 
 /**
  * Reações persistentes. Hidrata via GET /posts/{id}/reactions; cada clique
@@ -368,7 +368,7 @@ type ReactionsState = { reactions: Record<string, number>; mine: string | null }
  */
 function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [mine, setMine] = useState<string | null>(null);
+  const [mine, setMine] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   // Guarda contra race: se o GET inicial demorar e o user clicar antes,
   // a resposta do GET (estado antigo) NÃO sobrescreve o estado otimista
@@ -389,7 +389,7 @@ function PostReactions({ postId }: { postId: number }) {
         if (!res.ok || cancelled || interactedRef.current) return;
         const body = (await res.json()) as ReactionsState;
         setCounts(body.reactions ?? {});
-        setMine(body.mine ?? null);
+        setMine(body.mine ?? []);
       } catch {
         /* mantém estado local */
       }
@@ -402,15 +402,20 @@ function PostReactions({ postId }: { postId: number }) {
   function react(emoji: string) {
     // Marca que o user ja interagiu — bloqueia override do GET tardio.
     interactedRef.current = true;
-    // Optimistic: aplica o toggle/troca antes de bater na API.
-    const prevMine = mine;
+    // Optimistic: toggle independente por emoji (sem remover outros).
+    const alreadyReacted = mine.includes(emoji);
     setCounts((prev) => {
       const next = { ...prev };
-      if (prevMine) next[prevMine] = Math.max(0, (next[prevMine] ?? 1) - 1);
-      if (prevMine !== emoji) next[emoji] = (next[emoji] ?? 0) + 1;
+      if (alreadyReacted) {
+        next[emoji] = Math.max(0, (next[emoji] ?? 1) - 1);
+      } else {
+        next[emoji] = (next[emoji] ?? 0) + 1;
+      }
       return next;
     });
-    setMine((m) => (m === emoji ? null : emoji));
+    setMine((m) =>
+      alreadyReacted ? m.filter((e) => e !== emoji) : [...m, emoji],
+    );
     setOpen(false);
 
     const token = authToken();
@@ -431,7 +436,7 @@ function PostReactions({ postId }: { postId: number }) {
         // entre todos os usuários (caso outro tenha reagido em paralelo).
         const body = (await res.json()) as ReactionsState;
         setCounts(body.reactions ?? {});
-        setMine(body.mine ?? null);
+        setMine(body.mine ?? []);
       } catch {
         /* mantém otimista */
       }
@@ -451,7 +456,7 @@ function PostReactions({ postId }: { postId: number }) {
             react(emoji);
           }}
           className={`flex h-[22px] items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
-            mine === emoji
+            mine.includes(emoji)
               ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
               : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
           }`}
