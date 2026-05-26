@@ -277,7 +277,9 @@ class RankingWebhook
         // Flex" fica no final do description pra cair logo antes dos fields.
         $flexCols = self::buildFlexColumns($lists['flex']);
 
-        $description = "\u{200B}\n\n{$bademaBlock}\n\n\u{200B}\n\u{200B}\n\n**⚔️ Ranking Flex** _(por elo)_";
+        // ZWS no fim cria respiro entre o título "Ranking Flex" e os fields
+        // "Jogadores | Ranque" (Discord cola fields direto na description).
+        $description = "\u{200B}\n\n{$bademaBlock}\n\n\u{200B}\n\u{200B}\n\n**⚔️ Ranking Flex** _(por elo)_\n\u{200B}";
 
         $fields = [
             [
