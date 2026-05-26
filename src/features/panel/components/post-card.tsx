@@ -1,11 +1,12 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { getMemberSlug } from "@/features/panel/members-data";
 import { ImageLightbox } from "@/features/panel/components/image-lightbox";
 import { renderWithMentions } from "@/features/panel/components/mention-text";
@@ -29,6 +30,7 @@ export function PostCard({
 }) {
   const { user } = useAuth();
   const router = useRouter();
+  const toast = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -36,6 +38,36 @@ export function PostCard({
   const media = post.imageUrl ?? post.gifUrl;
   const canDelete =
     onDelete && user && (user.id === post.author.id || user.is_admin);
+
+  /** Compartilha o link do post. No mobile usa navigator.share (sheet
+   *  nativo). No desktop copia pra clipboard e mostra um toast. */
+  async function handleShare() {
+    setMenuOpen(false);
+    const url = `${window.location.origin}/post/${post.shortCode || post.id}`;
+    const shareData = {
+      title: "Baderna",
+      text: post.content ? post.content.slice(0, 120) : "Post na Baderna",
+      url,
+    };
+    // navigator.share existe em quase todo mobile e em alguns desktops; se a
+    // origem não suporta (ex.: localhost http antigo), o catch derruba pra clipboard.
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        // AbortError = usuário cancelou o share sheet, não é erro real
+        if ((err as Error)?.name === "AbortError") return;
+        // qualquer outra falha cai pra clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.show("Link copiado!");
+    } catch {
+      toast.show("Não foi possível copiar o link.");
+    }
+  }
 
   // Pega o membro ATUAL pra puxar nickname/name/estilo de nome. O backend
   // salva snapshot no payload do post; aqui sobrescreve com a versão fresh
@@ -183,22 +215,32 @@ export function PostCard({
                 </div>
               )}
             </div>
-            {canDelete && (
-              <div className="relative ml-auto" ref={menuRef}>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((v) => !v)}
-                  aria-label="Mais opções"
-                  className="flex h-[28px] w-[28px] items-center justify-center rounded-full text-[#8d8d8d] transition-colors hover:bg-[#f4f4f4]"
-                >
-                  <MoreHorizontal className="h-[16px] w-[16px]" strokeWidth={2} />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-[34px] z-10 overflow-hidden rounded-[12px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]">
+            {/* Menu de 3 pontinhos: sempre aparece (Compartilhar é universal).
+                Apagar só fica visível pra autor/admin. */}
+            <div className="relative ml-auto" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="Mais opções"
+                className="flex h-[28px] w-[28px] items-center justify-center rounded-full text-[#8d8d8d] transition-colors hover:bg-[#f4f4f4]"
+              >
+                <MoreHorizontal className="h-[16px] w-[16px]" strokeWidth={2} />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-[34px] z-10 min-w-[180px] overflow-hidden rounded-[12px] bg-white shadow-[0px_8px_40px_rgba(0,0,0,0.14)]">
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="flex w-full items-center gap-[8px] px-[14px] py-[10px] text-[13px] font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f4f4f4]"
+                  >
+                    <Share2 className="h-[14px] w-[14px]" strokeWidth={2} />
+                    Compartilhar
+                  </button>
+                  {canDelete && (
                     <button
                       type="button"
                       onClick={openDeleteConfirm}
-                      className="flex w-full items-center gap-[8px] px-[14px] py-[10px] text-[13px] font-semibold text-[#c53030] transition-colors hover:bg-[#fff4f4]"
+                      className="flex w-full items-center gap-[8px] border-t border-[#f4f4f4] px-[14px] py-[10px] text-[13px] font-semibold text-[#c53030] transition-colors hover:bg-[#fff4f4]"
                     >
                       <svg
                         className="h-[14px] w-[14px]"
@@ -216,10 +258,10 @@ export function PostCard({
                       </svg>
                       Apagar
                     </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
