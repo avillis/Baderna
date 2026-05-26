@@ -111,6 +111,11 @@ function ModulePicker({
               >
                 {mod.label}
               </span>
+              {taken ? (
+                <span className="rounded-full bg-[#f0f0f0] px-[7px] py-[2px] text-[10px] font-medium text-[#8d8d8d]">
+                  em uso
+                </span>
+              ) : null}
               {mod.lol ? (
                 <span
                   className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full bg-[#fff0ec]"
@@ -122,11 +127,6 @@ function ModulePicker({
                     height={15}
                     className="h-[15px] w-[15px] object-contain"
                   />
-                </span>
-              ) : null}
-              {taken ? (
-                <span className="rounded-full bg-[#f0f0f0] px-[7px] py-[2px] text-[10px] font-medium text-[#8d8d8d]">
-                  em uso
                 </span>
               ) : null}
             </button>

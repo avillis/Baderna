@@ -45,6 +45,7 @@ export function PanelBannerPicker({
   defaultBannerFileName,
 }: PanelBannerPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const { user } = useAuth();
   const { updateField } = useAccount();
   const LOGGED_USER_ID = user ? String(user.id) : "__guest__";
@@ -106,14 +107,25 @@ export function PanelBannerPicker({
     setSelectedFocusY(DEFAULT_BANNER_FOCUS_Y);
   }, []);
 
+  function handleOpen() {
+    // Se o usuário tem capas liberadas, abre direto em "Liberadas"
+    if (unlockedGroup) setSelectedChampion(UNLOCKED_KEY);
+    setClosing(false);
+    setIsOpen(true);
+  }
+
+  function handleClose() {
+    setClosing(true);
+  }
+
   // Permite abrir o picker via custom event (usado pelo atalho de "Editar
   // capa" na página /minha-conta). Sem isso, o picker só abre pelo botão
   // que aparece em hover sobre o banner.
   useEffect(() => {
-    const open = () => setIsOpen(true);
-    window.addEventListener("panel:open-banner-picker", open);
-    return () => window.removeEventListener("panel:open-banner-picker", open);
-  }, []);
+    window.addEventListener("panel:open-banner-picker", handleOpen);
+    return () => window.removeEventListener("panel:open-banner-picker", handleOpen);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlockedGroup]);
 
   useEffect(() => {
     if (!activeGroup) {
@@ -140,7 +152,7 @@ export function PanelBannerPicker({
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        handleClose();
       }
     };
 
@@ -202,13 +214,16 @@ export function PanelBannerPicker({
   };
 
   const modal =
-    isOpen && typeof document !== "undefined"
+    (isOpen || closing) && typeof document !== "undefined"
       ? createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]">
-            <div className="relative flex h-[86vh] max-h-[820px] w-full max-w-[1180px] flex-col overflow-hidden rounded-[var(--panel-radius-shell)] bg-[#f7f7f7] shadow-[0px_30px_90px_rgba(0,0,0,0.18)]">
+          <div className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[100] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}>
+            <div
+              className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative flex h-[86vh] max-h-[820px] w-full max-w-[1180px] flex-col overflow-hidden rounded-[var(--panel-radius-shell)] bg-[#f7f7f7] shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
+              onAnimationEnd={() => { if (closing) { setClosing(false); setIsOpen(false); } }}
+            >
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 aria-label="Fechar seletor de capa"
                 className="absolute right-[24px] top-[24px] z-50 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
               >
@@ -392,7 +407,7 @@ export function PanelBannerPicker({
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="absolute left-[24px] top-[24px] z-10 hidden rounded-full bg-black/50 px-[16px] py-[8px] text-[12px] font-bold tracking-[-0.03em] text-white backdrop-blur-md transition-all duration-200 hover:bg-black/70 xl:block xl:opacity-0 xl:group-hover:opacity-100"
       >
         Trocar capa

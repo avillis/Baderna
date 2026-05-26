@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { NAME_BY_ID } from "@/features/panel/names-data";
+import { StyledName } from "@/features/panel/components/styled-name";
 import { formatChampionName } from "@/features/panel/champion-utils";
 import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
 import { LiveRankCard } from "@/features/panel/components/live-rank-card";
@@ -235,19 +235,6 @@ function TopChampionsModuleCard({
   );
 }
 
-/** Retorna props de estilo para o nome a partir de um activeNameId. */
-function nameStyleProps(styleId: string | null): {
-  style?: React.CSSProperties;
-  className?: string;
-} {
-  if (!styleId) return {};
-  const ns = NAME_BY_ID[styleId];
-  if (!ns) return {};
-  if (ns.className) return { className: ns.className };
-  if (ns.color) return { style: { color: ns.color } };
-  return {};
-}
-
 function DuoModuleCard({
   duoName,
   duoFullName,
@@ -263,7 +250,6 @@ function DuoModuleCard({
   duoStyleId: string | null;
   onEdit?: () => void;
 }) {
-  const nsp = nameStyleProps(duoStyleId);
 
   if (!duoSlug) {
     // Estado vazio
@@ -344,12 +330,12 @@ function DuoModuleCard({
         {/* Texto */}
         <div className="min-w-0">
           {/* Nickname estilizado */}
-          <p
-            className={`truncate text-[14px] font-bold leading-[1.15] tracking-[-0.03em] ${nsp.className ?? ""}`}
-            style={nsp.style}
+          <StyledName
+            styleId={duoStyleId ?? undefined}
+            className="block truncate text-[14px] font-bold leading-[1.15] tracking-[-0.03em]"
           >
             {duoName ?? duoFullName ?? "—"}
-          </p>
+          </StyledName>
           {/* Nome real abaixo, sempre que existir */}
           {duoFullName && (
             <p className="mt-[3px] truncate text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">

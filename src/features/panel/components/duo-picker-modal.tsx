@@ -3,19 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { NAME_BY_ID, type NameStyle } from "@/features/panel/names-data";
-
-function nameStyleProps(styleId: string | null): {
-  style?: React.CSSProperties;
-  className?: string;
-} {
-  if (!styleId) return {};
-  const ns: NameStyle | undefined = NAME_BY_ID[styleId];
-  if (!ns) return {};
-  if (ns.className) return { className: ns.className };
-  if (ns.color) return { style: { color: ns.color } };
-  return {};
-}
+import { StyledName } from "@/features/panel/components/styled-name";
 
 export type DuoCandidate = {
   userId: number;
@@ -211,7 +199,6 @@ export function DuoPickerModal({
             <div className="flex flex-col gap-[4px]">
               {filtered.map((candidate) => {
                 const isSelected = selected === candidate.userId;
-                const nameColor = nameStyleProps(candidate.activeNameId);
                 return (
                   <button
                     key={candidate.userId}
@@ -242,12 +229,12 @@ export function DuoPickerModal({
                       )}
                     </div>
                     <div className="min-w-0 text-left">
-                      <p
-                        className={`truncate text-[13px] font-bold tracking-[-0.02em] ${nameColor.className ?? ""}`}
-                        style={nameColor.style}
+                      <StyledName
+                        styleId={candidate.activeNameId ?? undefined}
+                        className="block truncate text-[13px] font-bold tracking-[-0.02em]"
                       >
                         {candidate.nickname}
-                      </p>
+                      </StyledName>
                       {candidate.name !== candidate.nickname && (
                         <p className="truncate text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
                           {candidate.name}
