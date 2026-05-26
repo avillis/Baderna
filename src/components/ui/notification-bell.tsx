@@ -80,7 +80,7 @@ export default function NotificationBell({
         )}
       </div>
 
-      <div className="max-h-[320px] overflow-y-auto">
+      <div className="max-h-[320px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center gap-[8px] px-[24px] py-[32px] text-center">
             <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#f7f3f0] text-[#c7bdb6]">
