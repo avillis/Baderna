@@ -496,7 +496,7 @@ function EmojiPicker({
         }}
       />
       <div
-        className="absolute bottom-full left-1/2 z-[40] mb-[10px] w-[296px] -translate-x-1/2 overflow-hidden rounded-[18px] bg-white shadow-[0px_12px_48px_rgba(0,0,0,0.18)]"
+        className="absolute bottom-full left-1/2 z-[40] mb-[10px] w-[340px] -translate-x-1/2 overflow-hidden rounded-[18px] bg-white shadow-[0px_12px_48px_rgba(0,0,0,0.18)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Tabs de categoria */}
@@ -518,7 +518,7 @@ function EmojiPicker({
           ))}
         </div>
         {/* Grid de emojis */}
-        <div className="grid grid-cols-8 gap-[1px] overflow-y-auto p-[8px] [&::-webkit-scrollbar]:hidden [scrollbar-width:none]" style={{ maxHeight: "190px" }}>
+        <div className="grid grid-cols-9 gap-[1px] overflow-y-auto p-[8px] [&::-webkit-scrollbar]:hidden [scrollbar-width:none]" style={{ maxHeight: "190px" }}>
           {EMOJI_CATS[catIdx].emojis.map((emoji) => (
             <button
               key={emoji}
