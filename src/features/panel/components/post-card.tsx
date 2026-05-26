@@ -359,75 +359,84 @@ const REACTION_EMOJIS = ["👍", "🔥", "😂", "😮", "😢"];
 const REACTIONS_API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
-type ReactionsState = { reactions: Record<string, number>; mine: string[] };
+/** Normaliza mine: aceita array ou string legacy. */
+function parseMine(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw as string[];
+  if (typeof raw === "string" && raw) return [raw];
+  return [];
+}
 
 /**
- * Reações persistentes. Múltiplos emojis por usuário por post são permitidos.
- * Clicar no mesmo emoji remove; clicar em outro adiciona.
- * Hidrata via GET; cada clique é otimista e sincroniza com o server.
+ * Reações por post. Suporta múltiplas por usuário.
+ * Clique faz toggle optimista + sync com servidor.
+ * pendingRef evita cliques duplicados enquanto o POST está voando.
  */
 function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [mine, setMine] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
-  const interactedRef = useRef(false);
+  const pendingRef = useRef(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Sincroniza com o servidor (GET). Chamado na montagem.
+  function sync() {
     const token = authToken();
     if (!token) return;
-    (async () => {
-      try {
-        const res = await fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
-          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok || cancelled || interactedRef.current) return;
-        const body = (await res.json()) as ReactionsState;
+    fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        if (!body) return;
         setCounts(body.reactions ?? {});
-        setMine(Array.isArray(body.mine) ? body.mine : body.mine ? [body.mine as unknown as string] : []);
-      } catch {
-        /* mantém estado local */
-      }
-    })();
-    return () => { cancelled = true; };
+        setMine(parseMine(body.mine));
+      })
+      .catch(() => {/* sem rede, mantém vazio */});
+  }
+
+  useEffect(() => {
+    sync();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
   function react(emoji: string) {
-    interactedRef.current = true;
-    const alreadyReacted = mine.includes(emoji);
-    setCounts((prev) => {
-      const next = { ...prev };
-      if (alreadyReacted) {
-        next[emoji] = Math.max(0, (next[emoji] ?? 1) - 1);
-      } else {
-        next[emoji] = (next[emoji] ?? 0) + 1;
-      }
-      return next;
-    });
-    setMine((m) => alreadyReacted ? m.filter((e) => e !== emoji) : [...m, emoji]);
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setOpen(false);
 
+    // Optimistic toggle
+    const isActive = mine.includes(emoji);
+    setCounts((prev) => ({
+      ...prev,
+      [emoji]: isActive
+        ? Math.max(0, (prev[emoji] ?? 1) - 1)
+        : (prev[emoji] ?? 0) + 1,
+    }));
+    setMine((prev) =>
+      isActive ? prev.filter((e) => e !== emoji) : [...prev, emoji],
+    );
+
     const token = authToken();
-    if (!token) return;
-    (async () => {
-      try {
-        const res = await fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ emoji }),
-        });
-        if (!res.ok) return;
-        const body = (await res.json()) as ReactionsState;
-        setCounts(body.reactions ?? {});
-        setMine(Array.isArray(body.mine) ? body.mine : body.mine ? [body.mine as unknown as string] : []);
-      } catch {
-        /* mantém otimista */
-      }
-    })();
+    if (!token) { pendingRef.current = false; return; }
+
+    fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ emoji }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        if (body) {
+          // Sincroniza com estado canônico do servidor
+          setCounts(body.reactions ?? {});
+          setMine(parseMine(body.mine));
+        }
+      })
+      .catch(() => {/* mantém optimista */})
+      .finally(() => { pendingRef.current = false; });
   }
 
   const active = REACTION_EMOJIS.filter((e) => (counts[e] ?? 0) > 0);
