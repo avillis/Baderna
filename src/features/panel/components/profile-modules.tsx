@@ -427,7 +427,7 @@ function MarqueeTitle({ text, className }: { text: string; className: string }) 
           distance > 0
             ? ({
                 "--md": `-${distance}px`,
-                animation: "marquee-title 6s ease-in-out infinite",
+                animation: "marquee-title 7s linear infinite",
               } as React.CSSProperties)
             : undefined
         }

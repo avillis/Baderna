@@ -388,11 +388,10 @@ button {
 /* Marquee estilo player de música — desliza o título até o fim,
    pausa, volta e repete. Distância controlada via --md (calc em JS). */
 @keyframes marquee-title {
-  0%, 18%   { transform: translateX(0);           opacity: 1; }
-  72%       { transform: translateX(var(--md, 0px)); opacity: 1; }
-  80%       { transform: translateX(var(--md, 0px)); opacity: 0; }
-  81%       { transform: translateX(0);           opacity: 0; }
-  92%, 100% { transform: translateX(0);           opacity: 1; }
+  0%, 18%  { transform: translateX(0);              animation-timing-function: linear; }
+  72%      { transform: translateX(var(--md, 0px)); animation-timing-function: ease-in-out; }
+  82%      { transform: translateX(var(--md, 0px)); animation-timing-function: ease-in-out; }
+  100%     { transform: translateX(0); }
 }
 
 @keyframes capas-confetti-physics {
