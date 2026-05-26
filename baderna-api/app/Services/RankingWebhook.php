@@ -269,8 +269,9 @@ class RankingWebhook
     private static function buildBody(array $lists): array
     {
         // Baderna = só nomes (ranking por posição, não tem a ver com elo do LoL).
-        // Fica no description em coluna única.
-        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n\n" . self::formatBadernaList($lists['baderna']);
+        // Fica no description em coluna única. ZWS no meio iguala o "respiro"
+        // que o título do Flex tem antes dos fields.
+        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n\u{200B}\n" . self::formatBadernaList($lists['baderna']);
 
         // Flex vai em DOIS FIELDS inline (nome | rank) pra criar layout de
         // duas colunas alinhadas, igual a ref do user. O header "⚔️ Ranking
