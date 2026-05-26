@@ -133,14 +133,20 @@ export function PostCard({
     liveMember?.nickname ?? fallbackNick ?? "Anônimo";
   const authorRealName = liveMember?.name ?? post.author.name ?? "";
   const authorStyleId = liveMember?.activeNameId ?? undefined;
-  const authorSlugSource =
-    liveMember?.nickname ||
-    post.author.gameNick?.split("#")[0] ||
-    post.author.name ||
-    "";
-  const authorSlug = authorSlugSource
-    ? getMemberSlug({ nickname: authorSlugSource })
-    : "";
+  // Avatar: prefere o LIVE (do useBadernaMembers, refresh via API) ao
+  // snapshot embutido no post — assim troca de avatar/nick atualiza na
+  // hora em todo histórico.
+  const authorAvatar = liveMember?.avatarSrc ?? post.author.avatarSrc;
+  // Slug: liveMember.id JÁ É o slug canônico que o backend devolve.
+  // Usar isso direto evita recálculo no front (que poderia divergir do
+  // backend pra casos edge tipo "Pudim co canela"); só recai pro
+  // computado quando o autor não tá mais na lista de membros (deletado).
+  const authorSlug = liveMember?.id
+    ?? (post.author.gameNick?.split("#")[0]
+        ? getMemberSlug({ nickname: post.author.gameNick.split("#")[0] })
+        : post.author.name
+          ? getMemberSlug({ nickname: post.author.name })
+          : "");
 
   // Click no card → permalink do post. Buttons/links internos param
   // propagação pra não disparar duas navegações.
@@ -185,9 +191,9 @@ export function PostCard({
             href={`/membro/${authorSlug}`}
             className="relative h-[42px] w-[42px] flex-shrink-0 overflow-hidden rounded-full bg-[#ededed] transition-opacity hover:opacity-85 sm:h-[48px] sm:w-[48px]"
           >
-            {post.author.avatarSrc ? (
+            {authorAvatar ? (
               <Image
-                src={post.author.avatarSrc}
+                src={authorAvatar}
                 alt=""
                 fill
                 className="object-cover"
@@ -198,9 +204,9 @@ export function PostCard({
           </Link>
         ) : (
           <div className="relative h-[48px] w-[48px] flex-shrink-0 overflow-hidden rounded-full bg-[#ededed]">
-            {post.author.avatarSrc ? (
+            {authorAvatar ? (
               <Image
-                src={post.author.avatarSrc}
+                src={authorAvatar}
                 alt=""
                 fill
                 className="object-cover"

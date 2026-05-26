@@ -180,7 +180,7 @@ function CommentRow({
   canDelete: boolean;
   likedByMe: boolean;
   likesCount: number;
-  memberByUserId: Map<number, { id: string; nickname: string; activeNameId?: string }>;
+  memberByUserId: Map<number, { id: string; nickname: string; activeNameId?: string; avatarSrc?: string }>;
   membersBySlug: Map<string, { id: string; nickname: string }>;
   onDelete: () => void;
   onLike: () => void;
@@ -190,6 +190,9 @@ function CommentRow({
   const liveMember = comment.authorId ? memberByUserId.get(comment.authorId) : undefined;
   const displayNick = liveMember?.nickname ?? comment.author;
   const authorStyleId = liveMember?.activeNameId;
+  // Avatar: prefere o LIVE (atualizado em real time pela lista de membros)
+  // ao snapshot que veio com o comment do backend — mesma lógica do post.
+  const displayAvatar = liveMember?.avatarSrc ?? comment.authorAvatar;
   const profileHref = liveMember
     ? `/membro/${liveMember.id}`
     : `/membro/${getMemberSlug({ nickname: displayNick })}`;
@@ -203,13 +206,13 @@ function CommentRow({
         className="shrink-0 transition-opacity hover:opacity-80"
         style={{ width: avatarSize, height: avatarSize }}
       >
-        {comment.authorAvatar ? (
+        {displayAvatar ? (
           <div
             className="relative overflow-hidden rounded-full bg-[#efeae6]"
             style={{ width: avatarSize, height: avatarSize }}
           >
             <Image
-              src={comment.authorAvatar}
+              src={displayAvatar}
               alt={displayNick}
               fill
               className="object-cover"
@@ -347,7 +350,7 @@ export function PostCommentsSection({
 
   // Mapeia user_id → membro ao vivo. Usando member.id como slug garante que
   // links sempre apontem pro slug atual, mesmo após mudança de nick.
-  const memberByUserId = new Map<number, { id: string; nickname: string; activeNameId?: string }>();
+  const memberByUserId = new Map<number, { id: string; nickname: string; activeNameId?: string; avatarSrc?: string }>();
   const membersBySlug = new Map<string, { id: string; nickname: string }>();
   for (const m of members) {
     if (m.userId) memberByUserId.set(m.userId, m);
