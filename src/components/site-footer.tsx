@@ -44,7 +44,7 @@ const CONNECT_ITEMS: Array<{
   {
     icon: DiscordIcon,
     label: "Discord",
-    href: "https://discord.gg/CnShc8BX",
+    href: "https://discord.gg/c6jV9RFAwG",
     external: true,
   },
 ];
