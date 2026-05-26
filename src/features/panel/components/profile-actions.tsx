@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { NAME_BY_ID } from "@/features/panel/names-data";
 import type { RankType } from "@/features/panel/rank-utils";
 import { useAccount } from "@/features/panel/use-account";
@@ -66,7 +67,9 @@ export function ProfileActions({
 }: ProfileActionsProps) {
   const { account } = useAccount();
   const { user } = useAuth();
+  const toast = useToast();
   const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isOwnProfile =
     user != null && targetUserId != null && user.id === targetUserId;
@@ -154,22 +157,43 @@ export function ProfileActions({
     URL.revokeObjectURL(objectUrl);
   }
 
+  const profileUrl = memberId
+    ? (typeof window !== "undefined"
+        ? `${window.location.origin}/membro/${memberId}`
+        : `/membro/${memberId}`)
+    : (typeof window !== "undefined" ? window.location.origin : "/");
+
   async function shareCard() {
     if (typeof window === "undefined" || sharing) return;
 
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+
+    // Desktop: copia o link e exibe toast
+    if (isDesktop) {
+      try {
+        await navigator.clipboard.writeText(
+          `${window.location.origin}/membro/${memberId ?? ""}`,
+        );
+        setCopied(true);
+        toast.show("Link copiado!", "success");
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        toast.show("Não foi possível copiar o link.");
+      }
+      return;
+    }
+
+    // Mobile/tablet: share nativo com imagem
     setSharing(true);
     try {
       const card = await fetchCardBlob();
       if (!card) return;
 
       const file = new File([card.blob], card.fileName, { type: "image/png" });
-      const profileUrl = memberId
-        ? `${window.location.origin}/membro/${memberId}`
-        : window.location.origin;
       const intro = isOwnProfile
         ? "Esse é o meu perfil na Baderna!"
         : `Confira o perfil de ${liveDisplayName} na Baderna!`;
-      const text = `${intro}\n${profileUrl}`;
+      const text = `${intro}\n${window.location.origin}/membro/${memberId ?? ""}`;
       const nav = navigator as Navigator & {
         canShare?: (data: { files?: File[] }) => boolean;
       };
@@ -210,16 +234,13 @@ export function ProfileActions({
           <svg
             viewBox="0 0 24 24"
             fill="none"
-            className="h-[16px] w-[16px]"
-            xmlns="http://www.w3.org/2000/svg"
+            className="h-[14px] w-[14px]"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <path
-              d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11" />
           </svg>
           Comparar com você
         </button>
@@ -231,28 +252,40 @@ export function ProfileActions({
           disabled={sharing}
           className={actionButtonClass}
         >
-        {sharing ? (
-          <svg
-            className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
-            viewBox="25 25 50 50"
-          >
-            <circle r="20" cy="50" cx="50" />
-          </svg>
-        ) : (
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            className="h-[16px] w-[16px]"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M20.7914 12.6074C21.0355 12.3981 21.1575 12.2935 21.2023 12.169C21.2415 12.0598 21.2415 11.9402 21.2023 11.831C21.1575 11.7065 21.0355 11.6018 20.7914 11.3926L12.3206 4.13196C11.9004 3.77176 11.6903 3.59166 11.5124 3.58725C11.3578 3.58342 11.2101 3.65134 11.1124 3.77122C11 3.90915 11 4.18589 11 4.73936V9.03462C8.86532 9.40807 6.91159 10.4897 5.45971 12.1139C3.87682 13.8845 3.00123 16.1759 3 18.551V19.1629C4.04934 17.8989 5.35951 16.8765 6.84076 16.1659C8.1467 15.5394 9.55842 15.1683 11 15.0705V19.2606C11 19.8141 11 20.0908 11.1124 20.2288C11.2101 20.3486 11.3578 20.4166 11.5124 20.4127C11.6903 20.4083 11.9004 20.2282 12.3206 19.868L20.7914 12.6074Z" />
-          </svg>
-        )}
-        {sharing ? "Carregando..." : "Compartilhar"}
-      </button>
+          {sharing ? (
+            <svg
+              className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-[#ff4100]"
+              viewBox="25 25 50 50"
+            >
+              <circle r="20" cy="50" cx="50" />
+            </svg>
+          ) : copied ? (
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[15px] w-[15px]"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          ) : (
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[15px] w-[15px]"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20.7914 12.6074C21.0355 12.3981 21.1575 12.2935 21.2023 12.169C21.2415 12.0598 21.2415 11.9402 21.2023 11.831C21.1575 11.7065 21.0355 11.6018 20.7914 11.3926L12.3206 4.13196C11.9004 3.77176 11.6903 3.59166 11.5124 3.58725C11.3578 3.58342 11.2101 3.65134 11.1124 3.77122C11 3.90915 11 4.18589 11 4.73936V9.03462C8.86532 9.40807 6.91159 10.4897 5.45971 12.1139C3.87682 13.8845 3.00123 16.1759 3 18.551V19.1629C4.04934 17.8989 5.35951 16.8765 6.84076 16.1659C8.1467 15.5394 9.55842 15.1683 11 15.0705V19.2606C11 19.8141 11 20.0908 11.1124 20.2288C11.2101 20.3486 11.3578 20.4166 11.5124 20.4127C11.6903 20.4083 11.9004 20.2282 12.3206 19.868L20.7914 12.6074Z" />
+            </svg>
+          )}
+          {sharing ? "Carregando..." : copied ? "Copiado!" : "Compartilhar"}
+        </button>
 
       {editButton}
     </div>

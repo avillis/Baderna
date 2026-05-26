@@ -86,8 +86,18 @@ export function InhouseDetailClient({ matchId }: { matchId: string }) {
       setDirect(fresh);
       setLoading(false);
     });
+
+    // Polling a cada 2s para manter o estado sincronizado em tempo real
+    const interval = setInterval(() => {
+      fetchOne(normalised).then((fresh) => {
+        if (cancelled || !fresh) return;
+        setDirect(fresh);
+      });
+    }, 2000);
+
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, [normalised, fromList]);
 

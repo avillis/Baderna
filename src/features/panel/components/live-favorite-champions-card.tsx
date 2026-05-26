@@ -62,7 +62,9 @@ export function LiveFavoriteChampionsCard({
   riotId,
 }: { riotId?: string } = {}) {
   const { account } = useAccount();
-  const effectiveRiotId = riotId || account.gameNick;
+  // Se riotId foi fornecido explicitamente (mesmo vazio), respeita — não sobrescreve
+  // com a conta do usuário logado. Fallback pro account só no uso standalone (undefined).
+  const effectiveRiotId = riotId !== undefined ? riotId : account.gameNick;
   const hasRiotId = Boolean(effectiveRiotId);
   const state = useRiotProfile(effectiveRiotId);
 
@@ -77,9 +79,7 @@ export function LiveFavoriteChampionsCard({
 
       <div className="mt-[28px] flex flex-1 flex-col border-t border-[#efebe8] pt-[10px]">
         {!hasRiotId ? (
-          <p className="my-auto text-center text-[13px] font-medium tracking-[-0.03em] text-[#b0a09a]">
-            Conecte um Riot ID para exibir campeÃµes favoritos.
-          </p>
+          <div className="my-auto" />
         ) : state.status === "loading" || state.status === "idle" ? (
           <div className="my-auto flex items-center justify-center">
             <svg className="capas-spinner h-[40px] w-[40px]" viewBox="25 25 50 50">

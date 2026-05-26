@@ -41,11 +41,11 @@ class User extends Authenticatable
         'primary_lane',
         'secondary_lane',
         'community_highlight',
-        'duo_label',
         'profile_module_order',
         'favorite_champion_slugs',
         'favorite_game_title',
         'favorite_game_cover_url',
+        'duo_user_id',
     ];
 
     // Campos NUNCA expostos em respostas JSON automáticas (`return $user`).
@@ -81,6 +81,7 @@ class User extends Authenticatable
             'active_title_slugs' => 'array',
             'profile_module_order' => 'array',
             'favorite_champion_slugs' => 'array',
+            'duo_user_id' => 'integer',
             'cached_rank_at' => 'datetime',
             'cached_rank_lp' => 'integer',
             'banner_focus_y' => 'integer',

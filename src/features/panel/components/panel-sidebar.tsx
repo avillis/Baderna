@@ -3,9 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 
 function LogOutIcon({ className }: { className?: string }) {
   return (
@@ -69,6 +69,79 @@ function MenuItem({
     >
       {label}
     </Link>
+  );
+}
+
+/**
+ * Nav com pill laranja que desliza pro item hoverado e fica fixo no clique.
+ */
+function SlidingNav({
+  menuItems,
+  pathname,
+  onNavigate,
+}: {
+  menuItems: { label: string; href: string }[];
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [pill, setPill] = useState<{ top: number; height: number } | null>(null);
+  const [ready, setReady] = useState(false);
+
+  const activeIdx = menuItems.findIndex((item) => pathname === item.href);
+  const targetIdx = hoveredIdx ?? activeIdx;
+
+  useLayoutEffect(() => {
+    const el = itemRefs.current[targetIdx < 0 ? 0 : targetIdx];
+    if (!el) return;
+    const next = { top: el.offsetTop, height: el.offsetHeight };
+    setPill(next);
+    // Primeira renderização: posiciona sem transição
+    if (!ready) setTimeout(() => setReady(true), 0);
+  }, [targetIdx, ready]);
+
+  return (
+    <div className="relative px-[14px]" onMouseLeave={() => setHoveredIdx(null)}>
+      {/* Pill deslizante */}
+      {pill && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-[14px] right-[14px] rounded-[var(--panel-radius-chip)] bg-[#ededed]"
+          style={{
+            top: pill.top,
+            height: pill.height,
+            transition: ready
+              ? "top 0.32s cubic-bezier(0.4, 0, 0.2, 1)"
+              : "none",
+          }}
+        />
+      )}
+
+      <div className="space-y-[15px]">
+        {menuItems.map((item, index) => {
+          const isTarget = index === targetIdx;
+          return (
+            <div
+              key={item.label}
+              ref={(el) => { itemRefs.current[index] = el; }}
+              onMouseEnter={() => setHoveredIdx(index)}
+            >
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  "relative z-[1] flex min-h-[39px] w-full items-center rounded-[var(--panel-radius-chip)] px-[14px] text-left text-[16px] font-bold tracking-[-0.03em] transition-colors duration-150",
+                  "text-[#0f0f0f]",
+                )}
+              >
+                {item.label}
+              </Link>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -334,27 +407,28 @@ function SidebarInner({
               onClick={() => router.back()}
               className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-transform duration-150 hover:scale-105 active:scale-95"
             >
-              <ArrowLeft className="h-[16px] w-[16px]" strokeWidth={2.4} />
+              <svg
+                viewBox="0 0 10 10"
+                fill="none"
+                className="h-[12px] w-[12px]"
+                stroke="white"
+                strokeWidth={1.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6.5 1.5L3 5l3.5 3.5" />
+              </svg>
             </button>
           )}
         </div>
       )}
 
       <div className={showLogo ? "pt-[44px]" : undefined}>
-        <div className="space-y-[15px] px-[14px]">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <MenuItem
-                key={item.label}
-                label={item.label}
-                tone={isActive ? "active" : "default"}
-                href={item.href}
-                onClick={onNavigate}
-              />
-            );
-          })}
-        </div>
+        <SlidingNav
+          menuItems={menuItems}
+          pathname={pathname}
+          onNavigate={onNavigate}
+        />
       </div>
 
       <div className="mt-auto border-t border-[#f3ebe8] px-[6px] pb-[12px] pt-[18px]">

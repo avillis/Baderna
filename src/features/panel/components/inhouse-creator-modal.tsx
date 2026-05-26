@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { useToast } from "@/components/toast";
@@ -122,10 +122,14 @@ interface Guest {
 /* ── Modal inner content ────────────────────────────────── */
 function InhouseCreatorContent({
   onClose,
+  onCloseImmediate,
+  closing,
   creating,
   setCreating,
 }: {
   onClose: () => void;
+  onCloseImmediate: () => void;
+  closing: boolean;
   creating: boolean;
   setCreating: (v: boolean) => void;
 }) {
@@ -293,7 +297,7 @@ function InhouseCreatorContent({
     ) => ReturnType<typeof buildInhouseMatch>,
   ) {
     setCreating(true);
-    onClose();
+    onCloseImmediate();
 
     const MIN_MS = 900;
     const startedAt = Date.now();
@@ -343,12 +347,15 @@ function InhouseCreatorContent({
       onConfirm={handleDiceConfirm}
     />
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[100] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative flex h-[94vh] max-h-[780px] w-full max-w-[860px] flex-col overflow-hidden rounded-[var(--panel-radius-shell)] bg-[#f7f7f7] shadow-[0px_30px_90px_rgba(0,0,0,0.18)] sm:h-[88vh]">
+      <div
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative flex h-[94vh] max-h-[780px] w-full max-w-[860px] flex-col overflow-hidden rounded-[var(--panel-radius-shell)] bg-[#f7f7f7] shadow-[0px_30px_90px_rgba(0,0,0,0.18)] sm:h-[88vh]`}
+        onAnimationEnd={() => { if (closing) onCloseImmediate(); }}
+      >
         {/* Close button */}
         <button
           type="button"
@@ -356,7 +363,17 @@ function InhouseCreatorContent({
           aria-label="Fechar"
           className="absolute right-[20px] top-[20px] z-50 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
         >
-          <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+          <svg
+              viewBox="0 0 10 10"
+              fill="none"
+              className="h-[12px] w-[12px]"
+              stroke="currentColor"
+              strokeWidth={1.4}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+            </svg>
         </button>
 
         {/* Header */}
@@ -561,7 +578,17 @@ function InhouseCreatorContent({
                             onClick={() => removeGuest(guest.id)}
                             className="flex h-6 w-6 items-center justify-center rounded-full text-[#b0a8a4] transition-colors hover:bg-[#fee2e2] hover:text-[#c53030]"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <svg
+                              viewBox="0 0 10 10"
+                              fill="none"
+                              className="h-[9px] w-[9px]"
+                              stroke="currentColor"
+                              strokeWidth={1.4}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+                            </svg>
                           </button>
                         </div>
                         <div className="mt-2 space-y-1.5">
@@ -681,6 +708,7 @@ export function InhouseCreatorModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -688,17 +716,21 @@ export function InhouseCreatorModal() {
 
   useEffect(() => {
     if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
-    };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleEsc);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", handleEsc);
     };
   }, [isOpen]);
+
+  function handleClose() {
+    setClosing(true);
+  }
+
+  function handleCloseImmediate() {
+    setIsOpen(false);
+    setClosing(false);
+  }
 
   return (
     <>
@@ -715,7 +747,9 @@ export function InhouseCreatorModal() {
         isOpen &&
         createPortal(
           <InhouseCreatorContent
-            onClose={() => setIsOpen(false)}
+            onClose={handleClose}
+            onCloseImmediate={handleCloseImmediate}
+            closing={closing}
             creating={creating}
             setCreating={setCreating}
           />,

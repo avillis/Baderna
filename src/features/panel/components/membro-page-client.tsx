@@ -25,6 +25,8 @@ import { PanelMemberWinratesCard } from "@/features/panel/components/panel-membe
 import { PanelProfileSummary } from "@/features/panel/components/panel-profile-summary";
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { ProfileLoadingOverlay } from "@/features/panel/components/profile-loading-overlay";
+import { ChampionPickerModal } from "@/features/panel/components/champion-picker-modal";
+import { GamePickerModal } from "@/features/panel/components/game-picker-modal";
 import { ProfileModuleSelectorModal } from "@/features/panel/components/profile-module-selector-modal";
 import {
   ProfileModuleCard,
@@ -125,6 +127,8 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const { account, updateField } = useAccount();
   const [showCompare, setShowCompare] = useState(false);
   const [showModuleEditor, setShowModuleEditor] = useState(false);
+  const [showGamePicker, setShowGamePicker] = useState(false);
+  const [showChampionPicker, setShowChampionPicker] = useState(false);
   const { titles: allTitles } = useTitles();
 
   useEffect(() => {
@@ -241,7 +245,9 @@ export function MembroPageClient({ slug }: { slug: string }) {
     fallbackFeaturedEyebrow: stats[3].eyebrow,
     fallbackFeaturedValue: stats[3].value,
     fallbackFeaturedSrc: profile.featuredChampionSrc,
-    favoriteChampionSlugs: apiMember?.favoriteChampionSlugs ?? [],
+    favoriteChampionSlugs: isOwnProfile
+      ? (account.favoriteChampionSlugs ?? apiMember?.favoriteChampionSlugs ?? [])
+      : (apiMember?.favoriteChampionSlugs ?? []),
     onUpdateFavoriteChampions: isOwnProfile
       ? (champions) => updateField("favoriteChampionSlugs", champions)
       : null,
@@ -251,11 +257,14 @@ export function MembroPageClient({ slug }: { slug: string }) {
     duoName: duoMember?.nickname ?? duoMember?.name ?? null,
     duoAvatarSrc: duoMember?.avatarSrc ?? null,
     duoStyleId: duoMember?.activeNameId ?? null,
-    favoriteGameTitle: apiMember?.favoriteGameTitle ?? null,
-    favoriteGameCoverUrl: apiMember?.favoriteGameCoverUrl ?? null,
-    onUpdateFavoriteGameTitle: isOwnProfile
-      ? (title) => updateField("favoriteGameTitle", title)
-      : null,
+    favoriteGameTitle: isOwnProfile
+      ? (account.favoriteGameTitle ?? apiMember?.favoriteGameTitle ?? null)
+      : (apiMember?.favoriteGameTitle ?? null),
+    favoriteGameCoverUrl: isOwnProfile
+      ? (account.favoriteGameCoverUrl ?? apiMember?.favoriteGameCoverUrl ?? null)
+      : (apiMember?.favoriteGameCoverUrl ?? null),
+    onEditFavoriteGame: isOwnProfile ? () => setShowGamePicker(true) : undefined,
+    onEditTopChampions: isOwnProfile ? () => setShowChampionPicker(true) : undefined,
     memberSince: apiMember?.memberSince ?? null,
     unlockedBanners: apiMember?.unlockedBannersCount ?? 0,
     unlockedTitles: apiMember?.unlockedTitlesCount ?? 0,
@@ -276,8 +285,8 @@ export function MembroPageClient({ slug }: { slug: string }) {
     : apiMember?.profileModuleOrder;
 
   // Layout de 4 slots:
-  //   LoL user:     [lane-FIXO] [baderna-FIXO] [config[0]] [config[1]]
-  //   Não-LoL user: [config[0]] [baderna-FIXO] [config[1]] [config[2]]
+  //   lol user:     [lane-FIXO] [baderna-FIXO] [config[0]] [config[1]]
+  //   Não-lol user: [config[0]] [baderna-FIXO] [config[1]] [config[2]]
   const configurableSlots = resolveTopSlots({
     profileModuleOrder: effectiveModuleOrder,
     hasRiotId,
@@ -289,11 +298,12 @@ export function MembroPageClient({ slug }: { slug: string }) {
     return id ? <ProfileModuleCard key={id} moduleId={id} data={moduleData} /> : null;
   };
 
-  // 4 slots renderizados na ordem certa:
+  // lol:     [baderna-FIXO] [lane-FIXO] [config0] [config1] → 4 cards
+  // Não-lol: [config0]      [baderna-FIXO] [config1] [config2] → 4 cards
   const topSlots = hasRiotId
     ? [
-        <ProfileModuleCard key="lane-selector" moduleId="lane-selector" data={moduleData} />,
         baderna,
+        <ProfileModuleCard key="lane-selector" moduleId="lane-selector" data={moduleData} />,
         renderConfig(0),
         renderConfig(1),
       ]
@@ -340,7 +350,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
     onCompare: handleCompare,
   };
 
-  const canEditModules = isOwnProfile || Boolean(user?.is_admin);
+  const canEditModules = isOwnProfile;
   const editCardsButton = canEditModules ? (
     <button
       type="button"
@@ -356,7 +366,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M11 3.99998H6.8C5.11984 3.99998 4.27976 3.99998 3.63803 4.32696C3.07354 4.61458 2.6146 5.07353 2.32698 5.63801C2 6.27975 2 7.11983 2 8.79998V17.2C2 18.8801 2 19.7202 2.32698 20.362C2.6146 20.9264 3.07354 21.3854 3.63803 21.673C4.27976 22 5.11984 22 6.8 22H15.2C16.8802 22 17.7202 22 18.362 21.673C18.9265 21.3854 19.3854 20.9264 19.673 20.362C20 19.7202 20 18.8801 20 17.2V13M7.99997 16H9.67452C10.1637 16 10.4083 16 10.6385 15.9447C10.8425 15.8957 11.0376 15.8149 11.2166 15.7053C11.4184 15.5816 11.5914 15.4086 11.9373 15.0627L21.5 5.49998C22.3284 4.67156 22.3284 3.32841 21.5 2.49998C20.6716 1.67156 19.3284 1.67155 18.5 2.49998L8.93723 12.0627C8.59133 12.4086 8.41838 12.5816 8.29469 12.7834C8.18504 12.9624 8.10423 13.1574 8.05523 13.3615C7.99997 13.5917 7.99997 13.8363 7.99997 14.3255V16Z" />
+        <path d="M16 5.00007L16 19.0001M10 4.00007L10 20.0001M3 12.0001H21M3 5.98924L3 18.0109C3 19.3749 3 20.0569 3.28134 20.5297C3.52803 20.9442 3.9162 21.2556 4.37434 21.4065C4.89685 21.5785 5.56262 21.4306 6.89418 21.1347L18.4942 18.5569C19.3883 18.3582 19.8354 18.2589 20.1691 18.0185C20.4634 17.8064 20.6945 17.5183 20.8377 17.1849C21 16.807 21 16.3491 21 15.4331V8.56702C21 7.65109 21 7.19312 20.8377 6.8152C20.6945 6.48186 20.4634 6.19373 20.1691 5.98168C19.8354 5.74126 19.3883 5.64191 18.4942 5.44322L6.89418 2.86544C5.56262 2.56954 4.89685 2.42159 4.37434 2.59368C3.9162 2.74457 3.52803 3.05596 3.28134 3.47045C3 3.94318 3 4.6252 3 5.98924Z" />
       </svg>
       Editar cards
     </button>
@@ -377,6 +387,23 @@ export function MembroPageClient({ slug }: { slug: string }) {
           hasRiotId={hasRiotId}
           onSave={(order) => updateField("profileModuleOrder", order)}
           onClose={() => setShowModuleEditor(false)}
+        />
+      )}
+      {showGamePicker && isOwnProfile && (
+        <GamePickerModal
+          currentTitle={account.favoriteGameTitle ?? null}
+          onSelect={({ title, coverUrl }) => {
+            updateField("favoriteGameTitle", title);
+            updateField("favoriteGameCoverUrl", coverUrl ?? null);
+          }}
+          onClose={() => setShowGamePicker(false)}
+        />
+      )}
+      {showChampionPicker && isOwnProfile && (
+        <ChampionPickerModal
+          current={account.favoriteChampionSlugs ?? apiMember?.favoriteChampionSlugs ?? []}
+          onSave={(slugs) => updateField("favoriteChampionSlugs", slugs)}
+          onClose={() => setShowChampionPicker(false)}
         />
       )}
       <GameModeProvider>
@@ -441,7 +468,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
         <div className="hidden 2xl:block">
           <div>
-            <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
+            <div className="grid grid-cols-[1.67fr_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="pl-0">
                 <PanelProfileSummary
                   avatarSrc={profile.avatarSrc}
@@ -466,7 +493,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
               {topSlots}
             </div>
-            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
+            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
               <ProfileActions
                 className="col-start-1 col-span-3 flex flex-wrap items-center gap-[10px]"
                 editButton={editCardsButton}

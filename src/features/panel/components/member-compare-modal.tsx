@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
@@ -155,9 +154,15 @@ export function MemberCompareModal({
   right: CompareSide;
   onClose: () => void;
 }) {
+  const [closing, setClosing] = useState(false);
+
+  function handleClose() {
+    setClosing(true);
+  }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -205,20 +210,31 @@ export function MemberCompareModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4`}
+      onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-[420px] rounded-[25px] bg-white p-6 shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative w-full max-w-[420px] rounded-[25px] bg-white p-6 shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
         onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={() => { if (closing) onClose(); }}
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Fechar"
           className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
         >
-          <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+          <svg
+              viewBox="0 0 10 10"
+              fill="none"
+              className="h-[12px] w-[12px]"
+              stroke="currentColor"
+              strokeWidth={1.4}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+            </svg>
         </button>
 
         <h2 className="mb-5 text-center text-[18px] font-bold tracking-[-0.03em] text-[#0f0f0f]">

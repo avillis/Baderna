@@ -3,20 +3,35 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 
-import { useToast } from "@/components/toast";
-import {
-  CHAMPION_AVATAR_FILES,
-  getChampionTileSrc,
-} from "@/features/panel/champion-avatar";
+import { NAME_BY_ID } from "@/features/panel/names-data";
 import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
 import { LiveRankCard } from "@/features/panel/components/live-rank-card";
 import { PanelLaneSelectorCard } from "@/features/panel/components/panel-lane-selector-card";
 import { PanelStatCard } from "@/features/panel/components/panel-stat-card";
-import { StyledName } from "@/features/panel/components/styled-name";
 
+/**
+ * Catálogo de módulos do topo do perfil. Os IDs viram chave no
+ * `profile_module_order` (json) salvo no user.
+ *
+ * Bloco lol (entra em estado "trancado" sem Riot ID):
+ *   - lane-selector       — slot 0, sempre fixo pra quem joga lol
+ *   - lol-rank
+ *   - featured-champion
+ *
+ * Bloco Baderna (sempre fixo na pos 2, não removível):
+ *   - baderna-rank
+ *
+ * Bloco modular (livre escolha do user via seletor):
+ *   - collection           — Coleção (banners/títulos/estilos)
+ *   - participation        — Posts + comentários
+ *   - top-champions        — Top 3 champs favoritos (lol — bloqueia sem Riot ID)
+ *   - duo                  — Amizade/duo em destaque
+ *   - community-highlight  — Badge entregue pelo admin
+ *   - favorite-game        — Jogo favorito (multi-game)
+ *   - member-since         — Tempo de casa
+ *   - showcase             — Vitrine (3 itens em destaque)
+ */
 export type ProfileModuleId =
   | "lane-selector"
   | "baderna-rank"
@@ -58,7 +73,13 @@ function Eyebrow({ children }: { children: ReactNode }) {
   );
 }
 
-function StatLine({ label, value }: { label: string; value: string }) {
+function StatLine({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-center justify-between gap-[10px]">
       <span className="truncate text-[11px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
@@ -71,16 +92,17 @@ function StatLine({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** Overlay aplicado em módulos lol quando o user não tem Riot ID. */
 function LockedOverlay({ message }: { message?: string }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-[var(--panel-radius-card)] bg-white/72 backdrop-blur-[2px]">
       <div className="flex flex-col items-center gap-[6px] px-[14px] text-center">
         <Image
-          src="/riot_logo.svg"
-          alt="Riot Games"
+          src="/images/lanes/Top_icon.png"
+          alt=""
           width={20}
           height={20}
-          className="opacity-70"
+          className="opacity-50"
         />
         <p className="text-[11px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
           {message ?? "Conecte seu Riot ID"}
@@ -108,6 +130,8 @@ function LockedWrapper({
   );
 }
 
+// ─── Módulos individuais ──────────────────────────────────────────────────
+
 function CollectionModuleCard({
   unlockedBanners,
   unlockedTitles,
@@ -125,12 +149,10 @@ function CollectionModuleCard({
 }) {
   return (
     <CardShell>
-      <div className="flex h-full w-full flex-col justify-center">
-        <div className="space-y-[10px]">
-          <StatLine label="Capas" value={`${unlockedBanners}/${totalBanners}`} />
-          <StatLine label="Títulos" value={`${unlockedTitles}/${totalTitles}`} />
-          <StatLine label="Estilos" value={`${unlockedNames}/${totalNames}`} />
-        </div>
+      <div className="flex h-full w-full flex-col justify-center gap-[10px]">
+        <StatLine label="Capas" value={`${unlockedBanners}/${totalBanners}`} />
+        <StatLine label="Títulos" value={`${unlockedTitles}/${totalTitles}`} />
+        <StatLine label="Estilos" value={`${unlockedNames}/${totalNames}`} />
       </div>
     </CardShell>
   );
@@ -147,12 +169,10 @@ function ParticipationModuleCard({
 }) {
   return (
     <CardShell>
-      <div className="flex h-full w-full flex-col justify-center">
-        <div className="space-y-[10px]">
-          <StatLine label="Posts" value={String(postsCount)} />
-          <StatLine label="Comentários" value={String(authoredCommentsCount)} />
-          <StatLine label="Mural" value={String(profileCommentsCount)} />
-        </div>
+      <div className="flex h-full w-full flex-col justify-center gap-[10px]">
+        <StatLine label="Posts" value={String(postsCount)} />
+        <StatLine label="Comentários" value={String(authoredCommentsCount)} />
+        <StatLine label="Mural" value={String(profileCommentsCount)} />
       </div>
     </CardShell>
   );
@@ -160,261 +180,131 @@ function ParticipationModuleCard({
 
 function TopChampionsModuleCard({
   favoriteChampionSlugs,
-  onSave,
+  onEdit,
 }: {
   favoriteChampionSlugs: string[];
-  onSave: ((champions: string[]) => Promise<boolean> | boolean) | null;
+  onEdit?: () => void;
 }) {
-  const toast = useToast();
-  const canEdit = Boolean(onSave);
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [selected, setSelected] = useState<string[]>(
-    favoriteChampionSlugs.filter(Boolean).slice(0, 3),
-  );
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelected(favoriteChampionSlugs.filter(Boolean).slice(0, 3));
-  }, [favoriteChampionSlugs]);
-
-  const champs = selected;
-  const championOptions = useMemo(
-    () =>
-      CHAMPION_AVATAR_FILES.map((file) => file.replace(/_0\.jpg$/i, "")).sort(
-        (a, b) => a.localeCompare(b),
-      ),
-    [],
-  );
-
-  function toggleChampion(champion: string) {
-    setSelected((prev) => {
-      if (prev.includes(champion)) return prev.filter((item) => item !== champion);
-      if (prev.length >= 3) return [...prev.slice(1), champion];
-      return [...prev, champion];
-    });
-  }
-
-  async function handleSave() {
-    if (!onSave) return;
-    setSaving(true);
-    try {
-      const ok = await onSave(selected);
-      if (!ok) {
-        toast.show("Não foi possível salvar seus mains.");
-        return;
-      }
-      toast.show("Mains salvos.", "success");
-      setOpen(false);
-    } catch {
-      toast.show("Não foi possível salvar seus mains.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
+  const champs = favoriteChampionSlugs.filter(Boolean).slice(0, 3);
+  const editableClass = onEdit ? "cursor-pointer transition-opacity hover:opacity-90 active:opacity-75" : "";
   return (
-    <>
-      <CardShell>
-        <button
-          type="button"
-          disabled={!canEdit}
-          onClick={() => {
-            if (canEdit) setOpen(true);
-          }}
-          className={`flex h-full w-full flex-col text-left ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-        >
-          <Eyebrow>Mains</Eyebrow>
-          <div className="mt-auto flex items-end justify-between gap-[10px]">
-            {champs.length > 0 ? (
-              champs.map((champ) => (
-                <div key={champ} className="min-w-0 flex-1 text-center">
-                  <div className="relative mx-auto h-[46px] w-[46px] overflow-hidden rounded-full bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
-                    <Image
-                      src={`/api/champion-tile/${champ}_0.jpg`}
-                      alt={champ}
-                      fill
-                      className="object-cover"
-                      sizes="46px"
-                      unoptimized
-                    />
-                  </div>
-                  <p className="mt-[6px] truncate text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                    {champ}
-                  </p>
+    <article
+      className={`relative flex ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-white px-[22px] py-[18px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${editableClass}`}
+      onClick={onEdit}
+      role={onEdit ? "button" : undefined}
+      tabIndex={onEdit ? 0 : undefined}
+      onKeyDown={onEdit ? (e) => e.key === "Enter" && onEdit() : undefined}
+    >
+      <div className="flex h-full w-full flex-col">
+        <Eyebrow>Top 3 favoritos</Eyebrow>
+        <div className="mt-auto flex items-end justify-between gap-[10px]">
+          {champs.length > 0 ? (
+            champs.map((champ) => (
+              <div key={champ} className="min-w-0 flex-1 text-center">
+                <div className="relative mx-auto h-[46px] w-[46px] overflow-hidden rounded-full bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
+                  <Image
+                    src={`/api/champion-tile/${champ}_0.jpg`}
+                    alt={champ}
+                    fill
+                    className="object-cover"
+                    sizes="46px"
+                    unoptimized
+                  />
                 </div>
-              ))
-            ) : (
-              <p className="text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
-                {canEdit
-                  ? "Clique para escolher 3 mains"
-                  : "Sem mains escolhidos"}
-              </p>
-            )}
-          </div>
-        </button>
-      </CardShell>
-
-      {typeof document !== "undefined" && open
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
-              onClick={() => setOpen(false)}
-            >
-              <div
-                className="relative flex max-h-[86vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="h-[16px] w-[16px]"
-                    stroke="currentColor"
-                    strokeWidth={2.4}
-                    strokeLinecap="round"
-                  >
-                    <path d="M18 6 6 18M6 6l12 12" />
-                  </svg>
-                </button>
-                <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
-                  <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                    Escolher mains
-                  </h2>
-                  <p className="mt-[8px] text-[13px] text-[#8d8d8d]">
-                    Escolha até 3 campeões para destacar no perfil.
-                  </p>
-                </div>
-                <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-4 items-start gap-[16px] overflow-y-auto p-[24px] sm:grid-cols-5 md:grid-cols-6">
-                  {championOptions.map((champion) => {
-                    const selectedChampion = selected.includes(champion);
-                    return (
-                      <button
-                        key={champion}
-                        type="button"
-                        onClick={() => toggleChampion(champion)}
-                        className="group text-center"
-                      >
-                        <div
-                          className={`relative mx-auto h-[62px] w-[62px] overflow-hidden rounded-full ring-2 transition-all ${
-                            selectedChampion
-                              ? "ring-[#ff4100]"
-                              : "ring-transparent group-hover:ring-[#ff4100]/35"
-                          }`}
-                        >
-                          <Image
-                            src={getChampionTileSrc(`${champion}_0.jpg`)}
-                            alt={champion}
-                            fill
-                            className="object-cover"
-                            sizes="62px"
-                            unoptimized
-                          />
-                        </div>
-                        <p className="mt-[8px] truncate text-[11px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                          {champion}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between border-t border-[#f0f0f0] px-[24px] py-[18px]">
-                  <p className="text-[11px] font-medium text-[#8d8d8d]">
-                    {selected.length}/3 selecionados
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {saving ? (
-                      <>
-                        <svg
-                          className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
-                          viewBox="25 25 50 50"
-                        >
-                          <circle r="20" cy="50" cx="50" />
-                        </svg>
-                        Salvando...
-                      </>
-                    ) : (
-                      "Salvar"
-                    )}
-                  </button>
-                </div>
+                <p className="mt-[6px] truncate text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                  {champ}
+                </p>
               </div>
-            </div>,
-            document.body,
-          )
-        : null}
-    </>
+            ))
+          ) : (
+            <div>
+              <p className={`text-[18px] font-bold leading-[1.05] tracking-[-0.04em] text-[#c0c0c0]`}>
+                Escolher champs…
+              </p>
+              {onEdit && (
+                <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#c0c0c0]">
+                  Clique para escolher
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
 function DuoModuleCard({
-  duoSlug,
-  duoFullName,
   duoName,
+  duoFullName,
   duoAvatarSrc,
+  duoSlug,
   duoStyleId,
 }: {
-  duoSlug: string | null;
-  duoFullName: string | null;
   duoName: string | null;
+  duoFullName: string | null;
   duoAvatarSrc: string | null;
+  duoSlug: string | null;
   duoStyleId: string | null;
 }) {
-  const cardContent = (
-    <div className="flex h-full w-full flex-col">
-      <Eyebrow>Duo favorito</Eyebrow>
-      <div className="mt-auto flex items-center gap-[12px]">
-        {duoAvatarSrc ? (
-          <div className="relative h-[46px] w-[46px] overflow-hidden rounded-full bg-[#f4f0ed]">
+  const nameColor = duoStyleId
+    ? (NAME_BY_ID[duoStyleId]?.color ?? "#0f0f0f")
+    : "#0f0f0f";
+
+  if (!duoSlug) {
+    // Estado vazio
+    return (
+      <CardShell>
+        <div className="flex h-full w-full items-center gap-[14px]">
+          <div className="h-[52px] w-[52px] shrink-0 rounded-full bg-[#f0f0f0]" />
+          <p className="text-[13px] font-semibold tracking-[-0.02em] text-[#c0c0c0]">
+            Sem duo escolhido
+          </p>
+        </div>
+      </CardShell>
+    );
+  }
+
+  return (
+    <article
+      className={`relative flex h-[122px] overflow-hidden rounded-[var(--panel-radius-card)] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]`}
+    >
+      <Link
+        href={`/membro/${duoSlug}`}
+        className="flex h-full w-full items-center gap-[14px] px-[22px] py-[18px] transition-opacity hover:opacity-75"
+      >
+        {/* Avatar */}
+        <div className="relative h-[52px] w-[52px] shrink-0 overflow-hidden rounded-full bg-[#f4f0ed]">
+          {duoAvatarSrc && (
             <Image
               src={duoAvatarSrc}
               alt={duoName ?? ""}
               fill
               className="object-cover"
-              sizes="46px"
+              sizes="52px"
               unoptimized
             />
-          </div>
-        ) : (
-          <div className="h-[46px] w-[46px] rounded-full bg-[#f4f0ed]" />
-        )}
-        <div className="min-w-0">
-          <div className="truncate text-[13px] font-bold leading-[1.05] tracking-[-0.03em]">
-            <StyledName styleId={duoStyleId ?? undefined}>
-              {duoName ?? "Sem duo escolhido"}
-            </StyledName>
-          </div>
-          <p className="mt-[4px] truncate text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
-            {duoFullName ?? "Escolha alguém para destacar"}
-          </p>
+          )}
         </div>
-      </div>
-    </div>
-  );
 
-  return (
-    <CardShell>
-      {duoSlug ? (
-        <Link
-          href={`/membro/${duoSlug}`}
-          className="block h-full w-full transition-opacity hover:opacity-85"
-          aria-label={`Ver perfil de ${duoName ?? duoFullName ?? "duo favorito"}`}
-        >
-          {cardContent}
-        </Link>
-      ) : (
-        cardContent
-      )}
-    </CardShell>
+        {/* Texto */}
+        <div className="min-w-0">
+          {/* Nickname estilizado */}
+          <p
+            className="truncate text-[14px] font-bold leading-[1.15] tracking-[-0.03em]"
+            style={{ color: nameColor }}
+          >
+            {duoName ?? duoFullName ?? "—"}
+          </p>
+          {/* Nome real abaixo, sempre que existir */}
+          {duoFullName && (
+            <p className="mt-[3px] truncate text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
+              {duoFullName}
+            </p>
+          )}
+        </div>
+      </Link>
+    </article>
   );
 }
 
@@ -446,288 +336,96 @@ function CommunityHighlightModuleCard({
   );
 }
 
+function GameEditButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="absolute right-[10px] top-[10px] z-20 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-[4px] transition-colors hover:bg-black/65"
+      title="Editar jogo favorito"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className="h-[12px] w-[12px]"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M2.87601 18.1156C2.92195 17.7021 2.94493 17.4954 3.00748 17.3022C3.06298 17.1307 3.1414 16.9676 3.24061 16.8171C3.35242 16.6475 3.49952 16.5005 3.7937 16.2063L17 3C18.1046 1.89543 19.8954 1.89543 21 3C22.1046 4.10457 22.1046 5.89543 21 7L7.7937 20.2063C7.49951 20.5005 7.35242 20.6475 7.18286 20.7594C7.03242 20.8586 6.86926 20.937 6.69782 20.9925C6.50457 21.055 6.29783 21.078 5.88434 21.124L2.49997 21.5L2.87601 18.1156Z" />
+      </svg>
+    </button>
+  );
+}
+
 function FavoriteGameModuleCard({
   title,
   coverUrl,
-  onSave,
+  onEdit,
 }: {
   title: string | null;
   coverUrl: string | null;
-  onSave: ((title: string | null) => Promise<boolean> | boolean) | null;
+  onEdit?: () => void;
 }) {
-  const toast = useToast();
-  const canEdit = Boolean(onSave);
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState(title ?? "");
-
-  async function handleSave() {
-    if (!onSave) return;
-    setSaving(true);
-    try {
-      const nextTitle = draft.trim();
-      const ok = await onSave(nextTitle.length > 0 ? nextTitle : null);
-      if (!ok) {
-        toast.show("NÃ£o foi possÃ­vel salvar seu jogo favorito.");
-        return;
-      }
-      toast.show("Jogo favorito salvo.", "success");
-      setOpen(false);
-    } catch {
-      toast.show("NÃ£o foi possÃ­vel salvar seu jogo favorito.");
-    } finally {
-      setSaving(false);
-    }
-  }
+  const editableClass = onEdit ? "cursor-pointer transition-opacity hover:opacity-90 active:opacity-75" : "";
 
   if (coverUrl) {
     return (
-      <>
-        <button
-          type="button"
-          disabled={!canEdit}
-          onClick={() => {
-            if (canEdit) {
-              setDraft(title ?? "");
-              setOpen(true);
-            }
-          }}
-          className={`relative block ${CARD_HEIGHT_CLASS} w-full overflow-hidden rounded-[var(--panel-radius-card)] bg-black text-left shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-        >
-          <Image
-            src={coverUrl}
-            alt={title ?? "Jogo favorito"}
-            fill
-            className="object-cover"
-            sizes="(min-width: 1536px) 237px, (min-width: 1280px) 25vw, 100vw"
-            unoptimized
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.80)_0%,rgba(0,0,0,0.24)_55%,rgba(0,0,0,0.10)_100%)]" />
-          <div className="relative z-10 flex h-full flex-col justify-between p-[22px]">
-            <div className="flex items-start justify-between gap-[12px]">
-              <p className="text-[10px] font-bold tracking-[-0.03em] text-white/78">
-                Jogo favorito
-              </p>
-              {canEdit ? (
-                <span className="rounded-full bg-white/18 px-[8px] py-[4px] text-[10px] font-bold tracking-[-0.02em] text-white backdrop-blur-[2px]">
-                  editar
-                </span>
-              ) : null}
-            </div>
-            <div>
-              <p className="line-clamp-2 max-w-[72%] text-[22px] font-bold leading-[1.02] tracking-[-0.05em] text-white">
-                {title}
-              </p>
-              <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-white/72">
-                capa puxada automaticamente
-              </p>
-            </div>
-          </div>
-        </button>
-
-        {typeof document !== "undefined" && open
-          ? createPortal(
-              <div
-                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
-                onClick={() => setOpen(false)}
-              >
-                <div
-                  className="relative flex w-full max-w-[460px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className="h-[16px] w-[16px]"
-                      stroke="currentColor"
-                      strokeWidth={2.4}
-                      strokeLinecap="round"
-                    >
-                      <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
-                  </button>
-                  <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
-                    <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                      Jogo favorito
-                    </h2>
-                    <p className="mt-[8px] text-[13px] text-[#8d8d8d]">
-                      Defina o nome agora. A capa automÃ¡tica entra depois com a API.
-                    </p>
-                  </div>
-                  <div className="px-[24px] py-[22px]">
-                    <label className="block text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                      Nome do jogo
-                    </label>
-                    <input
-                      type="text"
-                      value={draft}
-                      onChange={(event) => setDraft(event.target.value)}
-                      placeholder="Ex.: League of Legends, Valorant, Hades..."
-                      className="mt-[10px] h-[48px] w-full rounded-[14px] border border-[#ededed] bg-[#fafafa] px-[14px] text-[14px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none transition-colors placeholder:text-[#a6a6a6] focus:border-[#ff4100]"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between border-t border-[#f0f0f0] px-[24px] py-[18px]">
-                    <p className="text-[11px] font-medium text-[#8d8d8d]">
-                      vocÃª pode trocar isso quando quiser
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {saving ? (
-                        <>
-                          <svg
-                            className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
-                            viewBox="25 25 50 50"
-                          >
-                            <circle r="20" cy="50" cx="50" />
-                          </svg>
-                          Salvando...
-                        </>
-                      ) : (
-                        "Salvar"
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>,
-              document.body,
-            )
-          : null}
-      </>
+      <article
+        className={`relative ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-black shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${editableClass}`}
+        onClick={onEdit}
+        role={onEdit ? "button" : undefined}
+        tabIndex={onEdit ? 0 : undefined}
+        onKeyDown={onEdit ? (e) => e.key === "Enter" && onEdit() : undefined}
+      >
+        <Image
+          src={coverUrl}
+          alt={title ?? "Jogo favorito"}
+          fill
+          className="object-cover"
+          sizes="(min-width: 1536px) 237px, (min-width: 1280px) 25vw, 100vw"
+          unoptimized
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.75)_0%,rgba(0,0,0,0.10)_100%)]" />
+        <div className="relative z-10 flex h-full flex-col justify-end p-[22px]">
+          <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
+            Jogo favorito
+          </p>
+          <p className="mt-[6px] line-clamp-1 text-[22px] font-bold leading-[1.05] tracking-[-0.04em] text-white">
+            {title}
+          </p>
+        </div>
+      </article>
     );
   }
   return (
-    <>
-      <CardShell>
-        <button
-          type="button"
-          disabled={!canEdit}
-          onClick={() => {
-            if (canEdit) {
-              setDraft(title ?? "");
-              setOpen(true);
-            }
-          }}
-          className={`flex h-full w-full text-left ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-        >
-          <div className="flex h-full w-full items-center justify-between gap-[18px]">
-            <div className="order-2 ml-auto flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#f6f0ed_0%,#ededed_100%)] ring-1 ring-[#eee3de]">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-[24px] w-[24px] text-[#0f0f0f]"
-                stroke="currentColor"
-                strokeWidth={1.9}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 4h9l3 3v13H6z" />
-                <path d="M15 4v3h3" />
-                <path d="M9 12h6M9 16h4" />
-              </svg>
-            </div>
-            <div className="order-1 min-w-0 flex-1">
-              <Eyebrow>Jogo favorito</Eyebrow>
-              <p className="mt-[10px] line-clamp-2 max-w-[190px] text-[18px] font-bold leading-[1.02] tracking-[-0.04em] text-[#0f0f0f]">
-                {title ?? "Defina seu jogo favorito"}
-              </p>
-              <p className="hidden mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#8d8d8d]">
-                {title
-                  ? "a capa automÃ¡tica entra na prÃ³xima etapa"
-                  : canEdit
-                    ? "clique para escolher o nome do jogo"
-                    : "mÃ³dulo multi-game"}
-              </p>
-            </div>
-          </div>
-        </button>
-      </CardShell>
-
-      {typeof document !== "undefined" && open
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
-              onClick={() => setOpen(false)}
-            >
-              <div
-                className="relative flex w-full max-w-[460px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="h-[16px] w-[16px]"
-                    stroke="currentColor"
-                    strokeWidth={2.4}
-                    strokeLinecap="round"
-                  >
-                    <path d="M18 6 6 18M6 6l12 12" />
-                  </svg>
-                </button>
-                <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
-                  <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                    Jogo favorito
-                  </h2>
-                  <p className="mt-[8px] text-[13px] text-[#8d8d8d]">
-                    Defina o nome agora. A capa automÃ¡tica entra depois com a API.
-                  </p>
-                </div>
-                <div className="px-[24px] py-[22px]">
-                  <label className="block text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                    Nome do jogo
-                  </label>
-                  <input
-                    type="text"
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    placeholder="Ex.: League of Legends, Valorant, Hades..."
-                    className="mt-[10px] h-[48px] w-full rounded-[14px] border border-[#ededed] bg-[#fafafa] px-[14px] text-[14px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none transition-colors placeholder:text-[#a6a6a6] focus:border-[#ff4100]"
-                  />
-                </div>
-                <div className="flex items-center justify-between border-t border-[#f0f0f0] px-[24px] py-[18px]">
-                  <p className="text-[11px] font-medium text-[#8d8d8d]">
-                    vocÃª pode trocar isso quando quiser
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="inline-flex h-[40px] items-center justify-center gap-[8px] rounded-[12px] bg-[#0f0f0f] px-[20px] text-[13px] font-bold tracking-[-0.02em] text-white hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {saving ? (
-                      <>
-                        <svg
-                          className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
-                          viewBox="25 25 50 50"
-                        >
-                          <circle r="20" cy="50" cx="50" />
-                        </svg>
-                        Salvando...
-                      </>
-                    ) : (
-                      "Salvar"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-    </>
+    <article
+      className={`relative flex ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-white px-[22px] py-[18px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${editableClass}`}
+      onClick={onEdit}
+      role={onEdit ? "button" : undefined}
+      tabIndex={onEdit ? 0 : undefined}
+      onKeyDown={onEdit ? (e) => e.key === "Enter" && onEdit() : undefined}
+    >
+      <div className="flex h-full w-full flex-col justify-between">
+        <Eyebrow>Jogo favorito</Eyebrow>
+        <div>
+          <p
+            className={`text-[18px] font-bold leading-[1.05] tracking-[-0.04em] ${title ? "text-[#0f0f0f]" : "text-[#c0c0c0]"}`}
+          >
+            {title ?? "Escolher jogo…"}
+          </p>
+          {!title && (
+            <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#c0c0c0]">
+              Clique para buscar
+            </p>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -797,8 +495,51 @@ function MemberSinceModuleCard({ memberSince }: { memberSince: string | null }) 
   );
 }
 
+function ShowcaseModuleCard({
+  items,
+}: {
+  items: { label: string; src: string | null }[];
+}) {
+  const slots = items.slice(0, 3);
+  while (slots.length < 3) slots.push({ label: "—", src: null });
+  return (
+    <CardShell>
+      <div className="flex h-full w-full flex-col">
+        <Eyebrow>Vitrine</Eyebrow>
+        <div className="mt-auto flex items-end justify-between gap-[8px]">
+          {slots.map((slot, idx) => (
+            <div
+              key={`${slot.label}-${idx}`}
+              className="min-w-0 flex-1 text-center"
+            >
+              <div className="relative mx-auto h-[44px] w-[44px] overflow-hidden rounded-[10px] bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
+                {slot.src ? (
+                  <Image
+                    src={slot.src}
+                    alt={slot.label}
+                    fill
+                    className="object-cover"
+                    sizes="44px"
+                    unoptimized
+                  />
+                ) : null}
+              </div>
+              <p className="mt-[6px] truncate text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                {slot.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </CardShell>
+  );
+}
+
+// ─── Public renderer ──────────────────────────────────────────────────────
+
 export type ProfileModuleData = {
   hasRiotId: boolean;
+  /** Próprio user editando o perfil — habilita interatividade do lane selector. */
   isOwnProfile: boolean;
   riotId: string;
   targetUserId: number | null;
@@ -812,7 +553,7 @@ export type ProfileModuleData = {
   fallbackFeaturedValue: string;
   fallbackFeaturedSrc?: string;
   favoriteChampionSlugs: string[];
-  onUpdateFavoriteChampions: ((champions: string[]) => Promise<boolean> | boolean) | null;
+  onUpdateFavoriteChampions: ((champions: string[]) => void) | null;
   communityHighlight: string | null;
   duoSlug: string | null;
   duoFullName: string | null;
@@ -821,7 +562,10 @@ export type ProfileModuleData = {
   duoStyleId: string | null;
   favoriteGameTitle: string | null;
   favoriteGameCoverUrl: string | null;
-  onUpdateFavoriteGameTitle: ((title: string | null) => Promise<boolean> | boolean) | null;
+  /** Abre o modal de busca RAWG (só no próprio perfil). */
+  onEditFavoriteGame?: () => void;
+  /** Abre o modal de seleção de campeões favoritos (só no próprio perfil). */
+  onEditTopChampions?: () => void;
   memberSince: string | null;
   unlockedBanners: number;
   unlockedTitles: number;
@@ -897,7 +641,7 @@ export function ProfileModuleCard({
         <LockedWrapper locked={locked}>
           <TopChampionsModuleCard
             favoriteChampionSlugs={data.favoriteChampionSlugs}
-            onSave={data.onUpdateFavoriteChampions}
+            onEdit={data.onEditTopChampions}
           />
         </LockedWrapper>
       );
@@ -926,10 +670,10 @@ export function ProfileModuleCard({
     case "duo":
       return (
         <DuoModuleCard
-          duoSlug={data.duoSlug}
-          duoFullName={data.duoFullName}
           duoName={data.duoName}
+          duoFullName={data.duoFullName}
           duoAvatarSrc={data.duoAvatarSrc}
+          duoSlug={data.duoSlug}
           duoStyleId={data.duoStyleId}
         />
       );
@@ -944,7 +688,7 @@ export function ProfileModuleCard({
         <FavoriteGameModuleCard
           title={data.favoriteGameTitle}
           coverUrl={data.favoriteGameCoverUrl}
-          onSave={data.onUpdateFavoriteGameTitle}
+          onEdit={data.onEditFavoriteGame}
         />
       );
 
@@ -952,18 +696,24 @@ export function ProfileModuleCard({
       return <MemberSinceModuleCard memberSince={data.memberSince} />;
 
     case "showcase":
-      return (
-        <TopChampionsModuleCard
-          favoriteChampionSlugs={data.favoriteChampionSlugs}
-          onSave={data.onUpdateFavoriteChampions}
-        />
-      );
+      return <ShowcaseModuleCard items={data.showcaseItems} />;
 
     default:
       return null;
   }
 }
 
+/**
+ * Layout de slots da grid de topo. Posições:
+ *   slot 0 — lane-selector (fixo pra lol, tranca/placeholder sem Riot ID)
+ *   slot 1 — baderna-rank (fixo sempre)
+ *   slot 2 — primeiro módulo configurável (default: lol-rank)
+ *   slot 3 — segundo módulo configurável (default: featured-champion)
+ *
+ * O `profileModuleOrder` salvo no user controla SOMENTE os slots 2+. Os
+ * dois primeiros são imutáveis.
+ */
+/** Todos os IDs que o usuário pode colocar nos slots configuráveis. */
 export const ALL_CONFIGURABLE_MODULE_IDS: ProfileModuleId[] = [
   "lol-rank",
   "featured-champion",
@@ -974,8 +724,10 @@ export const ALL_CONFIGURABLE_MODULE_IDS: ProfileModuleId[] = [
   "community-highlight",
   "favorite-game",
   "member-since",
+  "showcase",
 ];
 
+// Defaults separados por contexto lol.
 const LOL_DEFAULT_ORDER: ProfileModuleId[] = [
   "lol-rank",
   "featured-champion",
@@ -986,21 +738,34 @@ const LOL_DEFAULT_ORDER: ProfileModuleId[] = [
   "community-highlight",
   "favorite-game",
   "member-since",
+  "showcase",
 ];
 
 const NO_LOL_DEFAULT_ORDER: ProfileModuleId[] = [
-  "member-since",
-  "favorite-game",
-  "community-highlight",
   "collection",
   "participation",
   "duo",
-  "top-champions",
+  "community-highlight",
+  "favorite-game",
+  "member-since",
+  "showcase",
   "lol-rank",
   "featured-champion",
   "top-champions",
 ];
 
+/**
+ * Resolve os IDs dos slots CONFIGURÁVEIS do topo do perfil.
+ *
+ * Layout de slots completo:
+ *   Slot 1 — lane-selector (FIXO para lol; config[0] para não-lol)
+ *   Slot 2 — baderna-rank  (SEMPRE FIXO)
+ *   Slot 3 — configurável
+ *   Slot 4 — configurável
+ *
+ * lol:     2 configuráveis (slots 3–4)
+ * Não-lol: 3 configuráveis (slots 1, 3, 4)
+ */
 export function resolveTopSlots({
   profileModuleOrder,
   hasRiotId,
@@ -1011,11 +776,9 @@ export function resolveTopSlots({
   const slotCount = hasRiotId ? 2 : 3;
   const defaultOrder = hasRiotId ? LOL_DEFAULT_ORDER : NO_LOL_DEFAULT_ORDER;
 
-  const preferred = (profileModuleOrder ?? [])
-    .map((id) => (id === "showcase" ? "top-champions" : id))
-    .filter((id): id is ProfileModuleId =>
-      ALL_CONFIGURABLE_MODULE_IDS.includes(id as ProfileModuleId),
-    );
+  const preferred = (profileModuleOrder ?? []).filter((id): id is ProfileModuleId =>
+    ALL_CONFIGURABLE_MODULE_IDS.includes(id as ProfileModuleId),
+  );
   const merged = [...preferred, ...defaultOrder].filter(
     (id, idx, list) => list.indexOf(id) === idx,
   );

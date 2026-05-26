@@ -18,7 +18,7 @@ type ModuleMeta = {
 export const MODULE_META: ModuleMeta[] = [
   {
     id: "lol-rank",
-    label: "Ranking LoL",
+    label: "Ranking Lol",
     description: "Seu elo atual na fila flex.",
     lol: true,
   },
@@ -71,17 +71,22 @@ function ModulePicker({
   occupied: occupiedRaw,
   onChange,
   onClose,
+  slotNumber,
 }: {
   current: ProfileModuleId | null;
   occupied: ProfileModuleId[];
   onChange: (id: ProfileModuleId) => void;
   onClose: () => void;
+  slotNumber: number;
 }) {
   const occupied = new Set(occupiedRaw);
+  const visibleMods = MODULE_META.filter(
+    (mod) => mod.id !== "lol-rank" || slotNumber === 3,
+  );
   return (
-    <div className="mt-[8px] overflow-hidden rounded-[14px] border border-[#f0f0f0] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.10)]">
-      <div className="max-h-[260px] overflow-y-auto p-[6px]">
-        {MODULE_META.map((mod) => {
+    <div className="mt-[8px] overflow-hidden rounded-[14px] border border-[#f0f0f0] bg-white">
+      <div className="max-h-[260px] overflow-y-auto p-[6px] [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+        {visibleMods.map((mod) => {
           const taken = occupied.has(mod.id) && mod.id !== current;
           const active = mod.id === current;
           return (
@@ -95,24 +100,20 @@ function ModulePicker({
               }}
               className={`flex w-full items-center gap-[10px] rounded-[10px] px-[12px] py-[9px] text-left transition-colors ${
                 active
-                  ? "bg-[#0f0f0f] text-white"
+                  ? "bg-[#ededed]"
                   : taken
                     ? "cursor-not-allowed opacity-40"
                     : "hover:bg-[#f5f5f5]"
               }`}
             >
               <span
-                className={`flex-1 text-[12px] font-bold tracking-[-0.02em] ${
-                  active ? "text-white" : "text-[#0f0f0f]"
-                }`}
+                className="flex-1 text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]"
               >
                 {mod.label}
               </span>
               {mod.lol ? (
                 <span
-                  className={`inline-flex h-[24px] w-[24px] items-center justify-center rounded-full ${
-                    active ? "bg-white/20" : "bg-[#fff0ec]"
-                  }`}
+                  className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full bg-[#fff0ec]"
                 >
                   <Image
                     src="/lol_logo.png"
@@ -144,6 +145,9 @@ function SlotRow({
   current,
   allSelected,
   onSelect,
+  isOpen,
+  onOpen,
+  onClose: onCloseSlot,
 }: {
   number: number;
   fixed?: boolean;
@@ -152,8 +156,11 @@ function SlotRow({
   current?: ProfileModuleId | null;
   allSelected: ProfileModuleId[];
   onSelect?: (id: ProfileModuleId) => void;
+  isOpen?: boolean;
+  onOpen?: () => void;
+  onClose?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const open = isOpen ?? false;
   const meta = current ? MODULE_META.find((m) => m.id === current) : null;
 
   return (
@@ -162,7 +169,7 @@ function SlotRow({
         className={`flex items-center gap-[12px] rounded-[14px] px-[16px] py-[12px] ${
           fixed ? "bg-[#f7f7f7]" : "cursor-pointer bg-[#f0f0f0] hover:bg-[#e8e8e8]"
         }`}
-        onClick={() => !fixed && setOpen((value) => !value)}
+        onClick={() => { if (!fixed) { open ? onCloseSlot?.() : onOpen?.(); } }}
       >
         <div
           className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
@@ -230,7 +237,8 @@ function SlotRow({
           current={current ?? null}
           occupied={allSelected}
           onChange={onSelect}
-          onClose={() => setOpen(false)}
+          onClose={() => onCloseSlot?.()}
+          slotNumber={number}
         />
       ) : null}
     </div>
@@ -266,14 +274,23 @@ export function ProfileModuleSelectorModal({
     return Array.from({ length: slotCount }, (_, index) => normalized[index] ?? null);
   });
   const [saving, setSaving] = useState(false);
+  const [closing, setClosing] = useState(false);
+  // Accordion: só um slot aberto por vez.
+  const [openSlotIndex, setOpenSlotIndex] = useState<number | null>(null);
+  const openSlot  = (i: number) => setOpenSlotIndex(i);
+  const closeSlot = (i: number) => setOpenSlotIndex((prev) => prev === i ? null : prev);
+
+  function handleClose() {
+    setClosing(true);
+  }
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") handleClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   function setSlot(index: number, id: ProfileModuleId) {
     setSelected((previous) => {
@@ -294,7 +311,7 @@ export function ProfileModuleSelectorModal({
         return;
       }
       toast.show("Cards salvos.", "success");
-      onClose();
+      handleClose();
     } catch {
       toast.show("Não foi possível salvar os cards.");
     } finally {
@@ -306,8 +323,8 @@ export function ProfileModuleSelectorModal({
 
   const slots = hasRiotId
     ? [
-        { fixed: true, label: "Posição / Lane", reason: "Fixo para jogadores LoL", configIdx: null },
         { fixed: true, label: "Rank da Baderna", reason: "Sempre fixo", configIdx: null },
+        { fixed: true, label: "Posição / Lane", reason: "Fixo para jogadores Lol", configIdx: null },
         { fixed: false, configIdx: 0 },
         { fixed: false, configIdx: 1 },
       ]
@@ -320,12 +337,15 @@ export function ProfileModuleSelectorModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]"
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]`}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) handleClose();
       }}
     >
-      <div className="relative mx-4 w-full max-w-[440px] overflow-hidden rounded-[28px] bg-white shadow-[0_32px_80px_rgba(0,0,0,0.22)]">
+      <div
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative mx-4 w-full max-w-[440px] overflow-hidden rounded-[28px] bg-white shadow-[0_32px_80px_rgba(0,0,0,0.22)]`}
+        onAnimationEnd={() => { if (closing) onClose(); }}
+      >
         <div className="flex items-center justify-between px-[24px] pt-[24px] pb-[16px]">
           <div>
             <p className="text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
@@ -337,18 +357,19 @@ export function ProfileModuleSelectorModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-90"
           >
             <svg
-              viewBox="0 0 24 24"
+              viewBox="0 0 10 10"
               fill="none"
-              className="h-[14px] w-[14px]"
+              className="h-[12px] w-[12px]"
               stroke="currentColor"
-              strokeWidth={2.4}
+              strokeWidth={1.4}
               strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path d="M18 6 6 18M6 6l12 12" />
+              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
             </svg>
           </button>
         </div>
@@ -371,6 +392,9 @@ export function ProfileModuleSelectorModal({
                 current={slot.configIdx !== null ? selected[slot.configIdx] : null}
                 allSelected={allSelected}
                 onSelect={(id) => slot.configIdx !== null && setSlot(slot.configIdx, id)}
+                isOpen={openSlotIndex === index}
+                onOpen={() => openSlot(index)}
+                onClose={() => closeSlot(index)}
               />
             ),
           )}

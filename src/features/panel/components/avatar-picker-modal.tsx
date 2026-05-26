@@ -1,6 +1,5 @@
 "use client";
 
-import { X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -34,6 +33,7 @@ export function AvatarPickerModal({
   const { account } = useAccount();
   const riotIconUrl = account.riotIconUrl ?? null;
   const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
   // Inicial: Riot se tiver ícone disponível, senão Campeões
   const [tab, setTab] = useState<Tab>(riotIconUrl ? "riot" : "champions");
   const [query, setQuery] = useState("");
@@ -41,12 +41,19 @@ export function AvatarPickerModal({
   const toast = useToast();
   const fileInput = useRef<HTMLInputElement>(null);
 
+  function handleClose() {
+    setClosing(true);
+  }
+
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setClosing(false);
+      return;
+    }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     }
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -54,7 +61,7 @@ export function AvatarPickerModal({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 
@@ -90,7 +97,7 @@ export function AvatarPickerModal({
           firstErr ?? body?.message ?? `Falha no upload (${res.status})`,
         );
       }
-      onClose();
+      handleClose();
       onSelect(body.url);
     } catch (err) {
       toast.show(err instanceof Error ? err.message : "Falha no upload.");
@@ -101,20 +108,31 @@ export function AvatarPickerModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]"
-      onClick={onClose}
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}
+      onClick={handleClose}
     >
       <div
-        className="relative flex max-h-[86vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]"
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative flex max-h-[86vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
         onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={() => { if (closing) onClose(); }}
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Fechar"
           className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
         >
-          <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+          <svg
+            viewBox="0 0 10 10"
+            fill="none"
+            className="h-[12px] w-[12px]"
+            stroke="currentColor"
+            strokeWidth={1.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+          </svg>
         </button>
 
         <div className="border-b border-[#ededed] px-[28px] pt-[28px] pb-[16px]">
@@ -181,7 +199,7 @@ export function AvatarPickerModal({
             <button
               type="button"
               onClick={() => {
-                onClose();
+                handleClose();
                 onSelect(riotIconUrl);
               }}
               className="relative h-[148px] w-[148px] overflow-hidden rounded-full ring-4 ring-transparent transition-all hover:scale-[1.04] hover:ring-[#ff4100]"
@@ -199,7 +217,7 @@ export function AvatarPickerModal({
             <button
               type="button"
               onClick={() => {
-                onClose();
+                handleClose();
                 onSelect(riotIconUrl);
               }}
               className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#ff4100] px-8 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
@@ -229,7 +247,7 @@ export function AvatarPickerModal({
                     src={src}
                     isCurrent={isCurrent}
                     onPick={() => {
-                      onClose();
+                      handleClose();
                       onSelect(src);
                     }}
                   />

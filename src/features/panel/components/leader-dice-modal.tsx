@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 
@@ -51,7 +50,12 @@ export function LeaderDiceModal({
   const [flip, setFlip] = useState<FlipState>({ phase: "idle" });
   const [pickingSide, setPickingSide] = useState(false);
   const [trigger, setTrigger] = useState(0);
+  const [closing, setClosing] = useState(false);
   const timersRef = useRef<number[]>([]);
+
+  function handleCancel() {
+    setClosing(true);
+  }
 
   // Limpa timers se modal fechar ou unmount.
   useEffect(() => {
@@ -66,6 +70,7 @@ export function LeaderDiceModal({
       // Reset ao fechar
       setFlip({ phase: "idle" });
       setPickingSide(false);
+      setClosing(false);
       timersRef.current.forEach((id) => window.clearTimeout(id));
       timersRef.current = [];
     }
@@ -112,19 +117,32 @@ export function LeaderDiceModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]"
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[200] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]`}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onCancel();
+        if (e.target === e.currentTarget) handleCancel();
       }}
     >
-      <div className="relative flex w-full max-w-[520px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]">
+      <div
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative flex w-full max-w-[520px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
+        onAnimationEnd={() => { if (closing) onCancel(); }}
+      >
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleCancel}
           aria-label="Cancelar"
           className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
         >
-          <X className="h-[16px] w-[16px]" strokeWidth={2.4} />
+          <svg
+            viewBox="0 0 10 10"
+            fill="none"
+            className="h-[12px] w-[12px]"
+            stroke="currentColor"
+            strokeWidth={1.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+          </svg>
         </button>
 
         <div className="border-b border-[#f3ebe8] px-[28px] pt-[28px] pb-[20px]">
