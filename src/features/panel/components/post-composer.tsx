@@ -38,6 +38,16 @@ export function PostComposer({
 
   const canPost = text.trim().length > 0 || imageUrl || gifUrl || videoUrl;
 
+  function handlePaste(e: React.ClipboardEvent) {
+    const imageItem = Array.from(e.clipboardData.items).find((item) =>
+      item.type.startsWith("image/"),
+    );
+    if (!imageItem) return;
+    e.preventDefault();
+    const file = imageItem.getAsFile();
+    if (file) handleFile(file);
+  }
+
   async function handleFile(file: File) {
     setUploading(true);
     try {
@@ -124,6 +134,7 @@ export function PostComposer({
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onPaste={handlePaste}
               placeholder="Qual a boa de hoje?"
               rows={4}
               maxLength={2000}

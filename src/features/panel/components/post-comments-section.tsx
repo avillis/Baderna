@@ -42,6 +42,16 @@ export function PostCommentsSection({
   const mediaUrl = imageUrl ?? gifUrl;
   const canSubmit = (draft.trim().length > 0 || mediaUrl) && !submitting && !uploading;
 
+  function handlePaste(e: React.ClipboardEvent) {
+    const imageItem = Array.from(e.clipboardData.items).find((item) =>
+      item.type.startsWith("image/"),
+    );
+    if (!imageItem) return;
+    e.preventDefault();
+    const file = imageItem.getAsFile();
+    if (file) handleImageFile(file);
+  }
+
   async function handleImageFile(file: File) {
     setUploading(true);
     try {
@@ -221,6 +231,7 @@ export function PostCommentsSection({
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onPaste={handlePaste}
             placeholder="Fazer um comentário..."
             className="min-w-0 flex-1 bg-transparent text-[13px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-[#a4a4a4]"
           />
