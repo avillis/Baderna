@@ -16,6 +16,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'slug',
         'email',
         'password',
         'is_admin',
@@ -138,5 +139,36 @@ class User extends Authenticatable
             $newName = $user->summoner_name;
             \App\Services\MentionRewriter::rewriteSlugChange($oldName, $newName);
         });
+
+        // Novo user (register / adminStore): se ninguém setou slug
+        // explicitamente, deriva do summoner_name (ou name). Garante que
+        // /membro/{slug-derivado} resolve pro user assim que ele aparece
+        // na listagem, sem precisar editar a slug à mão.
+        static::creating(function (User $user) {
+            if (!empty($user->slug)) return;
+            $nick = $user->summoner_name ?: $user->name;
+            if (!$nick) return;
+            $base = self::slugifyForCreate($nick);
+            if ($base === '') return;
+            $slug = $base;
+            $suffix = 2;
+            while (self::where('slug', $slug)->exists()) {
+                $slug = $base . '-' . $suffix;
+                $suffix++;
+            }
+            $user->slug = mb_substr($slug, 0, 30);
+        });
+    }
+
+    private static function slugifyForCreate(string $nick): string
+    {
+        $trimmed = trim($nick);
+        $ascii = @transliterator_transliterate('Any-Latin; Latin-ASCII;', $trimmed);
+        if (!$ascii) $ascii = $trimmed;
+        $lower = strtolower($ascii);
+        $cleaned = preg_replace('/[^a-z0-9\s-]/', '', $lower) ?? '';
+        $hyphenated = preg_replace('/\s+/', '-', $cleaned) ?? '';
+        $dedupHyphen = preg_replace('/-+/', '-', $hyphenated) ?? '';
+        return trim($dedupHyphen, '-');
     }
 }

@@ -13,7 +13,8 @@ class MembersController extends Controller
 {
     /**
      * Slug usado nas URLs (/membro/{slug}). Bate com getMemberSlug do front:
-     * lowercase + espaços viram hífen.
+     * lowercase + espaços viram hífen. Só usado como fallback enquanto a
+     * coluna users.slug não foi populada (backfill).
      */
     private function slugify(?string $nick, int $userId): string
     {
@@ -58,7 +59,7 @@ class MembersController extends Controller
         return response()->json($users->map(function ($u) use ($viewerIsAdmin) {
             $nick = $u->summoner_name ?: $u->name;
             $row = [
-                'id'              => $this->slugify($nick, $u->id),
+                'id'              => $u->slug ?: $this->slugify($nick, $u->id),
                 'userId'          => $u->id,
                 'name'            => $u->display_name ?: $u->name,
                 'nickname'        => $nick,
