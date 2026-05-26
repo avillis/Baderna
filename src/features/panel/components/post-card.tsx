@@ -640,6 +640,11 @@ function PostReactions({ postId }: { postId: number }) {
       return;
     }
 
+    const myGen = genRef.current;
+    // Se ESTE clique foi feito enquanto outros POSTs já estavam em voo,
+    // a resposta deste pode chegar fora de ordem → não confia, faz sync depois.
+    const hadConcurrent = pendingRef.current.size > 1;
+
     fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
       method: "POST",
       headers: {
@@ -649,13 +654,22 @@ function PostReactions({ postId }: { postId: number }) {
       },
       body: JSON.stringify({ emoji }),
     })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        // Aplica a resposta do POST diretamente — economiza um GET extra.
+        // Só aplica se: (a) não houve concorrência E (b) nenhuma nova interação
+        // aconteceu depois deste clique. Caso contrário a resposta pode estar
+        // "atrasada" e o sync no .finally vai pegar o estado canônico.
+        if (!body || hadConcurrent || genRef.current !== myGen) return;
+        setCounts(body.reactions ?? {});
+        setMine(parseMine(body.mine));
+      })
       .catch(() => {})
       .finally(() => {
         pendingRef.current.delete(emoji);
-        // Quando todos os POSTs em voo terminarem, busca o estado canônico.
-        // sync() captura o gen atual → se o usuário já clicou mais alguma coisa
-        // nesse intervalo, o GET vai ser descartado e o próximo .finally fará o sync.
-        if (pendingRef.current.size === 0) {
+        // Só faz GET de sync se houve concorrência — necessário pra evitar que
+        // respostas POST fora de ordem deixem o estado inconsistente.
+        if (pendingRef.current.size === 0 && hadConcurrent) {
           sync();
         }
       });
