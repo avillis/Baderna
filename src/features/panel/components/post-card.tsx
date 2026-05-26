@@ -539,25 +539,35 @@ function EmojiPicker({
 
 /**
  * Reações por post. Suporta múltiplas por usuário com qualquer emoji.
- * Toggle otimista + sync com servidor. pendingRef evita duplo clique.
+ *
+ * Race condition resolvida com dois refs:
+ *  - pendingRef (Set): bloqueia double-click no MESMO emoji enquanto o POST
+ *    está em voo, mas não bloqueia emojis diferentes.
+ *  - genRef (number): invalida respostas GET "velhas". Toda vez que react()
+ *    é chamado o gerador incrementa. O sync() captura o gen atual e só aplica
+ *    o resultado se nenhuma nova interação aconteceu enquanto o GET voava —
+ *    evita que um GET tardio sobrescreva o estado otimista de um clique mais recente.
  */
 function PostReactions({ postId }: { postId: number }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [mine, setMine] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
-  // Rastreia quais emojis têm request em voo — impede double-click no MESMO
-  // emoji mas permite reagir com emojis diferentes ao mesmo tempo.
   const pendingRef = useRef<Set<string>>(new Set());
+  const genRef = useRef(0);
 
   function sync() {
     const token = authToken();
     if (!token) return;
+    // Captura o gen ANTES do fetch — se outro react() chegar antes da resposta
+    // chegar, genRef.current vai ser diferente e jogamos o resultado fora.
+    const expectedGen = genRef.current;
     fetch(`${REACTIONS_API_BASE}/posts/${postId}/reactions`, {
       headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((body) => {
         if (!body) return;
+        if (genRef.current !== expectedGen) return; // resposta velha, descarta
         setCounts(body.reactions ?? {});
         setMine(parseMine(body.mine));
       })
@@ -572,6 +582,8 @@ function PostReactions({ postId }: { postId: number }) {
   function react(emoji: string) {
     if (pendingRef.current.has(emoji)) return;
     pendingRef.current.add(emoji);
+    // Invalida qualquer GET em voo antes deste clique
+    genRef.current++;
     setOpen(false);
 
     const isActive = mine.includes(emoji);
@@ -609,9 +621,9 @@ function PostReactions({ postId }: { postId: number }) {
       .catch(() => {})
       .finally(() => {
         pendingRef.current.delete(emoji);
-        // Quando TODOS os requests em voo terminarem, faz um GET final pra
-        // sincronizar com o estado canônico do servidor — evita race condition
-        // onde respostas chegam fora de ordem e sobrescrevem umas às outras.
+        // Quando todos os POSTs em voo terminarem, busca o estado canônico.
+        // sync() captura o gen atual → se o usuário já clicou mais alguma coisa
+        // nesse intervalo, o GET vai ser descartado e o próximo .finally fará o sync.
         if (pendingRef.current.size === 0) {
           sync();
         }
