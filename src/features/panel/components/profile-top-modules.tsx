@@ -171,7 +171,7 @@ function TopChampionsModuleCard({
               <div className="relative mx-auto h-[46px] w-[46px] overflow-hidden rounded-full bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
                 <Image
                   src={`/api/champion-tile/${champion}_0.jpg`}
-                  alt={champion}
+                  alt={champion ?? ""}
                   fill
                   className="object-cover"
                   sizes="46px"

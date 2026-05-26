@@ -7,11 +7,7 @@ export default function FaqPage() {
     <PanelShell showBanner={false}>
       <section className="-mt-4 -mb-10 flex h-screen w-full flex-col items-center justify-center px-4 text-center sm:-mt-6 xl:-mt-[45px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/gifs/akali.gif"
-          alt=""
-          className="mb-[18px] h-[180px] w-[180px] object-contain"
-        />
+        <img src="/gifs/akali.gif" alt="" className="mb-[18px] h-[200px] w-[200px] object-contain" />
         <p className="text-[16px] font-semibold tracking-[-0.02em] text-[#0f0f0f]">
           Em construção
         </p>
