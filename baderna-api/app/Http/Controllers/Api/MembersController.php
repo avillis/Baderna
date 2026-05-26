@@ -79,6 +79,7 @@ class MembersController extends Controller
                 'duoUserId'       => $u->duo_user_id,
                 'memberSince'     => optional($u->created_at)->toIso8601String(),
                 'activeNameId'    => $u->active_name_id,
+                'activeTitleSlugs' => $u->active_title_slugs ?? ['aprendiz'],
                 'cachedRankTier'      => $u->cached_rank_tier,
                 'cachedRankDivision'  => $u->cached_rank_division,
                 'cachedRankLp'        => $u->cached_rank_lp,

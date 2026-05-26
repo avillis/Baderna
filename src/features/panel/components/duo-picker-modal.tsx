@@ -231,7 +231,7 @@ export function DuoPickerModal({
                     <div className="min-w-0 text-left">
                       <StyledName
                         styleId={candidate.activeNameId ?? undefined}
-                        className="block truncate text-[13px] font-bold tracking-[-0.02em]"
+                        className="block truncate-glow text-[13px] font-bold tracking-[-0.02em]"
                       >
                         {candidate.nickname}
                       </StyledName>

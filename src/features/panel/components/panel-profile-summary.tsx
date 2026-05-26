@@ -98,7 +98,9 @@ export function PanelProfileSummary({
     riot.status === "ready" ? (riot.profile?.rank?.tier ?? "") : "";
   const isUnranked =
     !hasRiotId ||
-    (riot.status === "ready" && (!liveTier || liveTier === "Unranked"));
+    riot.status !== "ready" ||
+    !liveTier ||
+    liveTier === "Unranked";
   const liveRankType =
     riot.status === "ready" && liveTier && liveTier !== "Unranked"
       ? (TIER_TO_RANK_TYPE[liveTier.toUpperCase()] ?? rankType)

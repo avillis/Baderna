@@ -332,7 +332,7 @@ function DuoModuleCard({
           {/* Nickname estilizado */}
           <StyledName
             styleId={duoStyleId ?? undefined}
-            className="block truncate text-[14px] font-bold leading-[1.15] tracking-[-0.03em]"
+            className="block truncate-glow text-[14px] font-bold leading-[1.15] tracking-[-0.03em]"
           >
             {duoName ?? duoFullName ?? "—"}
           </StyledName>
