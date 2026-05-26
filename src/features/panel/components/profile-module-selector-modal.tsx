@@ -18,7 +18,7 @@ type ModuleMeta = {
 export const MODULE_META: ModuleMeta[] = [
   {
     id: "lol-rank",
-    label: "Ranking Lol",
+    label: "Ranking lol",
     description: "Seu elo atual na fila flex.",
     lol: true,
   },
