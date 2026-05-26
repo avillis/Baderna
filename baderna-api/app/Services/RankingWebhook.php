@@ -23,7 +23,6 @@ class RankingWebhook
 {
     private const BRAND_COLOR = 0xFF4100;
     private const TIMEOUT_SECONDS = 5;
-    private const TOP_N = 10;
     /** Chave do app_settings que guarda o message_id do Discord. */
     private const SETTING_KEY = 'discord_ranking_message_id';
 
@@ -68,12 +67,12 @@ class RankingWebhook
             return false;
         }
 
-        $top = self::computeTopN();
-        if (empty($top)) {
+        $lists = self::computeLists();
+        if (empty($lists['baderna'])) {
             return false;
         }
 
-        $body = self::buildBody($top);
+        $body = self::buildBody($lists);
 
         $existingMessageId = AppSetting::get(self::SETTING_KEY);
 
@@ -85,9 +84,10 @@ class RankingWebhook
                 if ($res->successful()) {
                     return true;
                 }
-                // 404 = mensagem foi apagada manualmente → cai pra criar nova
+                // 404 = mensagem foi apagada manualmente → cai pra criar nova.
+                // Delete em vez de put(null) pra evitar problemas com cast 'array'.
                 if ($res->status() === 404) {
-                    AppSetting::put(self::SETTING_KEY, null);
+                    AppSetting::where('key', self::SETTING_KEY)->delete();
                 } else {
                     Log::warning('RankingWebhook PATCH failed', [
                         'status' => $res->status(),
@@ -133,37 +133,47 @@ class RankingWebhook
         return $tierIdx * 100000 + $divVal * 1000 + $lp;
     }
 
-    /** Top N players ordenados por elo (descendente). */
-    private static function computeTopN(): array
+    /**
+     * Compute as duas listas:
+     *  - 'baderna': todos os membros aprovados em ordem natural (user_id),
+     *    bate com a aba "Baderna" do site (ranking oficial / signup order).
+     *  - 'flex': mesmos membros ordenados por elo descendente (Unranked
+     *    sobra no fim).
+     */
+    private static function computeLists(): array
     {
         $users = User::where('is_deleted', false)
             ->where('approval_status', 'approved')
-            ->whereNotNull('cached_rank_tier')
-            ->where('cached_rank_tier', '!=', 'Unranked')
-            ->select('summoner_name', 'display_name', 'name', 'cached_rank_tier', 'cached_rank_division', 'cached_rank_lp')
+            ->select('id', 'summoner_name', 'display_name', 'name', 'cached_rank_tier', 'cached_rank_division', 'cached_rank_lp')
+            ->orderBy('id')
             ->get();
 
-        $ranked = [];
+        $rows = [];
         foreach ($users as $u) {
-            $tier = strtoupper((string) $u->cached_rank_tier);
-            if (! isset(self::TIER_ORDER[$tier])) continue;
-            $score = self::eloScore($tier, $u->cached_rank_division, (int) ($u->cached_rank_lp ?? 0));
-            if ($score < 0) continue;
-            $ranked[] = [
+            $tierRaw = (string) ($u->cached_rank_tier ?? '');
+            $tier = strtoupper($tierRaw);
+            $hasRank = $tier !== '' && $tier !== 'UNRANKED' && isset(self::TIER_ORDER[$tier]);
+            $score = $hasRank
+                ? self::eloScore($tier, $u->cached_rank_division, (int) ($u->cached_rank_lp ?? 0))
+                : -1;
+            $rows[] = [
                 'nickname' => $u->summoner_name ?: ($u->display_name ?: $u->name),
-                'tier'     => $tier,
-                'division' => $u->cached_rank_division,
+                'tier'     => $hasRank ? $tier : null,
+                'division' => $hasRank ? $u->cached_rank_division : null,
                 'lp'       => (int) ($u->cached_rank_lp ?? 0),
                 'score'    => $score,
+                'hasRank'  => $hasRank,
             ];
         }
 
-        usort($ranked, fn ($a, $b) => $b['score'] <=> $a['score']);
+        // Baderna = ordem natural (user_id). Flex = clone ordenado por elo.
+        $flex = $rows;
+        usort($flex, fn ($a, $b) => $b['score'] <=> $a['score']);
 
-        return array_slice($ranked, 0, self::TOP_N);
+        return ['baderna' => $rows, 'flex' => $flex];
     }
 
-    /** Linha de cada player no embed. */
+    /** Linha de cada player no embed (PDL ao invés de LP). */
     private static function formatLine(int $position, array $r): string
     {
         $medal = match ($position) {
@@ -172,26 +182,41 @@ class RankingWebhook
             3 => '🥉',
             default => '',
         };
-        $tierLabel = self::TIER_PT[$r['tier']] ?? $r['tier'];
-        $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
-            ? "{$tierLabel} · {$r['lp']} LP"
-            : "{$tierLabel} {$r['division']} · {$r['lp']} LP";
 
-        // Top 3 com medalha + sem número (medalha já cumpre o papel);
-        // 4-10 com número em mono pra alinhar visualmente.
-        if ($medal !== '') {
-            return "{$medal} **{$r['nickname']}** · `{$rankStr}`";
+        if ($r['hasRank']) {
+            $tierLabel = self::TIER_PT[$r['tier']] ?? $r['tier'];
+            $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
+                ? "{$tierLabel} · {$r['lp']} PDL"
+                : "{$tierLabel} {$r['division']} · {$r['lp']} PDL";
+            $rankPart = " · `{$rankStr}`";
+        } else {
+            $rankPart = " · _sem rank_";
         }
-        return "`" . str_pad((string) $position, 2, ' ', STR_PAD_LEFT) . ".` **{$r['nickname']}** · `{$rankStr}`";
+
+        // Top 3 leva medalha (substitui o número); 4+ usa número em mono.
+        $prefix = $medal !== ''
+            ? $medal
+            : "`" . str_pad((string) $position, 2, ' ', STR_PAD_LEFT) . ".`";
+
+        return "{$prefix} **{$r['nickname']}**{$rankPart}";
     }
 
-    private static function buildBody(array $top): array
+    /** Formata uma lista inteira (multi-linha). */
+    private static function formatList(array $entries): string
     {
         $lines = [];
-        foreach ($top as $i => $r) {
+        foreach ($entries as $i => $r) {
             $lines[] = self::formatLine($i + 1, $r);
         }
-        $description = implode("\n", $lines);
+        return implode("\n", $lines);
+    }
+
+    private static function buildBody(array $lists): array
+    {
+        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n" . self::formatList($lists['baderna']);
+        $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n" . self::formatList($lists['flex']);
+
+        $description = "{$bademaBlock}\n\n{$flexBlock}";
 
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
@@ -199,7 +224,7 @@ class RankingWebhook
             'username'   => 'Baderna Ranking',
             'avatar_url' => "{$siteBase}/logo.svg",
             'embeds'     => [[
-                'title'       => '🏆 Placar de Liderança da Baderna · Top 10',
+                'title'       => '🏆 Placar de Liderança da Baderna',
                 'description' => $description,
                 'color'       => self::BRAND_COLOR,
                 'url'         => "{$siteBase}/ranking",
