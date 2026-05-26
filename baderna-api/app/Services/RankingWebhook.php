@@ -220,13 +220,16 @@ class RankingWebhook
     {
         // Baderna = só nomes (ranking por posição, não tem a ver com elo).
         // Flex = nomes + rank LoL.
-        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n" . self::formatList($lists['baderna'], includeRank: false);
-        $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n" . self::formatList($lists['flex'], includeRank: true);
+        // \n\n após cada header cria linha em branco entre o título do bloco
+        // e o primeiro colocado.
+        $bademaBlock = "**🎖️ Ranking Baderna** _(oficial)_\n\n" . self::formatList($lists['baderna'], includeRank: false);
+        $flexBlock   = "**⚔️ Ranking Flex** _(por elo)_\n\n" . self::formatList($lists['flex'], includeRank: true);
 
-        // Linha vazia com zero-width-space entre as duas seções pra dar respiro.
-        // Discord colapsa \n\n\n em um único parágrafo; o caractere invisível
-        // força uma "linha" extra entre os blocos.
-        $description = "{$bademaBlock}\n\n\u{200B}\n\n{$flexBlock}";
+        // Linha invisível (ZWS) entre os dois blocos pra criar um respiro
+        // visível — Discord colapsa newlines sucessivas, mas uma linha com
+        // caractere zero-width permanece visível.
+        // No início, também ZWS pra separar do título do embed.
+        $description = "\u{200B}\n\n{$bademaBlock}\n\n\u{200B}\n\n{$flexBlock}";
 
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
