@@ -193,10 +193,11 @@ class RankingWebhook
             ];
         }
 
-        // Baderna = ordem natural (user_id), todos os membros (rankeados ou não).
-        // Flex = só quem TEM rank, ordenado por elo descendente. Quem é
-        // "sem rank" simplesmente não aparece nessa lista.
-        $flex = array_values(array_filter($rows, fn ($r) => $r['hasRank']));
+        // Baderna = ordem natural (user_id), todos os membros.
+        // Flex = clone com TODOS os membros ordenado por elo descendente —
+        // quem não tem rank (score = -1) vai pro fundo da lista mas
+        // ainda aparece (só sem nada na coluna direita).
+        $flex = $rows;
         usort($flex, fn ($a, $b) => $b['score'] <=> $a['score']);
 
         return ['baderna' => $rows, 'flex' => $flex];
@@ -222,7 +223,9 @@ class RankingWebhook
     /** Linha do "rank" — vai na coluna direita (Ranque). */
     private static function formatRankLine(array $r): string
     {
-        if (! $r['hasRank']) return '_sem rank_';
+        // Sem rank → zero-width space pra ocupar a linha (alinha com a
+        // linha do Jogadores) mas não mostra nada visível.
+        if (! $r['hasRank']) return "\u{200B}";
 
         $tierLabel = self::TIER_PT[$r['tier']] ?? $r['tier'];
         $rankStr = in_array($r['tier'], self::NO_DIVISION_TIERS, true) || ! $r['division']
