@@ -31,6 +31,27 @@ const LOGS: LogEntry[] = [
   {
     date: "2026-05-26",
     type: "feat",
+    title: "Bot 'Baderna Ranking' no Discord",
+    description:
+      "Webhook horário que posta (e atualiza in-place) o Placar de Liderança no canal de rank. Mostra Ranking Baderna (todos membros, posicional) + Ranking Flex (com Riot ID, ordenado por elo). Custom emojis por tier (Ferro/Bronze/.../Desafiante), layout em duas colunas (Jogadores | Ranque), PDL ao invés de LP.",
+  },
+  {
+    date: "2026-05-26",
+    type: "feat",
+    title: "Bot 'Baderna Inhouse' no Discord",
+    description:
+      "Webhook que anuncia novos inhouses no canal #-inhouse-. Duas fases pro modo Líder: 'Novo Inhouse criado!' com os líderes + Aguardando draft, depois '⚔️ Times prontos!' quando o draft fecha. Modo Aleatório dispara só uma vez completo. Mostra team_name custom dos líderes, fallback pra 'Time {nick}'.",
+  },
+  {
+    date: "2026-05-26",
+    type: "feat",
+    title: "Página /logs com changelog público",
+    description:
+      "Esta página aqui mesmo. Linha do tempo de tudo que mudou desde o lançamento, agrupada por dia e categorizada (Novidade/Correção/Performance/etc).",
+  },
+  {
+    date: "2026-05-26",
+    type: "feat",
     title: "Sistema de @menções em posts, comentários e respostas",
     description:
       "Digite @ em qualquer caixa de texto e selecione um membro. Os mencionados recebem notificação automaticamente. Suporta navegação por teclado (setas, Enter, Esc) e renderiza menções como links pro perfil.",
