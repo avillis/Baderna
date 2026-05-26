@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { NAME_BY_ID } from "@/features/panel/names-data";
+import { formatChampionName } from "@/features/panel/champion-utils";
 import { LiveFeaturedChampionCard } from "@/features/panel/components/live-featured-champion-card";
 import { LiveRankCard } from "@/features/panel/components/live-rank-card";
 import { PanelLaneSelectorCard } from "@/features/panel/components/panel-lane-selector-card";
@@ -204,15 +205,15 @@ function TopChampionsModuleCard({
                 <div className="relative mx-auto h-[46px] w-[46px] overflow-hidden rounded-full bg-[#f4f0ed] ring-1 ring-[#efe6e2]">
                   <Image
                     src={`/api/champion-tile/${champ}_0.jpg`}
-                    alt={champ}
+                    alt={formatChampionName(champ)}
                     fill
                     className="object-cover"
                     sizes="46px"
                     unoptimized
                   />
                 </div>
-                <p className="mt-[6px] truncate text-[10px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                  {champ}
+                <p className="mt-[6px] line-clamp-2 break-words text-[10px] font-bold leading-[1.2] tracking-[-0.03em] text-[#0f0f0f]">
+                  {formatChampionName(champ)}
                 </p>
               </div>
             ))

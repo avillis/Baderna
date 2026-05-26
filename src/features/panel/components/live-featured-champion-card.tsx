@@ -2,6 +2,7 @@
 
 import { PanelStatCard } from "@/features/panel/components/panel-stat-card";
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
+import { formatChampionName } from "@/features/panel/champion-utils";
 import { useAccount } from "@/features/panel/use-account";
 import {
   useRiotProfile,
@@ -74,7 +75,7 @@ export function LiveFeaturedChampionCard({
       return (
         <PanelStatCard
           eyebrow="Campeão mais jogado"
-          value={fav.champion}
+          value={formatChampionName(fav.champion)}
           tone="featured"
           featuredSrc={getSplashImageSrc(`${fav.champion}_0.jpg`)}
           placeholder={false}
