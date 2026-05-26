@@ -62,13 +62,17 @@ class PostReactionsController extends Controller
         $emoji  = $data['emoji'];
         $userId = $request->user()->id;
 
-        $existing = PostReaction::where('user_id', $userId)
+        $count = PostReaction::where('user_id', $userId)
             ->where('post_id', $id)
             ->where('emoji', $emoji)
-            ->first();
+            ->count();
 
-        if ($existing) {
-            $existing->delete();
+        if ($count > 0) {
+            // Deleta TODOS os registros com esse emoji (limpa duplicatas).
+            PostReaction::where('user_id', $userId)
+                ->where('post_id', $id)
+                ->where('emoji', $emoji)
+                ->delete();
         } else {
             PostReaction::create([
                 'user_id' => $userId,
