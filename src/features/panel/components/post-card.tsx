@@ -384,7 +384,7 @@ function PostReactions({ postId }: { postId: number }) {
         if (!res.ok || cancelled || interactedRef.current) return;
         const body = (await res.json()) as ReactionsState;
         setCounts(body.reactions ?? {});
-        setMine(body.mine ?? []);
+        setMine(Array.isArray(body.mine) ? body.mine : body.mine ? [body.mine as unknown as string] : []);
       } catch {
         /* mantém estado local */
       }
@@ -423,7 +423,7 @@ function PostReactions({ postId }: { postId: number }) {
         if (!res.ok) return;
         const body = (await res.json()) as ReactionsState;
         setCounts(body.reactions ?? {});
-        setMine(body.mine ?? []);
+        setMine(Array.isArray(body.mine) ? body.mine : body.mine ? [body.mine as unknown as string] : []);
       } catch {
         /* mantém otimista */
       }
