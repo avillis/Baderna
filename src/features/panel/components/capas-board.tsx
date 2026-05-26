@@ -248,19 +248,36 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   const audioBuffRef  = useRef<AudioBuffer  | null>(null);
   const audioSrcRef   = useRef<AudioBufferSourceNode | null>(null);
   const audioRafRef   = useRef<number>(0);
+  const winBuffRef    = useRef<AudioBuffer  | null>(null);
 
   useEffect(() => {
-    // Carrega e decodifica o MP3 uma vez. AudioContext é criado lazy pra
-    // respeitar a política de autoplay (será resumido no clique do usuário).
     const ctx = new AudioContext();
     audioCtxRef.current = ctx;
+    // Spin sound
     fetch("/sounds/roulette-spin.mp3")
       .then((r) => r.arrayBuffer())
       .then((buf) => ctx.decodeAudioData(buf))
       .then((decoded) => { audioBuffRef.current = decoded; })
-      .catch(() => {/* sem áudio */});
+      .catch(() => {});
+    // Win sound (épico+)
+    fetch("/sounds/roulette-win.mp3")
+      .then((r) => r.arrayBuffer())
+      .then((buf) => ctx.decodeAudioData(buf))
+      .then((decoded) => { winBuffRef.current = decoded; })
+      .catch(() => {});
     return () => { ctx.close(); };
   }, []);
+
+  function playWinAudio() {
+    const ctx = audioCtxRef.current;
+    const buf = winBuffRef.current;
+    if (!ctx || !buf) return;
+    ctx.resume().catch(() => {});
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start();
+  }
 
   function playSpinAudio(duration: number) {
     const ctx = audioCtxRef.current;
@@ -730,6 +747,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
           setBurstPos({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
         }
         window.setTimeout(() => setConfettiBurst((n) => n + 1), 300);
+        playWinAudio();
       }
     }, duration + 100);
   }
