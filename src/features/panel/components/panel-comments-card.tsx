@@ -31,16 +31,11 @@ export function PanelCommentsCard({
   const isOwnProfile =
     user != null && targetUserId != null && user.id === targetUserId;
 
-  // Mapeia user_id → activeNameId e display name ATUAL. O backend cacheia
-  // o display_name no payload do comentário, mas se a pessoa mudar o nome
-  // depois, queremos refletir a versão nova sem invalidar o cache local.
-  const styleByUserId = new Map<number, string | undefined>();
-  const nameByUserId = new Map<number, string>();
+  // Mapeia user_id → membro ao vivo. Usando member.id como slug garante que
+  // links sempre apontem pro slug atual, mesmo após mudança de nick.
+  const memberByUserId = new Map<number, (typeof members)[number]>();
   for (const m of members) {
-    if (m.userId) {
-      styleByUserId.set(m.userId, m.activeNameId);
-      nameByUserId.set(m.userId, m.nickname);
-    }
+    if (m.userId) memberByUserId.set(m.userId, m);
   }
 
   function handleSubmit(e?: React.FormEvent) {
@@ -78,16 +73,16 @@ export function PanelCommentsCard({
             ) : (
               <div className="space-y-[18px]">
                 {comments.map((comment) => {
-                  // Prefere o nome atual do membro (atualizado em tempo
-                  // quase real) ao snapshot que veio no payload do comment.
-                  const liveName = comment.authorId
-                    ? nameByUserId.get(comment.authorId)
+                  // Usa dados ao vivo do membro quando disponível, garantindo
+                  // slug e nome sempre atualizados após mudança de nick.
+                  const liveMember = comment.authorId
+                    ? memberByUserId.get(comment.authorId)
                     : undefined;
-                  const displayName = liveName ?? comment.author;
-                  const profileHref = `/membro/${getMemberSlug({ nickname: displayName })}`;
-                  const authorStyleId = comment.authorId
-                    ? styleByUserId.get(comment.authorId)
-                    : undefined;
+                  const displayName = liveMember?.nickname ?? comment.author;
+                  const profileHref = liveMember
+                    ? `/membro/${liveMember.id}`
+                    : `/membro/${getMemberSlug({ nickname: displayName })}`;
+                  const authorStyleId = liveMember?.activeNameId;
                   return (
                   <article
                     key={comment.id}

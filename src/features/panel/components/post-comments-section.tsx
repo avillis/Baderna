@@ -151,8 +151,7 @@ function CommentRow({
   canDelete,
   likedByMe,
   likesCount,
-  nickByUserId,
-  styleByUserId,
+  memberByUserId,
   onDelete,
   onLike,
   onReply,
@@ -163,17 +162,18 @@ function CommentRow({
   canDelete: boolean;
   likedByMe: boolean;
   likesCount: number;
-  nickByUserId: Map<number, string>;
-  styleByUserId: Map<number, string | undefined>;
+  memberByUserId: Map<number, { id: string; nickname: string; activeNameId?: string }>;
   onDelete: () => void;
   onLike: () => void;
   onReply?: () => void;
   onImageClick: (src: string) => void;
 }) {
-  const liveNick = comment.authorId ? nickByUserId.get(comment.authorId) : undefined;
-  const displayNick = liveNick ?? comment.author;
-  const authorStyleId = comment.authorId ? styleByUserId.get(comment.authorId) : undefined;
-  const profileHref = `/membro/${getMemberSlug({ nickname: displayNick })}`;
+  const liveMember = comment.authorId ? memberByUserId.get(comment.authorId) : undefined;
+  const displayNick = liveMember?.nickname ?? comment.author;
+  const authorStyleId = liveMember?.activeNameId;
+  const profileHref = liveMember
+    ? `/membro/${liveMember.id}`
+    : `/membro/${getMemberSlug({ nickname: displayNick })}`;
   const avatarSize = isReply ? 32 : 42;
 
   return (
@@ -316,14 +316,11 @@ export function PostCommentsSection({
   const mediaUrl = imageUrl ?? gifUrl;
   const canSubmit = (draft.trim().length > 0 || mediaUrl) && !submitting && !uploading;
 
-  // Mapeia user_id → nick/estilo live
-  const nickByUserId = new Map<number, string>();
-  const styleByUserId = new Map<number, string | undefined>();
+  // Mapeia user_id → membro ao vivo. Usando member.id como slug garante que
+  // links sempre apontem pro slug atual, mesmo após mudança de nick.
+  const memberByUserId = new Map<number, { id: string; nickname: string; activeNameId?: string }>();
   for (const m of members) {
-    if (m.userId) {
-      nickByUserId.set(m.userId, m.nickname);
-      styleByUserId.set(m.userId, m.activeNameId);
-    }
+    if (m.userId) memberByUserId.set(m.userId, m);
   }
 
   async function handleImageFile(file: File) {
@@ -420,8 +417,7 @@ export function PostCommentsSection({
                     canDelete={canDeleteComment(comment)}
                     likedByMe={comment.likedByMe ?? false}
                     likesCount={comment.likesCount ?? 0}
-                    nickByUserId={nickByUserId}
-                    styleByUserId={styleByUserId}
+                    memberByUserId={memberByUserId}
                     onDelete={() => handleRemove(comment.id)}
                     onLike={() => toggleLike(comment.id)}
                     onReply={() => {
@@ -473,8 +469,7 @@ export function PostCommentsSection({
                               canDelete={canDeleteComment(reply)}
                               likedByMe={reply.likedByMe ?? false}
                               likesCount={reply.likesCount ?? 0}
-                              nickByUserId={nickByUserId}
-                              styleByUserId={styleByUserId}
+                              memberByUserId={memberByUserId}
                               onDelete={() => handleRemove(reply.id)}
                               onLike={() => toggleLike(reply.id)}
                               onImageClick={setLightboxSrc}
