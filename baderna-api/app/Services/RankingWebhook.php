@@ -23,8 +23,8 @@ class RankingWebhook
 {
     private const BRAND_COLOR = 0xFF4100;
     private const TIMEOUT_SECONDS = 5;
-    /** Chave do app_settings que guarda o message_id do Discord. */
-    private const SETTING_KEY = 'discord_ranking_message_id';
+    /** Chave do app_settings que guarda o message_id do Discord (bot). */
+    private const SETTING_KEY = 'discord_ranking_bot_message_id';
 
     /** Tradução PT-BR dos tiers da Riot (display label). */
     private const TIER_PT = [
@@ -89,8 +89,9 @@ class RankingWebhook
 
     public static function postOrUpdate(): bool
     {
-        $url = config('services.discord.ranking_webhook');
-        if (! $url) {
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.ranking_channel_id');
+        if (! $token || ! $channelId) {
             return false;
         }
 
@@ -99,20 +100,20 @@ class RankingWebhook
             return false;
         }
 
-        $body = self::buildBody($lists);
+        $body    = self::buildBody($lists);
+        $apiBase = "https://discord.com/api/v10/channels/{$channelId}/messages";
+        $headers = ['Authorization' => "Bot {$token}"];
 
         $existingMessageId = AppSetting::get(self::SETTING_KEY);
 
         if ($existingMessageId) {
-            // Tenta editar mensagem existente
             try {
                 $res = Http::timeout(self::TIMEOUT_SECONDS)
-                    ->patch("{$url}/messages/{$existingMessageId}", $body);
+                    ->withHeaders($headers)
+                    ->patch("{$apiBase}/{$existingMessageId}", $body);
                 if ($res->successful()) {
                     return true;
                 }
-                // 404 = mensagem foi apagada manualmente → cai pra criar nova.
-                // Delete em vez de put(null) pra evitar problemas com cast 'array'.
                 if ($res->status() === 404) {
                     AppSetting::where('key', self::SETTING_KEY)->delete();
                 } else {
@@ -128,10 +129,10 @@ class RankingWebhook
             }
         }
 
-        // Cria mensagem nova com ?wait=true pra receber o id de volta
         try {
             $res = Http::timeout(self::TIMEOUT_SECONDS)
-                ->post("{$url}?wait=true", $body);
+                ->withHeaders($headers)
+                ->post($apiBase, $body);
             if (! $res->successful()) {
                 Log::warning('RankingWebhook POST failed', [
                     'status' => $res->status(),
@@ -298,9 +299,7 @@ class RankingWebhook
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
         return [
-            'username'   => 'Baderna Ranking',
-            'avatar_url' => "{$siteBase}/logo.svg",
-            'embeds'     => [[
+            'embeds' => [[
                 'title'       => '🏆 Placar de Liderança da Baderna',
                 'description' => $description,
                 'color'       => self::BRAND_COLOR,
