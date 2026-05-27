@@ -143,7 +143,9 @@ function HeroCard({ member }: { member: BirthdayMember }) {
           </p>
         </div>
 
-        <DaysChip daysUntil={member.daysUntil} isToday={member.isToday} />
+        <div className="self-end shrink-0">
+          <DaysChip daysUntil={member.daysUntil} isToday={member.isToday} />
+        </div>
       </div>
     </div>
   );
@@ -187,6 +189,8 @@ function BirthdayCard({ member }: { member: BirthdayMember }) {
 export function AniversariosClient() {
   const { members, loading } = useBirthdays();
   const hero = members[0] ?? null;
+  // Grid: todos exceto o hero (que já aparece em destaque acima)
+  const gridMembers = members.slice(1);
 
   return (
     <div className="pt-[1.5vh] sm:pt-[6vh]">
@@ -227,17 +231,14 @@ export function AniversariosClient() {
           {/* Hero — próximo ou de hoje */}
           {hero && <HeroCard member={hero} />}
 
-          {/* Grid 3 colunas */}
-          <div>
-            <h2 className="mb-[14px] text-[15px] font-bold tracking-[-0.02em] text-[#6f6f6f]">
-              Todos os aniversários
-            </h2>
+          {/* Grid 3 colunas — sem o hero */}
+          {gridMembers.length > 0 && (
             <div className="grid grid-cols-2 gap-[16px] sm:grid-cols-3">
-              {members.map((m) => (
+              {gridMembers.map((m) => (
                 <BirthdayCard key={m.id} member={m} />
               ))}
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
