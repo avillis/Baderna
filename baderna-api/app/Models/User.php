@@ -47,6 +47,8 @@ class User extends Authenticatable
         'favorite_game_title',
         'favorite_game_cover_url',
         'duo_user_id',
+        'birthday',
+        'birthday_hidden',
     ];
 
     // Campos NUNCA expostos em respostas JSON automáticas (`return $user`).
@@ -83,6 +85,8 @@ class User extends Authenticatable
             'profile_module_order' => 'array',
             'favorite_champion_slugs' => 'array',
             'duo_user_id' => 'integer',
+            'birthday' => 'date',
+            'birthday_hidden' => 'boolean',
             'cached_rank_at' => 'datetime',
             'cached_rank_lp' => 'integer',
             'banner_focus_y' => 'integer',
