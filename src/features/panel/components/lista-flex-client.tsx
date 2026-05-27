@@ -320,37 +320,17 @@ export function ListaFlexClient() {
     );
   }
 
+  // Só mostra quem tem Riot ID configurado — membros sem conta vinculada
+  // não geram dado de Flex, então pular pra não poluir a lista.
+  const visible = members.filter((m) => m.summonerName && m.tagLine);
+
   return (
     <div className="flex flex-col gap-4 pt-[1.5vh] sm:pt-[6vh]">
-      {members.map((m, index) => {
-        // m.id é o slug do nick. Pra montar o riotId precisamos do nick+tag.
-        // useBadernaMembers já incorpora o nick em m.nickname; pra tag,
-        // confio no formato vindo do API (mas useBadernaMembers não expõe a
-        // tag separadamente). Uso o nickname como proxy de riotId só se
-        // estiver formato "Nick#TAG". Caso contrário deixo vazio e o card
-        // mostra "Riot ID pendente".
-        const riotId = m.nickname.includes("#")
-          ? m.nickname
-          : (() => {
-              // Tenta achar a tag no cache de membros admin (lista API)
-              if (typeof window === "undefined") return "";
-              try {
-                const raw = window.localStorage.getItem("baderna:members-cache");
-                if (!raw) return "";
-                const list = JSON.parse(raw) as Array<{
-                  id: string;
-                  summonerName: string | null;
-                  tagLine: string | null;
-                }>;
-                const found = list.find((x) => x.id === m.id);
-                if (found?.summonerName && found?.tagLine) {
-                  return `${found.summonerName}#${found.tagLine}`;
-                }
-                return "";
-              } catch {
-                return "";
-              }
-            })();
+      {visible.map((m, index) => {
+        // summonerName/tagLine vêm direto do BadernaMember (sem
+        // localStorage), então funciona mesmo depois que o user troca a
+        // slug — o lookup é por userId no useBadernaMembers, não por slug.
+        const riotId = `${m.summonerName}#${m.tagLine}`;
         return (
           <MemberFlexCard
             key={m.id}

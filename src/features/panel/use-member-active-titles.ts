@@ -25,9 +25,10 @@ export function useMemberActiveTitles(
   const accountNick = account.gameNick.split("#")[0] ?? "";
   const authNick = user?.summoner_name ?? "";
   const selfNick = accountNick || authNick;
-  // memberId é slug (lord-crisp), então comparamos contra o slug do
-  // próprio nick — comparar com o raw quebra pra nicks com espaço/acento.
-  const selfSlug = selfNick ? getMemberSlug({ nickname: selfNick }) : "";
+  // Slug canônica é `account.slug`; cai pro derivado-de-nick só enquanto
+  // o account ainda não hidratou (primeiro render pós-login).
+  const selfSlug =
+    account.slug || (selfNick ? getMemberSlug({ nickname: selfNick }) : "");
   const selfUserId = user ? String(user.id) : "";
   const isSelf =
     memberId === selfUserId ||
