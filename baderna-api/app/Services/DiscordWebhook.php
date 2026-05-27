@@ -385,28 +385,23 @@ class DiscordWebhook
      */
     public static function syncRulesToChannel(): bool
     {
-        $token     = config('services.discord.bot_token');
-        $channelId = config('services.discord.rules_channel_id');
-        if (! $token || ! $channelId) return false;
+        $url = config('services.discord.rules_webhook');
+        if (! $url) return false;
 
         $body       = self::buildRulesBody();
         $settingKey = 'discord_rules_message_id';
         $existingId = AppSetting::get($settingKey);
-        $apiBase    = "https://discord.com/api/v10/channels/{$channelId}/messages";
-        $headers    = ['Authorization' => "Bot {$token}"];
 
         if ($existingId) {
             try {
                 $res = Http::timeout(self::TIMEOUT_SECONDS)
-                    ->withHeaders($headers)
-                    ->patch("{$apiBase}/{$existingId}", $body);
+                    ->patch("{$url}/messages/{$existingId}", $body);
                 if ($res->successful()) return true;
                 if ($res->status() === 404) {
                     AppSetting::where('key', $settingKey)->delete();
                 } else {
                     Log::warning('DiscordWebhook::syncRules PATCH failed', [
-                        'status' => $res->status(),
-                        'body'   => $res->body(),
+                        'status' => $res->status(), 'body' => $res->body(),
                     ]);
                     return false;
                 }
@@ -418,12 +413,10 @@ class DiscordWebhook
 
         try {
             $res = Http::timeout(self::TIMEOUT_SECONDS)
-                ->withHeaders($headers)
-                ->post($apiBase, $body);
+                ->post("{$url}?wait=true", $body);
             if (! $res->successful()) {
                 Log::warning('DiscordWebhook::syncRules POST failed', [
-                    'status' => $res->status(),
-                    'body'   => $res->body(),
+                    'status' => $res->status(), 'body' => $res->body(),
                 ]);
                 return false;
             }
