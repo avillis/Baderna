@@ -385,17 +385,21 @@ class DiscordWebhook
      */
     public static function syncRulesToChannel(): bool
     {
-        $url = config('services.discord.rules_webhook');
-        if (! $url) return false;
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.rules_channel_id');
+        if (! $token || ! $channelId) return false;
 
         $body       = self::buildRulesBody();
         $settingKey = 'discord_rules_message_id';
         $existingId = AppSetting::get($settingKey);
+        $apiBase    = "https://discord.com/api/v10/channels/{$channelId}/messages";
+        $headers    = ['Authorization' => "Bot {$token}"];
 
         if ($existingId) {
             try {
                 $res = Http::timeout(self::TIMEOUT_SECONDS)
-                    ->patch("{$url}/messages/{$existingId}", $body);
+                    ->withHeaders($headers)
+                    ->patch("{$apiBase}/{$existingId}", $body);
                 if ($res->successful()) return true;
                 if ($res->status() === 404) {
                     AppSetting::where('key', $settingKey)->delete();
@@ -414,7 +418,8 @@ class DiscordWebhook
 
         try {
             $res = Http::timeout(self::TIMEOUT_SECONDS)
-                ->post("{$url}?wait=true", $body);
+                ->withHeaders($headers)
+                ->post($apiBase, $body);
             if (! $res->successful()) {
                 Log::warning('DiscordWebhook::syncRules POST failed', [
                     'status' => $res->status(),
