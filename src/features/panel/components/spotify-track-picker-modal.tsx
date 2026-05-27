@@ -198,18 +198,6 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
           )}
         </div>
 
-        {/* Footer — only show "Remover" when there's a current song */}
-        {currentSongId && (
-          <div className="border-t border-[#f0f0f0] px-[16px] py-[12px]">
-            <button
-              type="button"
-              onClick={clear}
-              className="w-full rounded-[12px] py-[10px] text-[13px] font-bold tracking-[-0.02em] text-[#9d9d9d] transition-colors hover:bg-[#f5f5f5] hover:text-[#0f0f0f]"
-            >
-              Remover música favorita
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
