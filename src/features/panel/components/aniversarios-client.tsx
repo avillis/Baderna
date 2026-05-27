@@ -110,13 +110,13 @@ function HeroCard({ member }: { member: BirthdayMember }) {
   const imgSrc = member.avatarSrc && !avatarErrored ? member.avatarSrc : fallback;
 
   return (
-    <div className="rounded-[var(--panel-radius-card)] bg-[#ededed] p-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <div className="rounded-[var(--panel-radius-card)] bg-white p-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       <p className="mb-[16px] text-[13px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
         {member.isToday ? "🎉 Aniversário hoje!" : "Próximo aniversário"}
       </p>
 
       <div className="flex items-center gap-[16px]">
-        <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-full ring-[3px] ring-[#d4d4d4]">
+        <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-full">
           <Image
             src={imgSrc}
             alt={member.nickname}
@@ -132,7 +132,7 @@ function HeroCard({ member }: { member: BirthdayMember }) {
           <p className="truncate text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
             {member.nickname}
           </p>
-          <p className="truncate text-[13px] font-semibold text-[#6f6f6f]">
+          <p className="truncate text-[13px] font-semibold text-[#8d8d8d]">
             {dateLabel}
             {member.age !== null && !member.isToday && (
               <span className="ml-[6px]">· vai fazer {member.age + 1} anos</span>
@@ -142,21 +142,9 @@ function HeroCard({ member }: { member: BirthdayMember }) {
             )}
           </p>
         </div>
-      </div>
 
-      {!member.isToday && (
-        <div className="mt-[20px] flex items-center gap-[10px]">
-          <div className="h-[4px] flex-1 overflow-hidden rounded-full bg-[#d4d4d4]">
-            <div
-              className="h-full rounded-full bg-[#ff4100] transition-all"
-              style={{ width: `${Math.max(4, 100 - Math.min(member.daysUntil, 365) / 3.65)}%` }}
-            />
-          </div>
-          <span className="text-[13px] font-bold text-[#0f0f0f]">
-            {member.daysUntil === 1 ? "amanhã" : `${member.daysUntil} dias`}
-          </span>
-        </div>
-      )}
+        <DaysChip daysUntil={member.daysUntil} isToday={member.isToday} />
+      </div>
     </div>
   );
 }
