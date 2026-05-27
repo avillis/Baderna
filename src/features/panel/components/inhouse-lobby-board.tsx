@@ -112,24 +112,31 @@ function PlayerRow({
   isLeader,
   specialist,
   badernaRank,
+  dimmed = false,
 }: {
   player: InhousePlayer;
   side: InhouseSide;
   isLeader: boolean;
   specialist?: boolean;
   badernaRank?: number;
+  dimmed?: boolean;
 }) {
   const href = getPlayerHref(player);
+  // Time perdedor depois que o vencedor foi definido: opacidade + grayscale
+  // pra deixar visualmente "apagado" sem esconder informação.
+  const dimClass = dimmed ? "opacity-50 grayscale" : "";
   const Wrapper = ({ children }: { children: React.ReactNode }) =>
     href ? (
       <Link
         href={href}
-        className="block w-full max-w-[390px] transition-transform duration-200 hover:scale-[1.02]"
+        className={`block w-full max-w-[390px] transition-all duration-300 hover:scale-[1.02] ${dimClass}`}
       >
         {children}
       </Link>
     ) : (
-      <div className="w-full max-w-[390px]">{children}</div>
+      <div className={`w-full max-w-[390px] transition-opacity duration-300 ${dimClass}`}>
+        {children}
+      </div>
     );
 
   if (side === "blue") {
@@ -206,12 +213,14 @@ function TeamHeader({
   align = "left",
   side,
   hideAvatar = false,
+  dimmed = false,
 }: {
   label: string;
   leader: InhousePlayer;
   align?: "left" | "right" | "center";
   side: InhouseSide;
   hideAvatar?: boolean;
+  dimmed?: boolean;
 }) {
   const sideLabel = side === "blue" ? "Azul" : "Vermelho";
   const sideGradient =
@@ -235,8 +244,9 @@ function TeamHeader({
       : align === "center"
         ? "justify-self-center"
         : "justify-self-start";
+  const dimClass = dimmed ? "opacity-50 grayscale" : "";
   return (
-    <div className={`flex items-center gap-4 ${justifyClass}`}>
+    <div className={`flex items-center gap-4 transition-opacity duration-300 ${justifyClass} ${dimClass}`}>
       {align === "right" ? (
         <>
           <div className="text-right">
@@ -267,10 +277,12 @@ function InhouseMatchHeader({
   blueLeader,
   redLeader,
   mode,
+  losingSide = null,
 }: {
   blueLeader: InhousePlayer;
   redLeader: InhousePlayer;
   mode: Inhouse["mode"];
+  losingSide?: InhouseSide | null;
 }) {
   const teamNames = useTeamNames();
   const allMembers = useBadernaMembers();
@@ -302,7 +314,12 @@ function InhouseMatchHeader({
         </span>
       </div>
 
-      <TeamHeader label={blueLabel} leader={blueLeader} side="blue" />
+      <TeamHeader
+        label={blueLabel}
+        leader={blueLeader}
+        side="blue"
+        dimmed={losingSide === "blue"}
+      />
 
       {/* Desktop only: bloco grande centralizado entre os times */}
       <div className="hidden text-center xl:block">
@@ -322,6 +339,7 @@ function InhouseMatchHeader({
         leader={redLeader}
         align="right"
         side="red"
+        dimmed={losingSide === "red"}
       />
     </section>
   );
@@ -605,6 +623,10 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
     inhouse.players.find((p) => p.id === inhouse.redLeaderId) ?? redTeam[0];
   const blueLabel = blueLeader ? resolveTeamLabel(blueLeader) : "Time Azul";
   const redLabel = redLeader ? resolveTeamLabel(redLeader) : "Time Vermelho";
+  // Lado perdedor (oposto do vencedor) — dimmed visualmente na lista.
+  const losingSide: InhouseSide | null = inhouse.winner
+    ? inhouse.winner === "blue" ? "red" : "blue"
+    : null;
 
   function setPlayerSide(id: string, side: InhouseSide) {
     if (id === inhouse.blueLeaderId || id === inhouse.redLeaderId) return;
@@ -764,7 +786,12 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
 
       <div className="relative z-10 flex w-full flex-col gap-4 justify-center pt-[24px] xl:min-h-[860px] xl:pt-[62px]">
         <div className="hidden xl:block">
-          <InhouseMatchHeader blueLeader={blueLeader} redLeader={redLeader} mode={inhouse.mode} />
+          <InhouseMatchHeader
+            blueLeader={blueLeader}
+            redLeader={redLeader}
+            mode={inhouse.mode}
+            losingSide={losingSide}
+          />
         </div>
 
         <div className="mt-[20px] grid w-full items-start gap-6 xl:mt-[40px] xl:grid-cols-[minmax(0,0.84fr)_minmax(340px,0.7fr)_minmax(0,0.88fr)] xl:gap-5">
@@ -778,7 +805,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
           >
             {/* Mobile-only: header do time azul antes dos cards (centralizado) */}
             <div className="mb-[32px] flex justify-center xl:hidden">
-              <TeamHeader label={resolveTeamLabel(blueLeader)} leader={blueLeader} side="blue" align="center" hideAvatar />
+              <TeamHeader label={resolveTeamLabel(blueLeader)} leader={blueLeader} side="blue" align="center" hideAvatar dimmed={losingSide === "blue"} />
             </div>
             {isAssigning && blueSlots
               ? blueSlots.map((p, i) =>
@@ -804,6 +831,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
                     isLeader={player.id === inhouse.blueLeaderId}
                     specialist={inhouse.mode === "leader"}
                     badernaRank={badernaRankByMemberId.get(player.id)}
+                    dimmed={losingSide === "blue"}
                   />
                 ))}
           </div>
@@ -875,7 +903,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
           >
             {/* Mobile-only: header do time vermelho antes dos cards (centralizado) */}
             <div className="mb-[32px] flex justify-center xl:hidden">
-              <TeamHeader label={resolveTeamLabel(redLeader)} leader={redLeader} side="red" align="center" hideAvatar />
+              <TeamHeader label={resolveTeamLabel(redLeader)} leader={redLeader} side="red" align="center" hideAvatar dimmed={losingSide === "red"} />
             </div>
             {isAssigning && redSlots
               ? redSlots.map((p, i) =>
@@ -901,6 +929,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
                     isLeader={player.id === inhouse.redLeaderId}
                     specialist={inhouse.mode === "leader"}
                     badernaRank={badernaRankByMemberId.get(player.id)}
+                    dimmed={losingSide === "red"}
                   />
                 ))}
           </div>
