@@ -48,7 +48,9 @@ class BirthdayWebhook
         }
 
         $members = User::whereNotNull('birthday')
-            ->where('birthday_hidden', false)
+            ->where(function ($q) {
+                $q->whereNull('birthday_hidden')->orWhere('birthday_hidden', false);
+            })
             ->where('is_deleted', false)
             ->where('approval_status', 'approved')
             ->orderByRaw('MONTH(birthday), DAY(birthday)')
