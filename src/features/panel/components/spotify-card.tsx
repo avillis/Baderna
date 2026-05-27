@@ -75,23 +75,23 @@ export function SpotifyConnectCard() {
   return (
     <div className="rounded-[var(--panel-radius-card)] bg-white p-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       {/* Header */}
-      <div className="flex items-center gap-[10px]">
-        <SpotifyLogo className="h-[22px] w-[22px]" />
-        <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+      <div className="flex w-fit items-center gap-[10px]">
+        <SpotifyLogo className="h-[22px] w-[22px] shrink-0" />
+        <h2 className="shrink-0 text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
           Spotify
         </h2>
         {!loading && (
           connected ? (
             <button
               onClick={disconnect}
-              className="h-[36px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#6f6f6f] transition-colors hover:bg-[#e0e0e0]"
+              className="h-[36px] shrink-0 rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#6f6f6f] transition-colors hover:bg-[#e0e0e0]"
             >
               Desconectar
             </button>
           ) : (
             <button
               onClick={connect}
-              className="flex h-[36px] items-center gap-[8px] rounded-[12px] bg-[#1DB954] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+              className="inline-flex h-[36px] shrink-0 items-center gap-[8px] rounded-[12px] bg-[#1DB954] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
             >
               <SpotifyLogo className="h-[14px] w-[14px]" />
               Conectar
