@@ -225,11 +225,11 @@ export function AdminIntegrationsCard() {
           )}
         </div>
 
-        {/* Discord Bot — placeholder */}
+        {/* Discord Bot */}
         <div className="flex items-center justify-between border-b border-[#efebe8] pb-4">
           <span className="text-[14px] font-semibold text-[#313131]">Discord Bot</span>
-          <span className="rounded bg-[#fef3c7] px-2 py-0.5 text-[11px] font-bold text-[#d97706]">
-            Pendente
+          <span className="rounded bg-[#f2faf5] px-2 py-0.5 text-[11px] font-bold text-[#2f855a]">
+            Conectado
           </span>
         </div>
 
