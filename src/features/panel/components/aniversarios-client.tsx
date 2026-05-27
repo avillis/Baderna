@@ -100,57 +100,6 @@ function DaysChip({ daysUntil, isToday }: { daysUntil: number; isToday: boolean 
   );
 }
 
-function HeroCard({ member }: { member: BirthdayMember }) {
-  const dateLabel = member.birthdayYear
-    ? `${member.birthdayDay} de ${MONTHS_FULL[member.birthdayMonth - 1]} de ${member.birthdayYear}`
-    : `${member.birthdayDay} de ${MONTHS_FULL[member.birthdayMonth - 1]}`;
-
-  const [avatarErrored, setAvatarErrored] = useState(false);
-  const fallback = getChampionAvatarSrc(member.nickname.toLowerCase().replace(/\s/g, ""));
-  const imgSrc = member.avatarSrc && !avatarErrored ? member.avatarSrc : fallback;
-
-  return (
-    <div className="rounded-[var(--panel-radius-card)] bg-white p-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-      <p className="mb-[16px] text-[13px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
-        {member.isToday ? "🎉 Aniversário hoje!" : "Próximo aniversário"}
-      </p>
-
-      <div className="flex items-center gap-[16px]">
-        <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-full">
-          <Image
-            src={imgSrc}
-            alt={member.nickname}
-            fill
-            className="object-cover"
-            sizes="68px"
-            unoptimized
-            onError={() => setAvatarErrored(true)}
-          />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-            {member.nickname}
-          </p>
-          <p className="truncate text-[13px] font-semibold text-[#8d8d8d]">
-            {dateLabel}
-            {member.age !== null && !member.isToday && (
-              <span className="ml-[6px]">· vai fazer {member.age + 1} anos</span>
-            )}
-            {member.age !== null && member.isToday && (
-              <span className="ml-[6px]">· {member.age} anos 🥳</span>
-            )}
-          </p>
-        </div>
-
-        <div className="self-end shrink-0">
-          <DaysChip daysUntil={member.daysUntil} isToday={member.isToday} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function BirthdayCard({ member }: { member: BirthdayMember }) {
   const href = member.slug ? `/membro/${member.slug}` : "#";
   const dateShort = `${member.birthdayDay} de ${MONTHS_FULL[member.birthdayMonth - 1]}`;
@@ -188,9 +137,6 @@ function BirthdayCard({ member }: { member: BirthdayMember }) {
 
 export function AniversariosClient() {
   const { members, loading } = useBirthdays();
-  const hero = members[0] ?? null;
-  // Grid: todos exceto o hero (que já aparece em destaque acima)
-  const gridMembers = members.slice(1);
 
   return (
     <div className="pt-[1.5vh] sm:pt-[6vh]">
@@ -227,18 +173,10 @@ export function AniversariosClient() {
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-[24px]">
-          {/* Hero — próximo ou de hoje */}
-          {hero && <HeroCard member={hero} />}
-
-          {/* Grid 3 colunas — sem o hero */}
-          {gridMembers.length > 0 && (
-            <div className="grid grid-cols-2 gap-[16px] sm:grid-cols-3">
-              {gridMembers.map((m) => (
-                <BirthdayCard key={m.id} member={m} />
-              ))}
-            </div>
-          )}
+        <div className="grid grid-cols-2 gap-[16px] sm:grid-cols-3">
+          {members.map((m) => (
+            <BirthdayCard key={m.id} member={m} />
+          ))}
         </div>
       )}
     </div>
