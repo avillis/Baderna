@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ErrorLog;
 use App\Models\User;
+use App\Services\FlexCreditService;
 use App\Services\RiotAPIServices;
 use Exception;
 use Illuminate\Http\Request;
@@ -46,8 +47,9 @@ class MemberWinratesController extends Controller
 
     /**
      * Força refresh limpando o cache + recomputando.
+     * Aproveita o refresh pra creditar partidas Flex novas automaticamente.
      */
-    public function refresh(Request $request, RiotAPIServices $riot)
+    public function refresh(Request $request, RiotAPIServices $riot, FlexCreditService $credits)
     {
         $user = $request->user();
         if (!$user->riot_puuid) {
@@ -60,6 +62,15 @@ class MemberWinratesController extends Controller
         Cache::forget("winrates_with_members:{$user->riot_puuid}:{$seasonId}");
         $result = $this->computeWinrates($user, $riot);
         Cache::put("winrates_with_members:{$user->riot_puuid}:{$seasonId}", $result, now()->addHour());
+
+        // Credita automaticamente partidas Flex novas (idempotente).
+        // lookback=20 cobre ~2 semanas de jogos regulares sem chamar mais API calls do que o necessário.
+        try {
+            $credits->creditUser($user, $riot, 20);
+        } catch (Exception $ignored) {
+            // Crédito falhou silenciosamente — winrates ainda são retornados normalmente.
+        }
+
         return response()->json($result);
     }
 
