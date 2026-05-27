@@ -299,6 +299,9 @@ function InhouseMatchHeader({
   }
   const blueLabel = resolveTeamLabel(blueLeader);
   const redLabel = resolveTeamLabel(redLeader);
+  // Quando vencedor já foi definido (losingSide != null), o lobby tá
+  // "Concluído"; antes disso continua "Pronto" (status default).
+  const statusLabel = losingSide ? "Concluído" : inhouseLobby.status;
   return (
     <section className="grid w-full items-center gap-6 xl:grid-cols-[minmax(0,0.84fr)_minmax(320px,0.7fr)_minmax(0,0.88fr)]">
       {/* Mobile: compact status pill no topo. Desktop: continua no centro. */}
@@ -308,7 +311,7 @@ function InhouseMatchHeader({
         </span>
         <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
         <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
-          {inhouseLobby.status}
+          {statusLabel}
         </span>
         <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
         <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8f8f8f]">
@@ -329,7 +332,7 @@ function InhouseMatchHeader({
           {inhouseLobby.matchType} - {inhouseLobby.region}
         </p>
         <p className="mt-2 text-[30px] font-bold leading-none tracking-[-0.03em] text-[#111111]">
-          {inhouseLobby.status}
+          {statusLabel}
         </p>
         <p className="mt-2 text-[14px] font-semibold tracking-[0em] text-[#8f8f8f]">
           {mode === "leader" ? "Modo Líder" : "Modo Aleatório"}
@@ -643,6 +646,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
   const losingSide: InhouseSide | null = inhouse.winner
     ? inhouse.winner === "blue" ? "red" : "blue"
     : null;
+  const statusLabel = inhouse.winner ? "Concluído" : inhouseLobby.status;
 
   function setPlayerSide(id: string, side: InhouseSide) {
     if (id === inhouse.blueLeaderId || id === inhouse.redLeaderId) return;
@@ -859,7 +863,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
             </span>
             <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
             <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
-              {inhouseLobby.status}
+              {statusLabel}
             </span>
             <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
             <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8f8f8f]">
