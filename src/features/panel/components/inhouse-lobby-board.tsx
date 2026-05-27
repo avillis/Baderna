@@ -438,9 +438,6 @@ function InhouseWinnerCard({
         >
           Definir vencedor
         </button>
-        <p className="mt-2 text-center text-[11px] font-medium text-[#b0a8a4]">
-          Credita as moedas configuradas em Recompensas pra cada time.
-        </p>
       </section>
     );
   }
@@ -455,7 +452,7 @@ function InhouseWinnerCard({
           type="button"
           onClick={() => void confirm("blue")}
           disabled={saving}
-          className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#3a87ff] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
+          className="flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#0a4a8c] to-[#1a72d8] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
         >
           {blueLabel}
         </button>
@@ -463,7 +460,7 @@ function InhouseWinnerCard({
           type="button"
           onClick={() => void confirm("red")}
           disabled={saving}
-          className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#e84545] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
+          className="flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#8b1a1a] to-[#d83333] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
         >
           {redLabel}
         </button>
