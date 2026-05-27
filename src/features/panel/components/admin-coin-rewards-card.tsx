@@ -147,30 +147,18 @@ export function AdminCoinRewardsCard() {
           type="button"
           onClick={() => void handleCreditFlex()}
           disabled={creditingFlex}
-          className="flex w-full items-center justify-center gap-[8px] rounded-full bg-[#0f0f0f] py-[13px] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#0f0f0f] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {creditingFlex && (
-            <svg
-              className="h-[14px] w-[14px] animate-spin"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="3"
-              />
-              <path
-                className="opacity-80"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-              />
-            </svg>
+          {creditingFlex ? (
+            <>
+              <svg className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white" viewBox="25 25 50 50">
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+              Creditando...
+            </>
+          ) : (
+            "Creditar Flex (últimas 5)"
           )}
-          {creditingFlex ? "Creditando..." : "Creditar Flex (últimas 5)"}
         </button>
         <MemberCoinsModal />
       </div>
