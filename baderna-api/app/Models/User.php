@@ -52,6 +52,11 @@ class User extends Authenticatable
         'spotify_access_token',
         'spotify_refresh_token',
         'spotify_token_expires_at',
+        'favorite_song_spotify_id',
+        'favorite_song_name',
+        'favorite_song_artist',
+        'favorite_song_image',
+        'favorite_song_url',
     ];
 
     // Campos NUNCA expostos em respostas JSON automáticas (`return $user`).

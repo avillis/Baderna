@@ -29,6 +29,7 @@ import { ProfileLoadingOverlay } from "@/features/panel/components/profile-loadi
 import { ChampionPickerModal } from "@/features/panel/components/champion-picker-modal";
 import { DuoPickerModal, type DuoCandidate } from "@/features/panel/components/duo-picker-modal";
 import { GamePickerModal } from "@/features/panel/components/game-picker-modal";
+import { SpotifyTrackPickerModal } from "@/features/panel/components/spotify-track-picker-modal";
 import { ProfileModuleSelectorModal } from "@/features/panel/components/profile-module-selector-modal";
 import {
   ProfileModuleCard,
@@ -66,6 +67,11 @@ type ApiMember = {
   favoriteChampionSlugs: string[] | null;
   favoriteGameTitle: string | null;
   favoriteGameCoverUrl: string | null;
+  favoriteSongId: string | null;
+  favoriteSongName: string | null;
+  favoriteSongArtist: string | null;
+  favoriteSongImage: string | null;
+  favoriteSongUrl: string | null;
   duoUserId: number | null;
   memberSince: string | null;
   postsCount: number;
@@ -135,12 +141,13 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const allMembers = useBadernaMembers();
   const ranks = useMemberRanks();
   const { user } = useAuth();
-  const { account, updateField } = useAccount();
+  const { account, updateField, updateFavoriteSong } = useAccount();
   const [showCompare, setShowCompare] = useState(false);
   const [showModuleEditor, setShowModuleEditor] = useState(false);
   const [showGamePicker, setShowGamePicker] = useState(false);
   const [showChampionPicker, setShowChampionPicker] = useState(false);
   const [showDuoPicker, setShowDuoPicker] = useState(false);
+  const [showSongPicker, setShowSongPicker] = useState(false);
   const { titles: allTitles } = useTitles();
 
   useEffect(() => {
@@ -285,6 +292,22 @@ export function MembroPageClient({ slug }: { slug: string }) {
     onEditFavoriteGame: isOwnProfile ? () => setShowGamePicker(true) : undefined,
     onEditTopChampions: isOwnProfile ? () => setShowChampionPicker(true) : undefined,
     onEditDuo: isOwnProfile ? () => setShowDuoPicker(true) : undefined,
+    onEditFavoriteSong: isOwnProfile ? () => setShowSongPicker(true) : undefined,
+    favoriteSongId: isOwnProfile
+      ? (account.favoriteSongId ?? apiMember?.favoriteSongId ?? null)
+      : (apiMember?.favoriteSongId ?? null),
+    favoriteSongName: isOwnProfile
+      ? (account.favoriteSongName ?? apiMember?.favoriteSongName ?? null)
+      : (apiMember?.favoriteSongName ?? null),
+    favoriteSongArtist: isOwnProfile
+      ? (account.favoriteSongArtist ?? apiMember?.favoriteSongArtist ?? null)
+      : (apiMember?.favoriteSongArtist ?? null),
+    favoriteSongImage: isOwnProfile
+      ? (account.favoriteSongImage ?? apiMember?.favoriteSongImage ?? null)
+      : (apiMember?.favoriteSongImage ?? null),
+    favoriteSongUrl: isOwnProfile
+      ? (account.favoriteSongUrl ?? apiMember?.favoriteSongUrl ?? null)
+      : (apiMember?.favoriteSongUrl ?? null),
     memberSince: apiMember?.memberSince ?? null,
     unlockedBanners: apiMember?.unlockedBannersCount ?? 0,
     unlockedTitles: apiMember?.unlockedTitlesCount ?? 0,
@@ -442,6 +465,15 @@ export function MembroPageClient({ slug }: { slug: string }) {
             await updateField("duoUserId", userId);
           }}
           onClose={() => setShowDuoPicker(false)}
+        />
+      )}
+      {showSongPicker && isOwnProfile && (
+        <SpotifyTrackPickerModal
+          currentSongId={account.favoriteSongId ?? apiMember?.favoriteSongId ?? null}
+          onSave={async (track) => {
+            await updateFavoriteSong(track);
+          }}
+          onClose={() => setShowSongPicker(false)}
         />
       )}
       <GameModeProvider>

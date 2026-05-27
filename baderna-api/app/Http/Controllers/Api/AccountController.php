@@ -65,6 +65,11 @@ class AccountController extends Controller
             'duo_user_id'        => 'sometimes|nullable|integer|exists:users,id',
             'birthday'           => 'sometimes|nullable|date',
             'birthday_hidden'    => 'sometimes|boolean',
+            'favorite_song_spotify_id' => 'sometimes|nullable|string|max:64',
+            'favorite_song_name'       => 'sometimes|nullable|string|max:255',
+            'favorite_song_artist'     => 'sometimes|nullable|string|max:255',
+            'favorite_song_image'      => 'sometimes|nullable|string|max:255',
+            'favorite_song_url'        => 'sometimes|nullable|string|max:255',
         ]);
 
         $changedRiotId =
@@ -181,6 +186,11 @@ class AccountController extends Controller
             'riotIconUrl'        => $user->profile_icon_id
                 ? $riot->profileIconUrl($user->profile_icon_id)
                 : null,
+            'favoriteSongId'     => $user->favorite_song_spotify_id,
+            'favoriteSongName'   => $user->favorite_song_name,
+            'favoriteSongArtist' => $user->favorite_song_artist,
+            'favoriteSongImage'  => $user->favorite_song_image,
+            'favoriteSongUrl'    => $user->favorite_song_url,
         ];
     }
 }

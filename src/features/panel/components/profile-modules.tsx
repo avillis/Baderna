@@ -31,6 +31,7 @@ import { PanelStatCard } from "@/features/panel/components/panel-stat-card";
  *   - duo                  — Amizade/duo em destaque
  *   - community-highlight  — Badge entregue pelo admin
  *   - favorite-game        — Jogo favorito (multi-game)
+ *   - favorite-song        — Música favorita no Spotify
  *   - member-since         — Tempo de casa
  *   - showcase             — Vitrine (3 itens em destaque)
  */
@@ -45,6 +46,7 @@ export type ProfileModuleId =
   | "duo"
   | "community-highlight"
   | "favorite-game"
+  | "favorite-song"
   | "member-since"
   | "showcase";
 
@@ -506,6 +508,103 @@ function FavoriteGameModuleCard({
   );
 }
 
+function FavoriteSongModuleCard({
+  name,
+  artist,
+  image,
+  url,
+  onEdit,
+}: {
+  name: string | null;
+  artist: string | null;
+  image: string | null;
+  url: string | null;
+  onEdit?: () => void;
+}) {
+  const editableClass = onEdit
+    ? "cursor-pointer transition-opacity hover:opacity-90 active:opacity-75"
+    : "";
+
+  if (name) {
+    const inner = (
+      <>
+        {image && (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="(min-width: 1536px) 237px, (min-width: 1280px) 25vw, 100vw"
+            unoptimized
+          />
+        )}
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.75)_0%,rgba(0,0,0,0.10)_100%)]" />
+        <div className="relative z-10 flex h-full flex-col justify-end p-[22px]">
+          <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
+            Música favorita
+          </p>
+          <MarqueeTitle
+            text={name}
+            className="mt-[4px] text-[18px] font-bold leading-[1.05] tracking-[-0.04em] text-white"
+          />
+          {artist && (
+            <p className="truncate text-[11px] font-medium text-white/70">
+              {artist}
+            </p>
+          )}
+        </div>
+      </>
+    );
+
+    if (onEdit) {
+      return (
+        <article
+          className={`relative ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-black shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${editableClass}`}
+          onClick={onEdit}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onEdit()}
+        >
+          {inner}
+        </article>
+      );
+    }
+    return (
+      <a
+        href={url ?? "#"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`relative block ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-black shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-opacity hover:opacity-90 active:opacity-75`}
+      >
+        {inner}
+      </a>
+    );
+  }
+
+  // Empty state
+  return (
+    <article
+      className={`relative flex ${CARD_HEIGHT_CLASS} overflow-hidden rounded-[var(--panel-radius-card)] bg-white px-[22px] py-[18px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] ${editableClass}`}
+      onClick={onEdit}
+      role={onEdit ? "button" : undefined}
+      tabIndex={onEdit ? 0 : undefined}
+      onKeyDown={onEdit ? (e) => e.key === "Enter" && onEdit() : undefined}
+    >
+      <div className="flex h-full w-full flex-col justify-between">
+        <Eyebrow>Música favorita</Eyebrow>
+        <div>
+          <p className="text-[18px] font-bold leading-[1.05] tracking-[-0.04em] text-[#c0c0c0]">
+            Escolher música…
+          </p>
+          <p className="mt-[6px] text-[11px] font-medium tracking-[-0.02em] text-[#c0c0c0]">
+            Clique para buscar
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 const MONTH_LABELS_PT = [
   "jan",
   "fev",
@@ -641,6 +740,13 @@ export type ProfileModuleData = {
   favoriteGameCoverUrl: string | null;
   /** Abre o modal de busca RAWG (só no próprio perfil). */
   onEditFavoriteGame?: () => void;
+  favoriteSongId: string | null;
+  favoriteSongName: string | null;
+  favoriteSongArtist: string | null;
+  favoriteSongImage: string | null;
+  favoriteSongUrl: string | null;
+  /** Abre o modal de seleção de música favorita (só no próprio perfil). */
+  onEditFavoriteSong?: () => void;
   /** Abre o modal de seleção de campeões favoritos (só no próprio perfil). */
   onEditTopChampions?: () => void;
   /** Abre o modal de seleção de duo (só no próprio perfil). */
@@ -772,6 +878,17 @@ export function ProfileModuleCard({
         />
       );
 
+    case "favorite-song":
+      return (
+        <FavoriteSongModuleCard
+          name={data.favoriteSongName}
+          artist={data.favoriteSongArtist}
+          image={data.favoriteSongImage}
+          url={data.favoriteSongUrl}
+          onEdit={data.onEditFavoriteSong}
+        />
+      );
+
     case "member-since":
       return <MemberSinceModuleCard memberSince={data.memberSince} />;
 
@@ -803,6 +920,7 @@ export const ALL_CONFIGURABLE_MODULE_IDS: ProfileModuleId[] = [
   "duo",
   "community-highlight",
   "favorite-game",
+  "favorite-song",
   "member-since",
   "showcase",
 ];
@@ -817,6 +935,7 @@ const LOL_DEFAULT_ORDER: ProfileModuleId[] = [
   "duo",
   "community-highlight",
   "favorite-game",
+  "favorite-song",
   "member-since",
   "showcase",
 ];
@@ -827,6 +946,7 @@ const NO_LOL_DEFAULT_ORDER: ProfileModuleId[] = [
   "duo",
   "community-highlight",
   "favorite-game",
+  "favorite-song",
   "member-since",
   "showcase",
   "lol-rank",
