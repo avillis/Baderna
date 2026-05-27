@@ -42,6 +42,10 @@ export interface InhouseMatchResult {
   blueLeaderId: string;
   redLeaderId: string;
   mode: InhouseMode;
+  /** Time vencedor (depois de admin/criador marcar). null enquanto não fechou. */
+  winner?: "blue" | "red" | null;
+  /** Timestamp ms de quando o vencedor foi definido. */
+  winnerSetAt?: number | null;
 }
 
 /* ── helpers ──────────────────────────────────────────── */

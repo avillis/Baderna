@@ -14,6 +14,7 @@ import {
 import { badernaMembers, getMemberSlug } from "@/features/panel/members-data";
 import { panelProfile } from "@/features/panel/panel-data";
 import { useTeamNames } from "@/features/panel/use-account";
+import { useAuth } from "@/features/panel/use-auth";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import type { RankType } from "@/features/panel/rank-utils";
 
@@ -366,6 +367,127 @@ function InhouseConnectCard() {
   );
 }
 
+/**
+ * Card de definição/exibição de vencedor. Antes de marcar, mostra um
+ * botão pro criador/admin escolher quem ganhou. Depois de marcado,
+ * mostra "Time X venceu" + indicação das moedas creditadas.
+ */
+function InhouseWinnerCard({
+  inhouse,
+  blueLabel,
+  redLabel,
+}: {
+  inhouse: Inhouse;
+  blueLabel: string;
+  redLabel: string;
+}) {
+  const { user } = useAuth();
+  const { setInhouseWinner } = useInhouses();
+  const [picking, setPicking] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const winner = inhouse.winner ?? null;
+  const isCreator = !!user && inhouse.createdBy === user.id;
+  const isAdmin = !!user?.is_admin;
+  const canMark = !winner && (isCreator || isAdmin) && !!inhouse.shortCode;
+
+  async function confirm(side: "blue" | "red") {
+    if (!inhouse.shortCode) return;
+    setSaving(true);
+    setError(null);
+    const err = await setInhouseWinner(inhouse.shortCode, side);
+    setSaving(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setPicking(false);
+  }
+
+  if (winner) {
+    const winLabel = winner === "blue" ? blueLabel : redLabel;
+    const winColor = winner === "blue" ? "#3a87ff" : "#e84545";
+    return (
+      <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-5 text-center xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8d8d8d]">
+          Resultado
+        </p>
+        <p
+          className="mt-1 text-[20px] font-bold tracking-[-0.03em]"
+          style={{ color: winColor }}
+        >
+          {winLabel} venceu
+        </p>
+        <p className="mt-2 text-[12px] font-medium text-[#8d8d8d]">
+          Moedas creditadas pra todos os jogadores.
+        </p>
+      </section>
+    );
+  }
+
+  if (!canMark) return null;
+
+  if (!picking) {
+    return (
+      <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-4 xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          className="flex h-[50px] w-full items-center justify-center rounded-[18px] bg-[#0f0f0f] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85"
+        >
+          Definir vencedor
+        </button>
+        <p className="mt-2 text-center text-[11px] font-medium text-[#b0a8a4]">
+          Credita as moedas configuradas em Recompensas pra cada time.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-4 xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
+      <p className="text-center text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+        Qual time venceu?
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => void confirm("blue")}
+          disabled={saving}
+          className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#3a87ff] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
+        >
+          {blueLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => void confirm("red")}
+          disabled={saving}
+          className="flex h-[50px] items-center justify-center rounded-[18px] bg-[#e84545] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
+        >
+          {redLabel}
+        </button>
+      </div>
+      <button
+        type="button"
+        onClick={() => {
+          setPicking(false);
+          setError(null);
+        }}
+        disabled={saving}
+        className="mt-2 w-full text-center text-[11px] font-semibold tracking-[-0.02em] text-[#8d8d8d] transition-colors hover:text-[#0f0f0f] disabled:opacity-50"
+      >
+        Cancelar
+      </button>
+      {error && (
+        <p className="mt-2 text-center text-[11px] font-medium text-red-500">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 // Ordem dos tiers pra calcular ranking interno da Baderna.
 const RANK_TIER_ORDER: Record<string, number> = {
   challenger: 9,
@@ -444,6 +566,8 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
     inhouse.players.find((p) => p.id === inhouse.blueLeaderId) ?? blueTeam[0];
   const redLeader =
     inhouse.players.find((p) => p.id === inhouse.redLeaderId) ?? redTeam[0];
+  const blueLabel = blueLeader ? resolveTeamLabel(blueLeader) : "Time Azul";
+  const redLabel = redLeader ? resolveTeamLabel(redLeader) : "Time Vermelho";
 
   function setPlayerSide(id: string, side: InhouseSide) {
     if (id === inhouse.blueLeaderId || id === inhouse.redLeaderId) return;
@@ -675,7 +799,14 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
                   onConfirm={confirmTeams}
                 />
               ) : (
-                <InhouseConnectCard />
+                <>
+                  <InhouseConnectCard />
+                  <InhouseWinnerCard
+                    inhouse={inhouse}
+                    blueLabel={blueLabel}
+                    redLabel={redLabel}
+                  />
+                </>
               )}
             </div>
           </div>
@@ -691,6 +822,9 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
               onChipPointerDown={(e, id) => startDrag(e, id)}
               teamsFull={teamsFull}
               onConfirm={confirmTeams}
+              inhouse={inhouse}
+              blueLabel={blueLabel}
+              redLabel={redLabel}
             />
           </div>
 
@@ -1080,6 +1214,9 @@ function MobilePoolBottomSheet({
   onChipPointerDown,
   teamsFull,
   onConfirm,
+  inhouse,
+  blueLabel,
+  redLabel,
 }: {
   isAssigning: boolean;
   poolPlayers: InhousePlayer[];
@@ -1089,6 +1226,9 @@ function MobilePoolBottomSheet({
   onChipPointerDown: (e: ReactPointerEvent, id: string) => void;
   teamsFull: boolean;
   onConfirm: () => void;
+  inhouse: Inhouse;
+  blueLabel: string;
+  redLabel: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -1145,7 +1285,14 @@ function MobilePoolBottomSheet({
               }}
             />
           ) : (
-            <InhouseConnectCard />
+            <>
+              <InhouseConnectCard />
+              <InhouseWinnerCard
+                inhouse={inhouse}
+                blueLabel={blueLabel}
+                redLabel={redLabel}
+              />
+            </>
           )}
         </div>
       </div>
