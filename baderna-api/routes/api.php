@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Inhouses (criar/atualizar/apagar)
     Route::post('/inhouses', [InhousesController::class, 'store']);
     Route::patch('/inhouses/{shortCode}', [InhousesController::class, 'update']);
+    Route::post('/inhouses/{shortCode}/winner', [InhousesController::class, 'setWinner']);
     Route::delete('/inhouses/{shortCode}', [InhousesController::class, 'destroy']);
 
     // Admin-only — só rolam com Sanctum válido + is_admin=true

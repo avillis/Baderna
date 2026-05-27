@@ -119,6 +119,38 @@ async function patchInhouse(
   return (await res.json()) as ApiInhouse;
 }
 
+async function postWinner(
+  shortCode: string,
+  winner: "blue" | "red",
+): Promise<{ inhouse: ApiInhouse; credited: unknown[] } | { error: string }> {
+  const token = authToken();
+  if (!token) return { error: "Sem autenticação." };
+  const res = await fetch(
+    `${API_BASE}/inhouses/${encodeURIComponent(shortCode)}/winner`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ winner }),
+    },
+  );
+  if (!res.ok) {
+    try {
+      const body = (await res.json()) as { error?: string };
+      return { error: body.error ?? "Não foi possível salvar." };
+    } catch {
+      return { error: "Não foi possível salvar." };
+    }
+  }
+  return (await res.json()) as {
+    inhouse: ApiInhouse;
+    credited: unknown[];
+  };
+}
+
 async function deleteInhouse(shortCode: string): Promise<boolean> {
   const token = authToken();
   if (!token) return false;
@@ -136,6 +168,10 @@ export function useInhouses(): {
   inhouses: Inhouse[];
   addInhouse: (result: InhouseMatchResult) => Promise<string>;
   updateInhouse: (id: string, patch: Partial<Inhouse>) => Promise<void>;
+  setInhouseWinner: (
+    shortCode: string,
+    winner: "blue" | "red",
+  ) => Promise<string | null>;
   removeInhouse: (idOrShortCode: string) => Promise<void>;
   getInhouse: (id: string) => Inhouse | undefined;
 } {
@@ -224,6 +260,27 @@ export function useInhouses(): {
     [inhouses, rawList],
   );
 
+  const setInhouseWinner = useCallback(
+    async (
+      shortCode: string,
+      winner: "blue" | "red",
+    ): Promise<string | null> => {
+      const result = await postWinner(shortCode, winner);
+      if ("error" in result) return result.error;
+      const fresh = result.inhouse;
+      const nextRaw = rawList.map((r) => (r.id === fresh.id ? fresh : r));
+      // Se o inhouse não estava na lista (entrou direto pela /[matchId]),
+      // adiciona ele no cache pra próxima leitura encontrar.
+      const exists = rawList.some((r) => r.id === fresh.id);
+      const finalRaw = exists ? nextRaw : [fresh, ...rawList];
+      setRawList(finalRaw);
+      setInhouses(finalRaw.map(unwrap));
+      writeCache(finalRaw);
+      return null;
+    },
+    [rawList],
+  );
+
   const removeInhouse = useCallback(
     async (idOrShortCode: string) => {
       // Aceita "inhouse-N" ou shortCode direto.
@@ -246,5 +303,12 @@ export function useInhouses(): {
     [inhouses],
   );
 
-  return { inhouses, addInhouse, updateInhouse, removeInhouse, getInhouse };
+  return {
+    inhouses,
+    addInhouse,
+    updateInhouse,
+    setInhouseWinner,
+    removeInhouse,
+    getInhouse,
+  };
 }

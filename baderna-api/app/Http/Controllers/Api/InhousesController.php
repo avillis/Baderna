@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\Inhouse;
+use App\Models\MemberCoin;
+use App\Models\User;
 use App\Services\DiscordWebhook;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class InhousesController extends Controller
@@ -86,6 +90,94 @@ class InhousesController extends Controller
         $this->maybeNotifyDiscord($inhouse->fresh(), $inhouse->createdBy);
 
         return response()->json($this->serialize($inhouse->fresh()));
+    }
+
+    /**
+     * Marca o vencedor de um inhouse e credita moedas pra todos os players
+     * (vitória pro time vencedor, derrota pro outro). Operação one-shot:
+     * uma vez setado, o winner fica travado pra não creditar duas vezes.
+     */
+    public function setWinner(Request $request, string $shortCode)
+    {
+        $data = $request->validate([
+            'winner' => 'required|string|in:blue,red',
+        ]);
+
+        $user = $request->user();
+        $winner = $data['winner'];
+
+        // Transaction com lock pra evitar double-credit em chamadas paralelas.
+        $result = DB::transaction(function () use ($shortCode, $user, $winner) {
+            $inhouse = Inhouse::where('short_code', $shortCode)
+                ->lockForUpdate()
+                ->first();
+            if (!$inhouse) {
+                return ['error' => 'Não encontrada.', 'status' => 404];
+            }
+            if ($inhouse->created_by_user_id !== $user->id && !$user->is_admin) {
+                return ['error' => 'Sem permissão.', 'status' => 403];
+            }
+            if (!$inhouse->isComplete()) {
+                return ['error' => 'O inhouse ainda tem jogadores no pool.', 'status' => 422];
+            }
+            $payload = is_array($inhouse->payload) ? $inhouse->payload : [];
+            if (!empty($payload['winner'])) {
+                return ['error' => 'Vencedor já foi definido.', 'status' => 422];
+            }
+
+            // Carrega as recompensas atuais. Defaults batendo com
+            // AppSettingsController pra não dar 0 se ainda não configurou.
+            $rewards = AppSetting::get('coin_rewards', [
+                'inhouse' => ['win' => 60, 'loss' => 20],
+            ]);
+            $winAmount  = (int)($rewards['inhouse']['win']  ?? 60);
+            $lossAmount = (int)($rewards['inhouse']['loss'] ?? 20);
+
+            $players = $payload['players'] ?? [];
+            $credited = [];
+            foreach ($players as $p) {
+                $playerSide = $p['side'] ?? null;
+                $playerSlug = $p['id'] ?? null;
+                if (!$playerSlug || !in_array($playerSide, ['blue', 'red'], true)) {
+                    continue;
+                }
+                $player = User::where('slug', $playerSlug)->first();
+                if (!$player) continue;
+
+                $delta = $playerSide === $winner ? $winAmount : $lossAmount;
+                $coin = MemberCoin::firstOrCreate(
+                    ['user_id' => $player->id],
+                    ['balance' => 0],
+                );
+                $coin->balance = $coin->balance + $delta;
+                $coin->save();
+
+                $credited[] = [
+                    'userId'  => $player->id,
+                    'slug'    => $player->slug,
+                    'side'    => $playerSide,
+                    'delta'   => $delta,
+                    'balance' => (int)$coin->balance,
+                ];
+            }
+
+            $payload['winner']           = $winner;
+            $payload['winnerSetBy']      = $user->id;
+            $payload['winnerSetAt']      = now()->getTimestampMs();
+            $payload['winnerCreditedAt'] = now()->getTimestampMs();
+            $payload['winnerCredited']   = $credited;
+            $inhouse->update(['payload' => $payload]);
+
+            return ['inhouse' => $inhouse->fresh(), 'credited' => $credited];
+        });
+
+        if (isset($result['error'])) {
+            return response()->json(['error' => $result['error']], $result['status']);
+        }
+        return response()->json([
+            'inhouse'  => $this->serialize($result['inhouse']),
+            'credited' => $result['credited'],
+        ]);
     }
 
     public function destroy(Request $request, string $shortCode)
