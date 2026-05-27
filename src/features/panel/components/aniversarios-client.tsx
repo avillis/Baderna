@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { authToken } from "@/features/panel/use-auth";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
+import { StyledName } from "@/features/panel/components/styled-name";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -16,6 +17,7 @@ export type BirthdayMember = {
   name: string;
   avatarSrc: string | null;
   slug: string | null;
+  activeNameId: string | null;
   birthdayDay: number;
   birthdayMonth: number;
   birthdayYear: number | null;
@@ -117,9 +119,12 @@ function BirthdayCard({ member }: { member: BirthdayMember }) {
     >
       <MemberAvatar src={member.avatarSrc} nick={member.nickname} size={72} />
 
-      <p className="mt-[14px] text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+      <StyledName
+        styleId={member.activeNameId ?? undefined}
+        className="mt-[14px] text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]"
+      >
         {member.nickname}
-      </p>
+      </StyledName>
       <p className="mt-[4px] text-[12px] font-semibold text-[#9d9d9d]">
         {dateShort}
       </p>

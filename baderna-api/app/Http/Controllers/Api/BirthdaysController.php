@@ -47,6 +47,7 @@ class BirthdaysController extends Controller
                     'name'           => $user->display_name ?: $user->name,
                     'avatarSrc'      => $user->avatar_src,
                     'slug'           => $user->slug,
+                    'activeNameId'   => $user->active_name_id,
                     'birthdayDay'    => $bDay,
                     'birthdayMonth'  => $bMonth,
                     'birthdayYear'   => $hidden ? null : $bYear,
