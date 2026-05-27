@@ -42,6 +42,12 @@ return [
         // Webhook do canal de ranking pro bot "Baderna Ranking" atualizar
         // o top 10 a cada hora (POST+PATCH in-place). No-op se vazio.
         'ranking_webhook' => env('DISCORD_RANKING_WEBHOOK_URL'),
+        // Bot token (com permissão MANAGE_CHANNELS) pra renomear os canais
+        // de voz Azul/Vermelho com o nome dos times do inhouse. Webhook
+        // não dá pra editar canal — só bot real. No-op se vazio.
+        'bot_token'       => env('DISCORD_BOT_TOKEN'),
+        'blue_channel_id' => env('DISCORD_BLUE_CHANNEL_ID'),
+        'red_channel_id'  => env('DISCORD_RED_CHANNEL_ID'),
     ],
 
 ];
