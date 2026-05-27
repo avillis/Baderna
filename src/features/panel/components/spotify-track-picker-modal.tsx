@@ -102,7 +102,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
         </div>
 
         {/* Body */}
-        <div className="no-scrollbar max-h-[460px] min-h-0 overflow-y-auto px-[16px] pb-[20px]">
+        <div className="no-scrollbar max-h-[460px] min-h-0 overflow-y-auto px-[16px] pt-[4px] pb-[20px]">
           {loading && (
             <div className="flex items-center justify-center py-[40px]">
               <svg
