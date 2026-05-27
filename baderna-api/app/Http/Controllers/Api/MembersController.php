@@ -93,6 +93,7 @@ class MembersController extends Controller
             ];
             if ($viewerIsAdmin) {
                 $row['isAdmin'] = (bool)$u->is_admin;
+                $row['isOwner'] = (bool)$u->is_owner;
             }
             return $row;
         }));
