@@ -539,18 +539,6 @@ function WinnerPickerModal({
   );
 }
 
-// Ordem dos tiers pra calcular ranking interno da Baderna.
-const RANK_TIER_ORDER: Record<string, number> = {
-  challenger: 9,
-  grandmaster: 8,
-  master: 7,
-  diamond: 6,
-  platinum: 5,
-  gold: 4,
-  silver: 3,
-  bronze: 2,
-  iron: 1,
-};
 
 export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
   const { updateInhouse } = useInhouses();
@@ -563,14 +551,12 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
     if (apiTeam) return apiTeam;
     return teamNames[leader.id] ?? `Time ${leader.nickname}`;
   }
-  // Mapa { player.id -> posição no ranking Baderna }
+  // Mapa { player.id -> posição no ranking Baderna }. Usa a ordem natural
+  // da API (mesma da página /ranking aba Baderna) — sem re-sort por tier.
   const badernaRankByMemberId = useMemo(() => {
-    const sorted = [...allMembersForRank].sort(
-      (a, b) =>
-        (RANK_TIER_ORDER[b.rankType] ?? 0) -
-        (RANK_TIER_ORDER[a.rankType] ?? 0),
+    return new Map<string, number>(
+      allMembersForRank.map((m, i) => [m.id, i + 1]),
     );
-    return new Map<string, number>(sorted.map((m, i) => [m.id, i + 1]));
   }, [allMembersForRank]);
   const hasPool = inhouse.players.some((p) => p.side === "pool");
   const isAssigning = inhouse.mode === "leader" && hasPool;
