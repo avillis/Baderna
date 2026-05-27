@@ -409,17 +409,6 @@ export default function LogsPage() {
   return (
     <PanelShell showBanner={false}>
       <div className="mx-auto w-full max-w-[760px] px-4 py-6 sm:px-6 sm:py-10">
-        {/* Cabeçalho */}
-        <header className="mb-[36px]">
-          <h1 className="text-[32px] font-bold tracking-[-0.04em] text-[#0f0f0f] sm:text-[40px]">
-            Logs
-          </h1>
-          <p className="mt-[6px] text-[14px] text-[#7c7c7c] sm:text-[15px]">
-            Tudo que mudou no Baderna desde o início. Em ordem cronológica
-            reversa, do mais recente pro lançamento.
-          </p>
-        </header>
-
         {/* Timeline */}
         <div className="space-y-[40px]">
           {Array.from(byDate.entries()).map(([date, entries]) => (
