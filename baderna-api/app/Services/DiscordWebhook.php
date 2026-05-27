@@ -300,7 +300,7 @@ class DiscordWebhook
         $description =
             "{$winnerEmoji} **{$winnerName}** venceu!\n\n"
             . "{$loserEmoji} _{$loserName}_\n\n"
-            . "💰 +{$winAmount} moedas pro time vencedor\n"
+            . "💰 +{$winAmount} moedas pro time vencedor\n\n"
             . "💰 +{$lossAmount} moedas pro time perdedor";
 
         $body = [
