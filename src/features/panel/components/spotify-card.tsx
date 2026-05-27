@@ -40,7 +40,7 @@ function TrackRow({ track, index }: { track: SpotifyTrack; index: number }) {
 // ── Section heading ───────────────────────────────────────────────────────────
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-[8px] px-[10px] text-[11px] font-bold uppercase tracking-[0.08em] text-[#8d8d8d]">
+    <p className="mb-[8px] px-[10px] text-[12px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
       {children}
     </p>
   );
@@ -79,13 +79,11 @@ export function SpotifyConnectCard() {
   return (
     <div className="rounded-[var(--panel-radius-card)] bg-white p-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-[10px]">
-          <SpotifyLogo className="h-[22px] w-[22px]" />
-          <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-            Spotify
-          </h2>
-        </div>
+      <div className="flex items-center gap-[10px]">
+        <SpotifyLogo className="h-[22px] w-[22px]" />
+        <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+          Spotify
+        </h2>
         {!loading && (
           connected ? (
             <button
