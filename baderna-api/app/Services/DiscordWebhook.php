@@ -457,30 +457,21 @@ class DiscordWebhook
             ['n' => '21', 's' => 'Call',            'f' => 'Não bater punheta em call ou adjacências.'],
         ];
 
-        // Duas colunas inline: nomes à esquerda, leis à direita.
-        // Mesma estrutura do ranking flex (Jogadores | Ranque).
-        $col1 = implode("\n", array_map(
-            fn($r) => "**{$r['n']}.** {$r['s']}",
+        $lines = array_map(
+            fn($r) => "**{$r['n']}.** **{$r['s']}** — {$r['f']}",
             $rules
-        ));
-        $col2 = implode("\n", array_map(
-            fn($r) => $r['f'],
-            $rules
-        ));
+        );
+        $description = implode("\n", $lines);
 
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
         return [
             'embeds' => [[
                 'title'       => '📋 Regras da Baderna',
-                'description' => "\u{200B}",
+                'description' => $description,
                 'color'       => self::BRAND_COLOR,
                 'url'         => "{$siteBase}/regras",
-                'fields'      => [
-                    ['name' => 'Regra', 'value' => $col1, 'inline' => true],
-                    ['name' => 'Lei',   'value' => $col2, 'inline' => true],
-                ],
-                'footer' => ['text' => "bdrn.com.br/regras"],
+                'footer'      => ['text' => 'bdrn.com.br/regras'],
             ]],
         ];
     }
