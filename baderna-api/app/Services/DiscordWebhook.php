@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AppSetting;
 use App\Models\Inhouse;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -368,6 +369,122 @@ class DiscordWebhook
 
         self::patchChannelName((string) $token, (string) $blueId, "🔵 - {$blueTeamName} - 🔵");
         self::patchChannelName((string) $token, (string) $redId,  "🔴 - {$redTeamName} - 🔴");
+    }
+
+    /**
+     * Posta (ou edita in-place) as regras da Baderna no canal #regras do
+     * Discord via bot token. Guarda o message_id em app_settings pra não
+     * criar uma nova mensagem a cada sync — se a mensagem for apagada
+     * manualmente no Discord, na próxima chamada cria uma nova.
+     */
+    public static function syncRulesToChannel(): bool
+    {
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.rules_channel_id');
+        if (! $token || ! $channelId) return false;
+
+        $body       = self::buildRulesBody();
+        $settingKey = 'discord_rules_message_id';
+        $existingId = AppSetting::get($settingKey);
+        $apiBase    = "https://discord.com/api/v10/channels/{$channelId}/messages";
+        $headers    = ['Authorization' => "Bot {$token}"];
+
+        if ($existingId) {
+            try {
+                $res = Http::timeout(self::TIMEOUT_SECONDS)
+                    ->withHeaders($headers)
+                    ->patch("{$apiBase}/{$existingId}", $body);
+                if ($res->successful()) return true;
+                // Mensagem foi apagada manualmente → cria nova abaixo.
+                if ($res->status() === 404) {
+                    AppSetting::where('key', $settingKey)->delete();
+                } else {
+                    Log::warning('DiscordWebhook::syncRules PATCH failed', [
+                        'status' => $res->status(),
+                        'body'   => $res->body(),
+                    ]);
+                    return false;
+                }
+            } catch (Throwable $e) {
+                Log::warning('DiscordWebhook::syncRules PATCH exception', ['err' => $e->getMessage()]);
+                return false;
+            }
+        }
+
+        try {
+            $res = Http::timeout(self::TIMEOUT_SECONDS)
+                ->withHeaders($headers)
+                ->post($apiBase, $body);
+            if (! $res->successful()) {
+                Log::warning('DiscordWebhook::syncRules POST failed', [
+                    'status' => $res->status(),
+                    'body'   => $res->body(),
+                ]);
+                return false;
+            }
+            $data = $res->json();
+            if (! empty($data['id'])) {
+                AppSetting::put($settingKey, $data['id']);
+            }
+            return true;
+        } catch (Throwable $e) {
+            Log::warning('DiscordWebhook::syncRules POST exception', ['err' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    /** Monta o payload do embed de regras, idêntico ao estilo do ranking. */
+    private static function buildRulesBody(): array
+    {
+        $rules = [
+            ['n' => '01', 's' => 'A Bíblia',       'f' => 'Não faça nada que não esteja na Bíblia.'],
+            ['n' => '02', 's' => 'Borboyote',       'f' => 'Seja um inimigo declarado da Borboyote.'],
+            ['n' => '03', 's' => 'O Sales',         'f' => 'Trate o Sales como se ele fosse uma pessoa normal.'],
+            ['n' => '04', 's' => 'Flex alheia',     'f' => 'É terminantemente proibido intar a flex alheia.'],
+            ['n' => '05', 's' => 'Respeito',        'f' => 'Respeite as mulheres e as crianças.'],
+            ['n' => '06', 's' => 'Laicidade',       'f' => 'O grupo é laico.'],
+            ['n' => '07', 's' => 'João',            'f' => 'Fvck João.'],
+            ['n' => '08', 's' => 'Wilson & álcool', 'f' => 'Mantenha bebidas alcoólicas longe do Wilson.'],
+            ['n' => '09', 's' => 'Muros',           'f' => 'É proibido pular muros.'],
+            ['n' => '10', 's' => 'ADMs',            'f' => 'Respeite os ADMs.'],
+            ['n' => '11', 's' => 'Wilson',          'f' => 'Jamais ajude o Wilson.'],
+            ['n' => '12', 's' => 'Fotos',           'f' => 'Proibido mandar foto de MERDA (sujeito a banimento instantâneo).'],
+            ['n' => '13', 's' => 'Lema',            'f' => 'O nosso lema é: ousadia e alegria.'],
+            ['n' => '15', 's' => 'Amigas da Alice', 'f' => 'Mantenha as amigas da Alice longe do João.'],
+            ['n' => '16', 's' => 'Decência',        'f' => 'Seja uma pessoa decente, por favor.'],
+            ['n' => '17', 's' => 'Alex G. & Rml',  'f' => 'Fvck Alex G. Fvck Rml.'],
+            ['n' => '18', 's' => 'Para né',         'f' => 'Aaah meu, para, né?!'],
+            ['n' => '19', 's' => 'Ditadura',        'f' => 'Grupo controlado pela Ditadura Socialista do STF e do PT.'],
+            ['n' => '20', 's' => 'Picantes',        'f' => 'Perguntinhas picantes permitidas somente após as 21h.'],
+            ['n' => '21', 's' => 'Call',            'f' => 'Não bater punheta em call ou adjacências.'],
+        ];
+
+        // Duas colunas inline: nomes à esquerda, leis à direita.
+        // Mesma estrutura do ranking flex (Jogadores | Ranque).
+        $col1 = implode("\n", array_map(
+            fn($r) => "**{$r['n']}.** {$r['s']}",
+            $rules
+        ));
+        $col2 = implode("\n", array_map(
+            fn($r) => $r['f'],
+            $rules
+        ));
+
+        $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
+
+        return [
+            'embeds' => [[
+                'title'       => '📋 Regras da Baderna',
+                'description' => "\u{200B}",
+                'color'       => self::BRAND_COLOR,
+                'url'         => "{$siteBase}/regras",
+                'fields'      => [
+                    ['name' => 'Regra', 'value' => $col1, 'inline' => true],
+                    ['name' => 'Lei',   'value' => $col2, 'inline' => true],
+                ],
+                'footer' => ['text' => "bdrn.com.br/regras"],
+            ]],
+        ];
     }
 
     private static function patchChannelName(string $token, string $channelId, string $name): void

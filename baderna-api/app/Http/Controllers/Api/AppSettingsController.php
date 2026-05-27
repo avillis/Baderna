@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
+use App\Services\DiscordWebhook;
 use Illuminate\Http\Request;
 
 class AppSettingsController extends Controller
@@ -84,5 +85,18 @@ class AppSettingsController extends Controller
 
         AppSetting::put(self::PROFILE_LOADING_OVERLAY_KEY, $data);
         return response()->json($data);
+    }
+
+    /**
+     * Sincroniza as regras da Baderna pro canal #regras do Discord.
+     * Posta nova mensagem ou edita a existente (idempotente).
+     */
+    public function syncRulesDiscord()
+    {
+        $ok = DiscordWebhook::syncRulesToChannel();
+        if (! $ok) {
+            return response()->json(['error' => 'Falha ao sincronizar. Verifique DISCORD_BOT_TOKEN e DISCORD_RULES_CHANNEL_ID.'], 500);
+        }
+        return response()->json(['ok' => true]);
     }
 }
