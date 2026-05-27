@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Posta (e atualiza) a lista de aniversários da Baderna no Discord.
+ * Posta (e atualiza) a lista de aniversários da Baderna no Discord via webhook.
  *
  * Strategy: na primeira chamada, faz POST com ?wait=true pra receber o
  * message_id de volta. Guarda em app_settings. Nas próximas chamadas, faz
@@ -23,7 +23,7 @@ class BirthdayWebhook
 {
     private const BRAND_COLOR     = 0xFF4100;
     private const TIMEOUT_SECONDS = 5;
-    private const SETTING_KEY     = 'discord_birthdays_bot_message_id';
+    private const SETTING_KEY     = 'discord_birthdays_message_id';
 
     private const MONTH_PT = [
         1  => 'Janeiro',
@@ -42,31 +42,26 @@ class BirthdayWebhook
 
     public static function postOrUpdate(): bool
     {
-        $token     = config('services.discord.bot_token');
-        $channelId = config('services.discord.birthdays_channel_id');
-
-        if (! $token || ! $channelId) {
+        $webhookUrl = config('services.discord.birthdays_webhook');
+        if (! $webhookUrl) {
             return false;
         }
 
         $members = User::whereNotNull('birthday')
             ->where('birthday_hidden', false)
             ->where('is_deleted', false)
-            ->whereIn('approval_status', ['approved'])
+            ->where('approval_status', 'approved')
             ->orderByRaw('MONTH(birthday), DAY(birthday)')
             ->get(['display_name', 'summoner_name', 'birthday']);
 
-        $body    = self::buildBody($members);
-        $apiBase = "https://discord.com/api/v10/channels/{$channelId}/messages";
-        $headers = ['Authorization' => "Bot {$token}"];
+        $body = self::buildBody($members);
 
         $existingId = AppSetting::get(self::SETTING_KEY);
 
         if ($existingId) {
             try {
                 $res = Http::timeout(self::TIMEOUT_SECONDS)
-                    ->withHeaders($headers)
-                    ->patch("{$apiBase}/{$existingId}", $body);
+                    ->patch("{$webhookUrl}/messages/{$existingId}", $body);
 
                 if ($res->successful()) {
                     return true;
@@ -91,8 +86,7 @@ class BirthdayWebhook
         // POST novo
         try {
             $res = Http::timeout(self::TIMEOUT_SECONDS)
-                ->withHeaders($headers)
-                ->post("{$apiBase}?wait=true", $body);
+                ->post("{$webhookUrl}?wait=true", $body);
 
             if (! $res->successful()) {
                 Log::warning('BirthdayWebhook POST failed', [
@@ -118,12 +112,10 @@ class BirthdayWebhook
     {
         $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
 
-        $description = self::formatList($members);
-
         return [
             'embeds' => [[
                 'title'       => '🎂 Aniversários da Baderna',
-                'description' => $description,
+                'description' => self::formatList($members),
                 'color'       => self::BRAND_COLOR,
                 'url'         => "{$siteBase}/members",
                 'footer'      => ['text' => 'Atualizado via bdrn.com.br'],
@@ -157,7 +149,7 @@ class BirthdayWebhook
         }
 
         // Remove trailing blank line
-        if (end($lines) === '') {
+        if (! empty($lines) && end($lines) === '') {
             array_pop($lines);
         }
 
