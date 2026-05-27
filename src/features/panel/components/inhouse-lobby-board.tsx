@@ -145,7 +145,7 @@ function PlayerRow({
               </p>
               {badernaRank ? (
                 <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                  #{String(badernaRank).padStart(2, "0")}
+                  #{badernaRank}
                 </span>
               ) : null}
               {isLeader ? (
@@ -180,7 +180,7 @@ function PlayerRow({
             ) : null}
             {badernaRank ? (
               <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                #{String(badernaRank).padStart(2, "0")}
+                #{badernaRank}
               </span>
             ) : null}
             <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
@@ -409,15 +409,17 @@ function InhouseWinnerCard({
 
   if (winner) {
     const winLabel = winner === "blue" ? blueLabel : redLabel;
-    const winColor = winner === "blue" ? "#3a87ff" : "#e84545";
+    const winGradient =
+      winner === "blue"
+        ? "from-[#0a4a8c] to-[#1a72d8]"
+        : "from-[#8b1a1a] to-[#d83333]";
     return (
       <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-5 text-center xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
         <p className="text-[11px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
           Resultado
         </p>
         <p
-          className="mt-1 text-[20px] font-bold tracking-[-0.03em]"
-          style={{ color: winColor }}
+          className={`mt-1 bg-gradient-to-r ${winGradient} bg-clip-text text-[20px] font-bold tracking-[-0.03em] text-transparent`}
         >
           {winLabel} venceu
         </p>
@@ -1175,7 +1177,7 @@ function DraggablePlayerRow({
                 </p>
                 {badernaRank ? (
                   <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                    #{String(badernaRank).padStart(2, "0")}
+                    #{badernaRank}
                   </span>
                 ) : null}
                 {isLeader ? (
@@ -1200,7 +1202,7 @@ function DraggablePlayerRow({
                 ) : null}
                 {badernaRank ? (
                   <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                    #{String(badernaRank).padStart(2, "0")}
+                    #{badernaRank}
                   </span>
                 ) : null}
                 <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
