@@ -18,3 +18,7 @@ Schedule::command('model:prune', ['--model' => [\App\Models\ErrorLog::class]])
 // in-place (uma mensagem única que vai sendo editada). Roda no minuto 0
 // de cada hora.
 Schedule::command('bdrn:post-ranking')->hourly();
+
+// Atualiza a lista de aniversários no Discord — ordenada por proximidade,
+// com dias restantes. Roda diariamente à meia-noite UTC.
+Schedule::command('bdrn:sync-birthdays')->dailyAt('00:00');
