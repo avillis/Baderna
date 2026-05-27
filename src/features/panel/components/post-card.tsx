@@ -420,9 +420,7 @@ export function PostCard({
           </div>
         )}
 
-        {/* Linha única de ações: like + comentários + reações (rolam horizontal
-            com setinhas quando estoura) + bookmark. min-w-0 no PostReactions
-            permite que ele encolha em vez de quebrar a linha. */}
+        {/* Linha de ações: like + comentários + reações + bookmark. */}
         <div className="relative mt-[18px] flex items-center gap-x-[14px]">
           <LikeButton
             liked={post.liked}
@@ -435,12 +433,14 @@ export function PostCard({
           />
           <PostReactions postId={post.id} />
           <BookmarkButton />
-          {expanded && (
-            <span className="text-[12px] text-[#8d8d8d]">
-              {formatPostDateLong(post.createdAt)}
-            </span>
-          )}
         </div>
+        {/* Data em linha própria abaixo das ações — só na view expandida.
+            Separada pra não comprimir o espaço das reações no mobile. */}
+        {expanded && (
+          <p className="mt-[10px] text-[12px] text-[#8d8d8d]">
+            {formatPostDateLong(post.createdAt)}
+          </p>
+        )}
       </div>
 
       {confirmOpen && (
@@ -907,6 +907,7 @@ function PostReactions({ postId }: { postId: number }) {
     <div className="flex min-w-0 flex-1 items-center gap-[4px]">
       {/* Setinha esquerda — SEMPRE renderizada, opacity controla visibilidade
           pra não causar layout shift quando aparece/some. */}
+      {/* Setinha esquerda — só no desktop (sm:); no mobile as pills fazem wrap */}
       <button
         type="button"
         onClick={(e) => {
@@ -916,18 +917,17 @@ function PostReactions({ postId }: { postId: number }) {
         aria-label="Rolar reações para a esquerda"
         aria-hidden={!canScrollLeft}
         tabIndex={canScrollLeft ? 0 : -1}
-        className={`flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
+        className={`hidden sm:flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
           canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
         <ChevronLeft className="h-[16px] w-[16px]" strokeWidth={2.5} />
       </button>
 
-      {/* Lista scroll horizontal das pills — scroll-snap garante que nunca
-          fica um emoji cortado pela metade na borda. */}
+      {/* Pills: wrap no mobile (sem scroll horizontal), nowrap+scroll no desktop */}
       <div
         ref={scrollRef}
-        className="flex min-w-0 flex-1 snap-x snap-mandatory items-center gap-[5px] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        className="flex min-w-0 flex-1 flex-wrap items-center gap-[5px] overflow-x-auto scroll-smooth sm:flex-nowrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
         {active.map((emoji) => (
           <button
@@ -937,7 +937,7 @@ function PostReactions({ postId }: { postId: number }) {
               e.stopPropagation();
               react(emoji);
             }}
-            className={`flex h-[24px] flex-shrink-0 snap-start items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
+            className={`flex h-[24px] flex-shrink-0 items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
               mine.includes(emoji)
                 ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
                 : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
@@ -949,7 +949,7 @@ function PostReactions({ postId }: { postId: number }) {
         ))}
       </div>
 
-      {/* Setinha direita — mesma lógica da esquerda */}
+      {/* Setinha direita — só no desktop (sm:) */}
       <button
         type="button"
         onClick={(e) => {
@@ -959,7 +959,7 @@ function PostReactions({ postId }: { postId: number }) {
         aria-label="Rolar reações para a direita"
         aria-hidden={!canScrollRight}
         tabIndex={canScrollRight ? 0 : -1}
-        className={`flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
+        className={`hidden sm:flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
           canScrollRight ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
