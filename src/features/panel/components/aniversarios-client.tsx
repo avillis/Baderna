@@ -81,20 +81,20 @@ function MemberAvatar({
 function DaysChip({ daysUntil, isToday }: { daysUntil: number; isToday: boolean }) {
   if (isToday) {
     return (
-      <span className="inline-flex items-center gap-[4px] rounded-full bg-[#fff3e8] px-[10px] py-[4px] text-[11px] font-bold text-[#e05a00]">
+      <span className="inline-flex h-[36px] items-center gap-[4px] rounded-[12px] bg-[#fff3e8] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#e05a00]">
         🎉 Hoje!
       </span>
     );
   }
   if (daysUntil === 1) {
     return (
-      <span className="inline-flex items-center rounded-full bg-[#fff3e8] px-[10px] py-[4px] text-[11px] font-bold text-[#e05a00]">
+      <span className="inline-flex h-[36px] items-center rounded-[12px] bg-[#fff3e8] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#e05a00]">
         Amanhã
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center rounded-full bg-[#ededed] px-[10px] py-[4px] text-[11px] font-bold text-[#6f6f6f]">
+    <span className="inline-flex h-[36px] items-center rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#6f6f6f]">
       em {daysUntil} dias
     </span>
   );
@@ -177,7 +177,7 @@ function BirthdayCard({ member }: { member: BirthdayMember }) {
           {ageText}
         </p>
       )}
-      <div className="mt-[12px]">
+      <div className="mt-auto pt-[16px]">
         <DaysChip daysUntil={member.daysUntil} isToday={member.isToday} />
       </div>
     </Link>
