@@ -410,7 +410,7 @@ function InhouseWinnerCard({
     const winColor = winner === "blue" ? "#3a87ff" : "#e84545";
     return (
       <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-5 text-center xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8d8d8d]">
+        <p className="text-[11px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
           Resultado
         </p>
         <p
