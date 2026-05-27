@@ -131,12 +131,12 @@ function PlayerRow({
     href ? (
       <Link
         href={href}
-        className={`block w-full max-w-[390px] transition-all duration-300 hover:scale-[1.02] ${dimClass}`}
+        className={`block w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] transition-all duration-300 hover:scale-[1.02] ${dimClass}`}
       >
         {children}
       </Link>
     ) : (
-      <div className={`w-full max-w-[390px] transition-opacity duration-300 ${dimClass}`}>
+      <div className={`w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] transition-opacity duration-300 ${dimClass}`}>
         {children}
       </div>
     );
@@ -817,7 +817,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
         <div className="mt-[20px] grid w-full items-start gap-6 xl:mt-[40px] xl:grid-cols-[minmax(0,0.84fr)_minmax(340px,0.7fr)_minmax(0,0.88fr)] xl:gap-5">
           <div
             data-drop-side={isAssigning ? "blue" : undefined}
-            className={`order-1 w-full max-w-[390px] space-y-4 xl:order-none xl:-ml-[4px] xl:space-y-7 ${
+            className={`order-1 w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] space-y-4 xl:order-none xl:-ml-[4px] xl:space-y-7 ${
               isAssigning && hoverSide === "blue"
                 ? "rounded-[24px] outline-2 outline-dashed outline-[#347dff]"
                 : ""
@@ -915,7 +915,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
 
           <div
             data-drop-side={isAssigning ? "red" : undefined}
-            className={`order-3 w-full max-w-[390px] space-y-4 xl:order-none xl:ml-auto xl:space-y-7 xl:flex xl:flex-col xl:items-end ${
+            className={`order-3 w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] space-y-4 xl:order-none xl:ml-auto xl:space-y-7 xl:flex xl:flex-col xl:items-end ${
               isAssigning && hoverSide === "red"
                 ? "rounded-[24px] outline-2 outline-dashed outline-[#e84545]"
                 : ""
@@ -1207,7 +1207,7 @@ function DraggablePlayerRow({
   return (
     <div
       onPointerDown={isLeader ? undefined : onPointerDown}
-      className={`group block w-full max-w-[390px] touch-none select-none ${
+      className={`group block w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] touch-none select-none ${
         isLeader ? "cursor-default" : "cursor-grab active:cursor-grabbing"
       }`}
     >
@@ -1291,7 +1291,7 @@ function DraggablePlayerRow({
 function EmptySlot({ side, index }: { side: "blue" | "red"; index: number }) {
   return (
     <div
-      className={`flex h-[76px] w-full max-w-[390px] items-center rounded-[22px] border-2 border-dashed border-[#d9d4d1] bg-white/40 px-[20px] text-[14px] font-semibold text-[#b0a8a4] ${
+      className={`flex h-[76px] w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] items-center rounded-[22px] border-2 border-dashed border-[#d9d4d1] bg-white/40 px-[20px] text-[14px] font-semibold text-[#b0a8a4] ${
         side === "red" ? "xl:justify-end" : ""
       }`}
     >
