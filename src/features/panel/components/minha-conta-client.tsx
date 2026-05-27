@@ -260,6 +260,16 @@ function BasicInfoCard({
           <div className="md:col-span-2">
             <SlugField value={account.slug} onCommit={updateSlug} />
           </div>
+          <div className="md:col-span-2">
+            <BirthdayField
+              value={account.birthday ?? null}
+              hidden={account.birthdayHidden ?? false}
+              onCommit={(date, hidden) => {
+                updateField("birthday", date);
+                updateField("birthdayHidden", hidden);
+              }}
+            />
+          </div>
           <PasswordFields />
         </div>
       </div>
@@ -341,6 +351,113 @@ function Field({
         </span>
       )}
     </label>
+  );
+}
+
+const MONTHS_PT = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+function BirthdayField({
+  value,
+  hidden,
+  onCommit,
+}: {
+  value: string | null;
+  hidden: boolean;
+  onCommit: (date: string | null, hidden: boolean) => void;
+}) {
+  const parsed = value ? new Date(value + "T00:00:00") : null;
+  const [day, setDay] = useState(parsed ? String(parsed.getDate()) : "");
+  const [month, setMonth] = useState(parsed ? String(parsed.getMonth() + 1) : "");
+  const [year, setYear] = useState(parsed ? String(parsed.getFullYear()) : "");
+  const [hiddenLocal, setHiddenLocal] = useState(hidden);
+
+  useEffect(() => {
+    const p = value ? new Date(value + "T00:00:00") : null;
+    setDay(p ? String(p.getDate()) : "");
+    setMonth(p ? String(p.getMonth() + 1) : "");
+    setYear(p ? String(p.getFullYear()) : "");
+  }, [value]);
+  useEffect(() => { setHiddenLocal(hidden); }, [hidden]);
+
+  function commit(d = day, m = month, y = year, h = hiddenLocal) {
+    const di = parseInt(d, 10);
+    const mi = parseInt(m, 10);
+    const yi = parseInt(y, 10);
+    if (!di || !mi || !yi || yi < 1900 || yi > new Date().getFullYear()) {
+      onCommit(null, h);
+      return;
+    }
+    const padded = `${yi}-${String(mi).padStart(2, "0")}-${String(di).padStart(2, "0")}`;
+    onCommit(padded, h);
+  }
+
+  const inputBase =
+    "border-none bg-[#ededed] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20 rounded-full px-4 py-4";
+
+  return (
+    <div className="flex flex-col gap-[8px]">
+      <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+        Aniversário
+      </span>
+      <div className="flex flex-wrap gap-[8px]">
+        <input
+          type="number"
+          min={1}
+          max={31}
+          placeholder="Dia"
+          value={day}
+          onChange={(e) => setDay(e.target.value)}
+          onBlur={() => commit()}
+          className={`${inputBase} w-[90px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
+        />
+        <select
+          value={month}
+          onChange={(e) => { setMonth(e.target.value); commit(day, e.target.value, year); }}
+          className={`${inputBase} flex-1 min-w-[130px]`}
+        >
+          <option value="">Mês</option>
+          {MONTHS_PT.map((name, i) => (
+            <option key={i + 1} value={String(i + 1)}>{name}</option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={1900}
+          max={new Date().getFullYear()}
+          placeholder="Ano"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          onBlur={() => commit()}
+          className={`${inputBase} w-[110px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
+        />
+      </div>
+      <label className="flex cursor-pointer items-center gap-[8px]">
+        <div
+          role="checkbox"
+          aria-checked={hiddenLocal}
+          onClick={() => {
+            const next = !hiddenLocal;
+            setHiddenLocal(next);
+            commit(day, month, year, next);
+          }}
+          className={`relative h-[20px] w-[36px] shrink-0 cursor-pointer rounded-full transition-colors ${
+            hiddenLocal ? "bg-[#ff4100]" : "bg-[#d4d4d4]"
+          }`}
+        >
+          <span
+            className={`absolute top-[2px] h-[16px] w-[16px] rounded-full bg-white shadow transition-transform ${
+              hiddenLocal ? "translate-x-[18px]" : "translate-x-[2px]"
+            }`}
+          />
+        </div>
+        <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+          Ocultar meu ano de nascimento e idade
+        </span>
+      </label>
+    </div>
   );
 }
 

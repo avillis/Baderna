@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\PostReactionsController;
 use App\Http\Controllers\Api\TitlesController;
+use App\Http\Controllers\Api\BirthdaysController;
 
 // ── Públicas (auth) ────────────────────────────────────────────────────
 // Únicas rotas SEM auth: register e login (não tem como ter token antes).
@@ -55,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile-loading-overlay', [AppSettingsController::class, 'showProfileLoadingOverlay']);
     Route::get('/store-prices', [AppSettingsController::class, 'showStorePrices']);
     Route::get('/titles', [TitlesController::class, 'index']);
+    Route::get('/birthdays', [BirthdaysController::class, 'index']);
 
     // Listagens da comunidade
     Route::get('/members', [MembersController::class, 'index']);

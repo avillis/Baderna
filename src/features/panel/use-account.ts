@@ -35,6 +35,8 @@ export type Account = {
   favoriteGameCoverUrl?: string | null;
   duoUserId?: number | null;
   memberSince?: string | null;
+  birthday?: string | null;
+  birthdayHidden?: boolean;
 };
 
 function buildDefaults(user: AuthUser | null): Account {
@@ -169,6 +171,8 @@ const FIELD_TO_API: Partial<Record<keyof Account, string>> = {
   favoriteGameTitle: "favorite_game_title",
   favoriteGameCoverUrl: "favorite_game_cover_url",
   duoUserId: "duo_user_id",
+  birthday: "birthday",
+  birthdayHidden: "birthday_hidden",
 };
 
 export function useCurrentUserId(): string | null {

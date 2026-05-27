@@ -63,6 +63,8 @@ class AccountController extends Controller
             'favorite_game_title' => 'sometimes|nullable|string|max:120',
             'favorite_game_cover_url' => 'sometimes|nullable|string|max:255',
             'duo_user_id'        => 'sometimes|nullable|integer|exists:users,id',
+            'birthday'           => 'sometimes|nullable|date',
+            'birthday_hidden'    => 'sometimes|boolean',
         ]);
 
         $changedRiotId =
@@ -170,6 +172,8 @@ class AccountController extends Controller
             'favoriteGameTitle'  => $user->favorite_game_title,
             'favoriteGameCoverUrl' => $user->favorite_game_cover_url,
             'duoUserId'          => $user->duo_user_id,
+            'birthday'           => $user->birthday ? \Carbon\Carbon::parse($user->birthday)->toDateString() : null,
+            'birthdayHidden'     => (bool) ($user->birthday_hidden ?? false),
             'memberSince'        => optional($user->created_at)->toIso8601String(),
             // URL do ícone Riot atual (Data Dragon). Independente do avatarSrc
             // — assim o user pode voltar a usar o ícone Riot mesmo se trocou
