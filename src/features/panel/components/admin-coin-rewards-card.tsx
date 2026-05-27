@@ -147,7 +147,7 @@ export function AdminCoinRewardsCard() {
           type="button"
           onClick={() => void handleCreditFlex()}
           disabled={creditingFlex}
-          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#0f0f0f] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#0f0f0f] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#1f1f1f] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {creditingFlex ? (
             <>
