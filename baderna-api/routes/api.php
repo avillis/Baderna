@@ -143,6 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/titles/{slug}', [TitlesController::class, 'destroy']);
         Route::get('/member-coins', [MemberCoinsController::class, 'index']);
         Route::put('/member-coins/{user}', [MemberCoinsController::class, 'update']);
+        Route::post('/flex-credit', [MemberCoinsController::class, 'flexCreditBatch']);
         Route::get('/member-unlocks/{user}', [MemberUnlocksController::class, 'adminIndex']);
         Route::post('/member-unlocks/{user}', [MemberUnlocksController::class, 'adminGrant']);
         Route::delete('/member-unlocks/{user}/{kind}/{slug}', [MemberUnlocksController::class, 'adminRevoke']);
