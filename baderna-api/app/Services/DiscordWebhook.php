@@ -38,8 +38,9 @@ class DiscordWebhook
      */
     public static function notifyInhouseCreated(Inhouse $inhouse, ?User $creator, string $kind = 'created'): void
     {
-        $url = config('services.discord.inhouse_webhook');
-        if (! $url) {
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.inhouse_channel_id');
+        if (! $token || ! $channelId) {
             return;
         }
 
@@ -188,10 +189,7 @@ class DiscordWebhook
             : "@here — **{$creatorName}** abriu um inhouse! 🎮";
 
         $body = [
-            'username'   => 'Baderna Inhouse',
-            // Logo da Baderna como avatar do webhook (sobrescreve a config no Discord).
-            'avatar_url' => "{$siteBase}/logo.svg",
-            'content'    => $contentText,
+            'content'          => $contentText,
             'allowed_mentions' => ['parse' => ['everyone']],
             'embeds'     => [[
                 'title'       => $title,
@@ -211,11 +209,10 @@ class DiscordWebhook
         ];
 
         try {
-            Http::timeout(self::TIMEOUT_SECONDS)->post($url, $body);
+            Http::timeout(self::TIMEOUT_SECONDS)
+                ->withHeaders(['Authorization' => "Bot {$token}"])
+                ->post("https://discord.com/api/v10/channels/{$channelId}/messages", $body);
         } catch (Throwable $e) {
-            // Não rebaixa o erro — só registra. Inhouse já foi criado e
-            // não deve falhar a request HTTP do user só porque o Discord
-            // está fora ou o webhook foi removido.
             Log::warning('DiscordWebhook::notifyInhouseCreated failed', [
                 'error' => $e->getMessage(),
                 'inhouse_id' => $inhouse->id,
@@ -248,8 +245,9 @@ class DiscordWebhook
         int $winAmount,
         int $lossAmount,
     ): void {
-        $url = config('services.discord.inhouse_webhook');
-        if (! $url) {
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.inhouse_channel_id');
+        if (! $token || ! $channelId) {
             return;
         }
 
@@ -317,10 +315,8 @@ class DiscordWebhook
             . "💰 +{$lossAmount} moedas pro time perdedor";
 
         $body = [
-            'username'   => 'Baderna Inhouse',
-            'avatar_url' => "{$siteBase}/logo.svg",
-            'content'    => "🏆 **Resultado do inhouse!**",
-            'embeds'     => [[
+            'content' => "🏆 **Resultado do inhouse!**",
+            'embeds'  => [[
                 'title'       => '🏆 Vencedor definido!',
                 'description' => $description,
                 'url'         => $inhouseUrl,
@@ -340,7 +336,9 @@ class DiscordWebhook
         ];
 
         try {
-            Http::timeout(self::TIMEOUT_SECONDS)->post($url, $body);
+            Http::timeout(self::TIMEOUT_SECONDS)
+                ->withHeaders(['Authorization' => "Bot {$token}"])
+                ->post("https://discord.com/api/v10/channels/{$channelId}/messages", $body);
         } catch (Throwable $e) {
             Log::warning('DiscordWebhook::notifyInhouseWinner failed', [
                 'error' => $e->getMessage(),
@@ -348,8 +346,6 @@ class DiscordWebhook
             ]);
         }
 
-        // Reseta os canais de voz pros nomes default agora que a
-        // partida acabou — próximo inhouse vai sobrescrever de novo.
         self::renameInhouseChannels('Azul', 'Vermelho');
     }
 

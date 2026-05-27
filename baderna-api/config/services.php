@@ -38,7 +38,8 @@ return [
     'discord' => [
         // Webhook do canal #-inhouse- pro bot "Baderna Inhouse" anunciar
         // quando alguém cria um lobby novo. No-op se vazio.
-        'inhouse_webhook' => env('DISCORD_INHOUSE_WEBHOOK_URL'),
+        'inhouse_webhook'    => env('DISCORD_INHOUSE_WEBHOOK_URL'),
+        'inhouse_channel_id' => env('DISCORD_INHOUSE_CHANNEL_ID'),
         // Webhook do canal de ranking pro bot "Baderna Ranking" atualizar
         // o top 10 a cada hora (POST+PATCH in-place). No-op se vazio.
         'ranking_webhook'    => env('DISCORD_RANKING_WEBHOOK_URL'),
