@@ -1027,7 +1027,11 @@ function InhouseListCard({
       )}
 
       {/* Blue team row */}
-      <TeamRow leader={blueLeader} team={blueTeam} />
+      <TeamRow
+        leader={blueLeader}
+        team={blueTeam}
+        dimmed={inhouse.winner === "red"}
+      />
 
       {/* Vs divider */}
       <div className="my-[12px] flex items-center gap-[10px]">
@@ -1039,7 +1043,11 @@ function InhouseListCard({
       </div>
 
       {/* Red team row */}
-      <TeamRow leader={redLeader} team={redTeam} />
+      <TeamRow
+        leader={redLeader}
+        team={redTeam}
+        dimmed={inhouse.winner === "blue"}
+      />
 
       {/* Meta footer */}
       <div className="mt-[14px] flex items-center justify-between border-t border-[#f1eeec] pt-[10px]">
@@ -1082,9 +1090,11 @@ function CaptainAvatar({ player }: { player: InhousePlayer }) {
 function TeamRow({
   leader,
   team,
+  dimmed = false,
 }: {
   leader: InhousePlayer;
   team: InhousePlayer[];
+  dimmed?: boolean;
 }) {
   const teamNames = useTeamNames();
   const allMembers = useBadernaMembers();
@@ -1093,7 +1103,11 @@ function TeamRow({
   const label =
     apiTeam || teamNames[leader.id] || `Time ${leader.nickname}`;
   return (
-    <div className="flex items-center gap-[14px]">
+    <div
+      className={`flex items-center gap-[14px] transition-opacity duration-300 ${
+        dimmed ? "opacity-50 grayscale" : ""
+      }`}
+    >
       <CaptainAvatar player={leader} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
