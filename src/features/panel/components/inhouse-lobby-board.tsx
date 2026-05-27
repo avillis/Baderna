@@ -499,22 +499,36 @@ function WinnerPickerModal({
   onPick: (side: "blue" | "red") => void;
   onClose: () => void;
 }) {
+  // Padrão dos outros modais do app: estado interno `closing` toca a
+  // animação de saída e dispara onClose só quando ela termina.
+  const [closing, setClosing] = useState(false);
+  function requestClose() {
+    if (saving) return;
+    setClosing(true);
+  }
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && !saving) onClose();
+      if (e.key === "Escape") requestClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, saving]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saving]);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]"
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]`}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
-      <div className="relative mx-4 w-full max-w-[420px] rounded-[28px] bg-white p-6 shadow-[0_32px_80px_rgba(0,0,0,0.22)]">
+      <div
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative mx-4 w-full max-w-[420px] rounded-[28px] bg-white p-6 shadow-[0_32px_80px_rgba(0,0,0,0.22)]`}
+        onAnimationEnd={() => {
+          if (closing) onClose();
+        }}
+      >
         <p className="text-center text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
           Qual time venceu?
         </p>
@@ -541,7 +555,7 @@ function WinnerPickerModal({
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={requestClose}
           disabled={saving}
           className="mt-3 w-full text-center text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d] transition-colors hover:text-[#0f0f0f] disabled:opacity-50"
         >
