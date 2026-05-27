@@ -91,9 +91,8 @@ export function SpotifyConnectCard() {
           ) : (
             <button
               onClick={connect}
-              className="inline-flex h-[36px] shrink-0 items-center gap-[8px] rounded-[12px] bg-[#1DB954] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
+              className="h-[36px] shrink-0 rounded-[12px] bg-[#1DB954] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
             >
-              <SpotifyLogo className="h-[14px] w-[14px]" />
               Conectar
             </button>
           )
