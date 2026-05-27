@@ -14,7 +14,7 @@ export function useMemberUnlockedTitles(
 ): {
   unlocked: string[];
   setUnlocked: (titles: string[]) => void;
-  unlock: (id: string) => void;
+  unlock: (id: string) => Promise<unknown> | undefined;
 } {
   const { unlocks, unlock: rawUnlock } = useMemberUnlocks();
 
@@ -37,8 +37,8 @@ export function useMemberUnlockedTitles(
   // SEMPRE responda (mesmo em duplicada) pra devolver o saldo otimista
   // debitado durante o spin. Bypass do guard de setUnlocked.
   const unlock = useCallback(
-    (id: string) => {
-      void rawUnlock("title", id);
+    (id: string): Promise<unknown> | undefined => {
+      return rawUnlock("title", id);
     },
     [rawUnlock],
   );

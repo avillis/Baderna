@@ -28,10 +28,7 @@ import { useUnlockedBanners } from "@/features/panel/use-unlocked-banners";
 import { panelProfile } from "@/features/panel/panel-data";
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
-
-const CAPAS_COST = 10;
-const TITULOS_COST = 50;
-const NOMES_COST = 80;
+import { useStorePrices } from "@/features/panel/use-store-prices";
 
 // Name pool — limitado excluded (admin grant only) and "preto" excluded
 // (it's the fixed default everyone already has).
@@ -176,6 +173,7 @@ type CapasBoardProps = {
 
 export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   const { user } = useAuth();
+  const storePrices = useStorePrices();
   const LOGGED_USER_ID = user ? String(user.id) : "__guest__";
   // Coins now keyed pelo user.id (numérico) — saldo vem da API.
   const COINS_KEY = LOGGED_USER_ID;
@@ -309,6 +307,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
 
   const [tab, setTab] = useState<"capas" | "titulos" | "nomes">("capas");
   const [spinning, setSpinning] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
   // Briefly suppresses the transition so the strip can snap back to 0
   // before the new spin animation starts (otherwise the second spin
   // shows a slow-rewind animation).
@@ -498,7 +497,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     if (tab === "capas") {
       return {
         pool: bannerPool,
-        cost: CAPAS_COST,
+        cost: storePrices.capa,
         pickWinner: () =>
           bannerPool[Math.floor(Math.random() * bannerPool.length)],
         pickFiller: () =>
@@ -507,13 +506,13 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
         ownedCount: unlockedBanners.length,
         totalCount: bannerPool.length,
         getRarity: (id: string): BannerRarity => getBannerRarity(id),
-        unlock: (id: string) => unlockBanner(id),
+        unlock: (id: string): Promise<unknown> | undefined => unlockBanner(id),
       };
     }
     if (tab === "titulos") {
       return {
         pool: titlePoolIds,
-        cost: TITULOS_COST,
+        cost: storePrices.title,
         pickWinner: () => pickWeightedTitleId(),
         pickFiller: () => pickWeightedTitleId(),
         isOwned: (id: string) => unlockedTitles.includes(id),
@@ -524,13 +523,13 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
         // SEM guard — backend é a fonte de verdade: cobra se for novo,
         // devolve saldo cheio se for duplicada (necessário pra reverter o
         // débito otimista feito antes do spin animar).
-        unlock: (id: string) => unlockTitle(id),
+        unlock: (id: string): Promise<unknown> | undefined => unlockTitle(id),
       };
     }
     // nomes
     return {
       pool: NAME_POOL_IDS,
-      cost: NOMES_COST,
+      cost: storePrices.name,
       pickWinner: () => pickWeightedNameId(),
       pickFiller: () => pickWeightedNameId(),
       isOwned: (id: string) => isNameUnlocked(id),
@@ -538,10 +537,11 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       totalCount: NAME_POOL.length,
       getRarity: (id: string): BannerRarity =>
         (NAME_BY_ID[id]?.rarity ?? "comum") as BannerRarity,
-      unlock: (id: string) => unlockName(id),
+      unlock: (id: string): Promise<unknown> | undefined => unlockName(id),
     };
   }, [
     tab,
+    storePrices,
     bannerPool,
     isBannerUnlocked,
     unlockedBanners,
@@ -593,7 +593,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   // Free spin (capas only) lets the user bypass the cost.
   const usingFreeSpin = tab === "capas" && freeSpinAvailable;
   const canOpen =
-    !spinning && (usingFreeSpin || coins >= activeConfig.cost);
+    !spinning && !unlocking && (usingFreeSpin || coins >= activeConfig.cost);
 
   // Build initial preview strip so the roulette doesn't appear empty.
   // Re-rolls only when the tab changes, the banner pool changes, or the
@@ -652,14 +652,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     setResetting(true);
     setTranslateX(0);
     setSpinning(true);
-    // Free spin (capas) pula o débito. Senão, deduz LOCAL otimisticamente
-    // (sem bater na API) — o débito real acontece server-side no /unlocks
-    // quando rolar o unlock no final da animação. Se for duplicada, backend
-    // não cobra e devolve o saldo cheio (sincronizado via storage event).
+    // Free spin (capas) pula o débito de moedas.
     if (usingFreeSpin) {
       claimFreeSpin();
-    } else {
-      setLocalBalance(coins - activeConfig.cost);
     }
 
     // Compute the translateX to land the winner card centered under the indicator
@@ -691,15 +686,21 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       const rarity = activeConfig.getRarity(winner);
       const isDuplicate = activeConfig.isOwned(winner);
       const wasFree = usingFreeSpin;
-      // Free spin → backend nem é chamado pra debitar.
-      // Duplicada (paga) → ainda chamamos unlock; backend devolve {duplicate:true}
-      //   sem cobrar e o saldo é sincronizado de volta automaticamente.
-      // Nova → backend cobra e devolve o novo saldo.
-      if (!wasFree) {
-        activeConfig.unlock(winner);
-      } else if (!isDuplicate) {
-        activeConfig.unlock(winner);
+
+      setUnlocking(true);
+      let unlockPromise: Promise<unknown>;
+      if (wasFree && !isDuplicate) {
+        // Free spin, new capa: unlock without charging (free=true flag to backend)
+        unlockPromise = unlockBanner(winner, true) ?? Promise.resolve();
+      } else if (wasFree) {
+        // Free spin, duplicate: no unlock needed, no charge
+        unlockPromise = Promise.resolve();
+      } else {
+        // Paid spin: backend charges if new, returns same balance if duplicate
+        unlockPromise = activeConfig.unlock(winner) ?? Promise.resolve();
       }
+      void unlockPromise.finally(() => setUnlocking(false));
+
       const balanceAfter = wasFree
         ? coins
         : isDuplicate

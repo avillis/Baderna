@@ -3,6 +3,7 @@ import { MembersTable } from "@/app/(dashboard)/admin/members-table";
 import { PendingApprovalsCard } from "@/features/panel/components/pending-approvals-card";
 import { AdminGuard } from "@/app/(dashboard)/admin/admin-guard";
 import { AdminCoinRewardsCard } from "@/features/panel/components/admin-coin-rewards-card";
+import { AdminStorePricesCard } from "@/features/panel/components/admin-store-prices-card";
 import { AdminDiscordRulesCard } from "@/features/panel/components/admin-discord-rules-card";
 import { AdminEmailsCard } from "@/features/panel/components/admin-emails-card";
 import { AdminErrorLogsCard } from "@/features/panel/components/admin-error-logs-card";
@@ -41,6 +42,7 @@ export default function AdminPage() {
 
             <AdminIntegrationsCard />
             <AdminCoinRewardsCard />
+            <AdminStorePricesCard />
             <AdminDiscordRulesCard />
             <AdminInhousePointsCard />
             <AdminLoadingOverlayCard />

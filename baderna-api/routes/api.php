@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/coin-rewards', [AppSettingsController::class, 'showCoinRewards']);
     Route::get('/inhouse-points', [AppSettingsController::class, 'showInhousePoints']);
     Route::get('/profile-loading-overlay', [AppSettingsController::class, 'showProfileLoadingOverlay']);
+    Route::get('/store-prices', [AppSettingsController::class, 'showStorePrices']);
     Route::get('/titles', [TitlesController::class, 'index']);
 
     // Listagens da comunidade
@@ -139,6 +140,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/coin-rewards', [AppSettingsController::class, 'updateCoinRewards']);
         Route::put('/inhouse-points', [AppSettingsController::class, 'updateInhousePoints']);
         Route::put('/profile-loading-overlay', [AppSettingsController::class, 'updateProfileLoadingOverlay']);
+        Route::put('/store-prices', [AppSettingsController::class, 'updateStorePrices']);
         Route::post('/sync-rules-discord', [AppSettingsController::class, 'syncRulesDiscord']);
         Route::post('/sync-ranking-discord', [AppSettingsController::class, 'syncRankingDiscord']);
         Route::post('/titles', [TitlesController::class, 'store']);

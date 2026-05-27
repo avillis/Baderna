@@ -13,6 +13,12 @@ class AppSettingsController extends Controller
     private const COIN_REWARDS_KEY = 'coin_rewards';
     private const INHOUSE_POINTS_KEY = 'inhouse_points';
     private const PROFILE_LOADING_OVERLAY_KEY = 'profile_loading_overlay';
+    private const STORE_PRICES_KEY = 'store_prices';
+    private const STORE_PRICES_DEFAULTS = [
+        'capa'  => 10,
+        'title' => 50,
+        'name'  => 80,
+    ];
 
     private const COIN_REWARDS_DEFAULTS = [
         'flex'    => ['win' => 20, 'loss' => 10],
@@ -85,6 +91,24 @@ class AppSettingsController extends Controller
         ]);
 
         AppSetting::put(self::PROFILE_LOADING_OVERLAY_KEY, $data);
+        return response()->json($data);
+    }
+
+    public function showStorePrices()
+    {
+        return response()->json(
+            AppSetting::get(self::STORE_PRICES_KEY, self::STORE_PRICES_DEFAULTS)
+        );
+    }
+
+    public function updateStorePrices(Request $request)
+    {
+        $data = $request->validate([
+            'capa'  => 'required|integer|min:0',
+            'title' => 'required|integer|min:0',
+            'name'  => 'required|integer|min:0',
+        ]);
+        AppSetting::put(self::STORE_PRICES_KEY, $data);
         return response()->json($data);
     }
 

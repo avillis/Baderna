@@ -12,7 +12,7 @@ export const DEFAULT_UNLOCKED_NAMES = ["preto"];
  */
 export function useMemberUnlockedNames(_memberId: string): {
   unlocked: string[];
-  unlock: (id: string) => void;
+  unlock: (id: string) => Promise<unknown> | undefined;
   isUnlocked: (id: string) => boolean;
 } {
   const { unlocks, unlock: rawUnlock, isUnlocked: rawIs } = useMemberUnlocks();
@@ -20,8 +20,8 @@ export function useMemberUnlockedNames(_memberId: string): {
   const unlocked = Array.from(new Set([...DEFAULT_UNLOCKED_NAMES, ...unlocks.name]));
 
   const unlock = useCallback(
-    (id: string) => {
-      void rawUnlock("name", id);
+    (id: string): Promise<unknown> | undefined => {
+      return rawUnlock("name", id);
     },
     [rawUnlock],
   );
