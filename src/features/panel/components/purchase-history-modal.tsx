@@ -94,7 +94,7 @@ export function PurchaseHistoryModal({ open, onClose, entries }: Props) {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-[20px] py-[16px]">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-[20px] py-[16px]">
           {entries.length === 0 ? (
             <div className="flex h-[200px] items-center justify-center text-[13px] text-[#7c7c7c]">
               Nenhum prêmio ainda. Gire uma roleta pra começar!

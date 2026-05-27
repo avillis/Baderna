@@ -110,7 +110,7 @@ export function TitleModal({
           </p>
         </div>
 
-        <div className="max-h-[calc(86vh-150px)] overflow-y-auto px-[28px] py-[24px]">
+        <div className="max-h-[calc(86vh-150px)] overflow-y-auto no-scrollbar px-[28px] py-[24px]">
           {RARITY_ORDER.map((rarity) => {
             const list = grouped[rarity];
             if (!list?.length) return null;

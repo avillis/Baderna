@@ -116,7 +116,7 @@ export function EditMemberNamesModal({
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-[28px] py-[24px]">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-[28px] py-[24px]">
           {RARITY_ORDER.map((rarity: TitleRarity) => {
             const list = grouped[rarity];
             if (!list?.length) return null;

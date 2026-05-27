@@ -85,7 +85,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
           <button
             type="button"
             onClick={handleClose}
-            className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-[#1DB954] transition-colors hover:bg-[#18a349]"
+            className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-[#ff4100] transition-colors hover:bg-[#e03a00]"
           >
             <svg
               viewBox="0 0 10 10"
@@ -102,7 +102,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
         </div>
 
         {/* Body */}
-        <div className="max-h-[460px] min-h-0 overflow-y-auto px-[16px] pb-[20px]">
+        <div className="no-scrollbar max-h-[460px] min-h-0 overflow-y-auto px-[16px] pb-[20px]">
           {loading && (
             <div className="flex items-center justify-center py-[40px]">
               <svg

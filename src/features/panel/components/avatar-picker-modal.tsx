@@ -236,7 +236,7 @@ export function AvatarPickerModal({
                 className="w-full rounded-full border-none bg-[#ededed] px-[16px] py-[8px] text-[13px] outline-none placeholder:text-[#a89e99] focus:ring-2 focus:ring-[#ff4100]/20"
               />
             </div>
-            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-5 items-start gap-[16px] overflow-y-auto p-[24px] sm:grid-cols-6">
+            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-5 items-start gap-[16px] overflow-y-auto no-scrollbar p-[24px] sm:grid-cols-6">
               {filtered.map((file) => {
                 const src = getChampionTileSrc(file);
                 const isCurrent = currentSrc === src;
