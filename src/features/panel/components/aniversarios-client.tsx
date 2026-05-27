@@ -173,7 +173,7 @@ export function AniversariosClient() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-[16px] sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-[16px] sm:grid-cols-4">
           {members.map((m) => (
             <BirthdayCard key={m.id} member={m} />
           ))}
