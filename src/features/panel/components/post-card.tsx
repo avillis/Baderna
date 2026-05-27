@@ -924,10 +924,10 @@ function PostReactions({ postId }: { postId: number }) {
         <ChevronLeft className="h-[16px] w-[16px]" strokeWidth={2.5} />
       </button>
 
-      {/* Pills: wrap no mobile (sem scroll horizontal), nowrap+scroll no desktop */}
+      {/* Pills: scroll horizontal em qualquer tela — toque nativo no mobile */}
       <div
         ref={scrollRef}
-        className="flex min-w-0 flex-1 flex-wrap items-center gap-[5px] overflow-x-auto scroll-smooth sm:flex-nowrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        className="flex min-w-0 flex-1 items-center gap-[5px] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
         {active.map((emoji) => (
           <button
