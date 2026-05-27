@@ -168,12 +168,27 @@ class InhousesController extends Controller
             $payload['winnerCredited']   = $credited;
             $inhouse->update(['payload' => $payload]);
 
-            return ['inhouse' => $inhouse->fresh(), 'credited' => $credited];
+            return [
+                'inhouse'     => $inhouse->fresh(),
+                'credited'    => $credited,
+                'winAmount'   => $winAmount,
+                'lossAmount'  => $lossAmount,
+            ];
         });
 
         if (isset($result['error'])) {
             return response()->json(['error' => $result['error']], $result['status']);
         }
+
+        // Webhook do Discord — fora da transaction pra não rollback se o
+        // Discord falhar. Service já é defensivo (log-only em erro).
+        DiscordWebhook::notifyInhouseWinner(
+            $result['inhouse'],
+            $winner,
+            $result['winAmount'],
+            $result['lossAmount'],
+        );
+
         return response()->json([
             'inhouse'  => $this->serialize($result['inhouse']),
             'credited' => $result['credited'],
