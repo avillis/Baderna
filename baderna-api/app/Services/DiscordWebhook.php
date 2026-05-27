@@ -220,6 +220,18 @@ class DiscordWebhook
                 'inhouse_id' => $inhouse->id,
             ]);
         }
+
+        // Renomeia canais de voz Azul/Vermelho com o nome dos times só
+        // quando os times tão completos (random na criação OU leader
+        // depois do draft fechar). maybeNotifyDiscord já garante que
+        // isso roda só uma vez por inhouse (via flag no payload).
+        if ($includeMembers) {
+            $blueTeamName = $resolveTeamName($blueLeader)
+                ?: ($blueLeader ? "Time {$resolveNick($blueLeader)}" : 'Azul');
+            $redTeamName = $resolveTeamName($redLeader)
+                ?: ($redLeader ? "Time {$resolveNick($redLeader)}" : 'Vermelho');
+            self::renameInhouseChannels($blueTeamName, $redTeamName);
+        }
     }
 
     /**
@@ -300,7 +312,8 @@ class DiscordWebhook
         $description =
             "{$winnerEmoji} **{$winnerName}** venceu!\n\n"
             . "{$loserEmoji} _{$loserName}_\n\n"
-            . "💰 +{$winAmount} moedas pro time vencedor · +{$lossAmount} pro outro";
+            . "💰 +{$winAmount} moedas pro time vencedor\n\n"
+            . "💰 +{$lossAmount} moedas pro time perdedor";
 
         $body = [
             'username'   => 'Baderna Inhouse',
@@ -331,6 +344,44 @@ class DiscordWebhook
             Log::warning('DiscordWebhook::notifyInhouseWinner failed', [
                 'error' => $e->getMessage(),
                 'inhouse_id' => $inhouse->id,
+            ]);
+        }
+
+        // Reseta os canais de voz pros nomes default agora que a
+        // partida acabou — próximo inhouse vai sobrescrever de novo.
+        self::renameInhouseChannels('Azul', 'Vermelho');
+    }
+
+    /**
+     * Renomeia os canais de voz do inhouse via Discord REST API. Usa o
+     * bot token (com permissão MANAGE_CHANNELS) — não dá pra fazer via
+     * webhook. No-op se faltar config. Discord rate-limita rename em
+     * ~2/10min por canal — se passar disso, retorna 429 e o catch só
+     * loga sem propagar.
+     */
+    public static function renameInhouseChannels(string $blueTeamName, string $redTeamName): void
+    {
+        $token  = config('services.discord.bot_token');
+        $blueId = config('services.discord.blue_channel_id');
+        $redId  = config('services.discord.red_channel_id');
+        if (! $token || ! $blueId || ! $redId) return;
+
+        self::patchChannelName((string) $token, (string) $blueId, "🔵 - {$blueTeamName} - 🔵");
+        self::patchChannelName((string) $token, (string) $redId,  "🔴 - {$redTeamName} - 🔴");
+    }
+
+    private static function patchChannelName(string $token, string $channelId, string $name): void
+    {
+        try {
+            Http::timeout(self::TIMEOUT_SECONDS)
+                ->withHeaders(['Authorization' => "Bot {$token}"])
+                ->patch("https://discord.com/api/v10/channels/{$channelId}", [
+                    'name' => $name,
+                ]);
+        } catch (Throwable $e) {
+            Log::warning('DiscordWebhook::patchChannelName failed', [
+                'error' => $e->getMessage(),
+                'channel' => $channelId,
             ]);
         }
     }

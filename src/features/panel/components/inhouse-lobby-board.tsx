@@ -13,7 +13,7 @@ import {
   type InhousePlayer,
   type InhouseSide,
 } from "@/features/panel/inhouse-data";
-import { badernaMembers, getMemberSlug } from "@/features/panel/members-data";
+import { badernaMembers } from "@/features/panel/members-data";
 import { panelProfile } from "@/features/panel/panel-data";
 import { useTeamNames } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
@@ -53,10 +53,12 @@ import {
 } from "@/features/panel/use-inhouses";
 
 function getPlayerHref(player: InhousePlayer): string | null {
+  // Convidados não têm perfil — `id` começa com "guest-".
   if (player.id.startsWith("guest-")) return null;
-  const member = badernaMembers.find((m) => m.id === player.id);
-  if (!member) return null;
-  return `/membro/${getMemberSlug(member)}`;
+  // player.id é a slug canônica do user (users.slug do DB), igual o que
+  // a página /membro/{slug} usa pra lookup. Antes íamos no badernaMembers
+  // estático que ficou vazio depois da migração pra API.
+  return `/membro/${player.id}`;
 }
 const laneIconByKey = {
   TOP: "/images/lanes/Top_icon.png",
@@ -112,24 +114,31 @@ function PlayerRow({
   isLeader,
   specialist,
   badernaRank,
+  dimmed = false,
 }: {
   player: InhousePlayer;
   side: InhouseSide;
   isLeader: boolean;
   specialist?: boolean;
   badernaRank?: number;
+  dimmed?: boolean;
 }) {
   const href = getPlayerHref(player);
+  // Time perdedor depois que o vencedor foi definido: opacidade + grayscale
+  // pra deixar visualmente "apagado" sem esconder informação.
+  const dimClass = dimmed ? "opacity-50 grayscale" : "";
   const Wrapper = ({ children }: { children: React.ReactNode }) =>
     href ? (
       <Link
         href={href}
-        className="block w-full max-w-[390px] transition-transform duration-200 hover:scale-[1.02]"
+        className={`block w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] transition-all duration-300 hover:scale-[1.02] ${dimClass}`}
       >
         {children}
       </Link>
     ) : (
-      <div className="w-full max-w-[390px]">{children}</div>
+      <div className={`w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] transition-opacity duration-300 ${dimClass}`}>
+        {children}
+      </div>
     );
 
   if (side === "blue") {
@@ -145,7 +154,7 @@ function PlayerRow({
               </p>
               {badernaRank ? (
                 <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                  #{String(badernaRank).padStart(2, "0")}
+                  #{badernaRank}
                 </span>
               ) : null}
               {isLeader ? (
@@ -180,7 +189,7 @@ function PlayerRow({
             ) : null}
             {badernaRank ? (
               <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                #{String(badernaRank).padStart(2, "0")}
+                #{badernaRank}
               </span>
             ) : null}
             <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
@@ -206,12 +215,14 @@ function TeamHeader({
   align = "left",
   side,
   hideAvatar = false,
+  dimmed = false,
 }: {
   label: string;
   leader: InhousePlayer;
   align?: "left" | "right" | "center";
   side: InhouseSide;
   hideAvatar?: boolean;
+  dimmed?: boolean;
 }) {
   const sideLabel = side === "blue" ? "Azul" : "Vermelho";
   const sideGradient =
@@ -235,8 +246,9 @@ function TeamHeader({
       : align === "center"
         ? "justify-self-center"
         : "justify-self-start";
+  const dimClass = dimmed ? "opacity-50 grayscale" : "";
   return (
-    <div className={`flex items-center gap-4 ${justifyClass}`}>
+    <div className={`flex items-center gap-4 transition-opacity duration-300 ${justifyClass} ${dimClass}`}>
       {align === "right" ? (
         <>
           <div className="text-right">
@@ -267,10 +279,12 @@ function InhouseMatchHeader({
   blueLeader,
   redLeader,
   mode,
+  losingSide = null,
 }: {
   blueLeader: InhousePlayer;
   redLeader: InhousePlayer;
   mode: Inhouse["mode"];
+  losingSide?: InhouseSide | null;
 }) {
   const teamNames = useTeamNames();
   const allMembers = useBadernaMembers();
@@ -285,6 +299,9 @@ function InhouseMatchHeader({
   }
   const blueLabel = resolveTeamLabel(blueLeader);
   const redLabel = resolveTeamLabel(redLeader);
+  // Quando vencedor já foi definido (losingSide != null), o lobby tá
+  // "Concluído"; antes disso continua "Pronto" (status default).
+  const statusLabel = losingSide ? "Concluído" : inhouseLobby.status;
   return (
     <section className="grid w-full items-center gap-6 xl:grid-cols-[minmax(0,0.84fr)_minmax(320px,0.7fr)_minmax(0,0.88fr)]">
       {/* Mobile: compact status pill no topo. Desktop: continua no centro. */}
@@ -294,7 +311,7 @@ function InhouseMatchHeader({
         </span>
         <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
         <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
-          {inhouseLobby.status}
+          {statusLabel}
         </span>
         <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
         <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8f8f8f]">
@@ -302,7 +319,12 @@ function InhouseMatchHeader({
         </span>
       </div>
 
-      <TeamHeader label={blueLabel} leader={blueLeader} side="blue" />
+      <TeamHeader
+        label={blueLabel}
+        leader={blueLeader}
+        side="blue"
+        dimmed={losingSide === "blue"}
+      />
 
       {/* Desktop only: bloco grande centralizado entre os times */}
       <div className="hidden text-center xl:block">
@@ -310,7 +332,7 @@ function InhouseMatchHeader({
           {inhouseLobby.matchType} - {inhouseLobby.region}
         </p>
         <p className="mt-2 text-[30px] font-bold leading-none tracking-[-0.03em] text-[#111111]">
-          {inhouseLobby.status}
+          {statusLabel}
         </p>
         <p className="mt-2 text-[14px] font-semibold tracking-[0em] text-[#8f8f8f]">
           {mode === "leader" ? "Modo Líder" : "Modo Aleatório"}
@@ -322,6 +344,7 @@ function InhouseMatchHeader({
         leader={redLeader}
         align="right"
         side="red"
+        dimmed={losingSide === "red"}
       />
     </section>
   );
@@ -409,15 +432,17 @@ function InhouseWinnerCard({
 
   if (winner) {
     const winLabel = winner === "blue" ? blueLabel : redLabel;
-    const winColor = winner === "blue" ? "#3a87ff" : "#e84545";
+    const winGradient =
+      winner === "blue"
+        ? "from-[#0a4a8c] to-[#1a72d8]"
+        : "from-[#8b1a1a] to-[#d83333]";
     return (
       <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-5 text-center xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
         <p className="text-[11px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
           Resultado
         </p>
         <p
-          className="mt-1 text-[20px] font-bold tracking-[-0.03em]"
-          style={{ color: winColor }}
+          className={`mt-1 bg-gradient-to-r ${winGradient} bg-clip-text text-[20px] font-bold tracking-[-0.03em] text-transparent`}
         >
           {winLabel} venceu
         </p>
@@ -479,22 +504,36 @@ function WinnerPickerModal({
   onPick: (side: "blue" | "red") => void;
   onClose: () => void;
 }) {
+  // Padrão dos outros modais do app: estado interno `closing` toca a
+  // animação de saída e dispara onClose só quando ela termina.
+  const [closing, setClosing] = useState(false);
+  function requestClose() {
+    if (saving) return;
+    setClosing(true);
+  }
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && !saving) onClose();
+      if (e.key === "Escape") requestClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, saving]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saving]);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]"
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]`}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
-      <div className="relative mx-4 w-full max-w-[420px] rounded-[28px] bg-white p-6 shadow-[0_32px_80px_rgba(0,0,0,0.22)]">
+      <div
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative mx-4 w-full max-w-[420px] rounded-[28px] bg-white p-6 shadow-[0_32px_80px_rgba(0,0,0,0.22)]`}
+        onAnimationEnd={() => {
+          if (closing) onClose();
+        }}
+      >
         <p className="text-center text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
           Qual time venceu?
         </p>
@@ -521,7 +560,7 @@ function WinnerPickerModal({
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={requestClose}
           disabled={saving}
           className="mt-3 w-full text-center text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d] transition-colors hover:text-[#0f0f0f] disabled:opacity-50"
         >
@@ -537,18 +576,6 @@ function WinnerPickerModal({
   );
 }
 
-// Ordem dos tiers pra calcular ranking interno da Baderna.
-const RANK_TIER_ORDER: Record<string, number> = {
-  challenger: 9,
-  grandmaster: 8,
-  master: 7,
-  diamond: 6,
-  platinum: 5,
-  gold: 4,
-  silver: 3,
-  bronze: 2,
-  iron: 1,
-};
 
 export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
   const { updateInhouse } = useInhouses();
@@ -561,14 +588,12 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
     if (apiTeam) return apiTeam;
     return teamNames[leader.id] ?? `Time ${leader.nickname}`;
   }
-  // Mapa { player.id -> posição no ranking Baderna }
+  // Mapa { player.id -> posição no ranking Baderna }. Usa a ordem natural
+  // da API (mesma da página /ranking aba Baderna) — sem re-sort por tier.
   const badernaRankByMemberId = useMemo(() => {
-    const sorted = [...allMembersForRank].sort(
-      (a, b) =>
-        (RANK_TIER_ORDER[b.rankType] ?? 0) -
-        (RANK_TIER_ORDER[a.rankType] ?? 0),
+    return new Map<string, number>(
+      allMembersForRank.map((m, i) => [m.id, i + 1]),
     );
-    return new Map<string, number>(sorted.map((m, i) => [m.id, i + 1]));
   }, [allMembersForRank]);
   const hasPool = inhouse.players.some((p) => p.side === "pool");
   const isAssigning = inhouse.mode === "leader" && hasPool;
@@ -617,6 +642,11 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
     inhouse.players.find((p) => p.id === inhouse.redLeaderId) ?? redTeam[0];
   const blueLabel = blueLeader ? resolveTeamLabel(blueLeader) : "Time Azul";
   const redLabel = redLeader ? resolveTeamLabel(redLeader) : "Time Vermelho";
+  // Lado perdedor (oposto do vencedor) — dimmed visualmente na lista.
+  const losingSide: InhouseSide | null = inhouse.winner
+    ? inhouse.winner === "blue" ? "red" : "blue"
+    : null;
+  const statusLabel = inhouse.winner ? "Concluído" : inhouseLobby.status;
 
   function setPlayerSide(id: string, side: InhouseSide) {
     if (id === inhouse.blueLeaderId || id === inhouse.redLeaderId) return;
@@ -776,13 +806,18 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
 
       <div className="relative z-10 flex w-full flex-col gap-4 justify-center pt-[24px] xl:min-h-[860px] xl:pt-[62px]">
         <div className="hidden xl:block">
-          <InhouseMatchHeader blueLeader={blueLeader} redLeader={redLeader} mode={inhouse.mode} />
+          <InhouseMatchHeader
+            blueLeader={blueLeader}
+            redLeader={redLeader}
+            mode={inhouse.mode}
+            losingSide={losingSide}
+          />
         </div>
 
         <div className="mt-[20px] grid w-full items-start gap-6 xl:mt-[40px] xl:grid-cols-[minmax(0,0.84fr)_minmax(340px,0.7fr)_minmax(0,0.88fr)] xl:gap-5">
           <div
             data-drop-side={isAssigning ? "blue" : undefined}
-            className={`order-1 w-full max-w-[390px] space-y-4 xl:order-none xl:-ml-[4px] xl:space-y-7 ${
+            className={`order-1 w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] space-y-4 xl:order-none xl:-ml-[4px] xl:space-y-7 ${
               isAssigning && hoverSide === "blue"
                 ? "rounded-[24px] outline-2 outline-dashed outline-[#347dff]"
                 : ""
@@ -790,7 +825,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
           >
             {/* Mobile-only: header do time azul antes dos cards (centralizado) */}
             <div className="mb-[32px] flex justify-center xl:hidden">
-              <TeamHeader label={resolveTeamLabel(blueLeader)} leader={blueLeader} side="blue" align="center" hideAvatar />
+              <TeamHeader label={resolveTeamLabel(blueLeader)} leader={blueLeader} side="blue" align="center" hideAvatar dimmed={losingSide === "blue"} />
             </div>
             {isAssigning && blueSlots
               ? blueSlots.map((p, i) =>
@@ -816,6 +851,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
                     isLeader={player.id === inhouse.blueLeaderId}
                     specialist={inhouse.mode === "leader"}
                     badernaRank={badernaRankByMemberId.get(player.id)}
+                    dimmed={losingSide === "blue"}
                   />
                 ))}
           </div>
@@ -827,7 +863,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
             </span>
             <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
             <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
-              {inhouseLobby.status}
+              {statusLabel}
             </span>
             <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
             <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8f8f8f]">
@@ -879,7 +915,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
 
           <div
             data-drop-side={isAssigning ? "red" : undefined}
-            className={`order-3 w-full max-w-[390px] space-y-4 xl:order-none xl:ml-auto xl:space-y-7 xl:flex xl:flex-col xl:items-end ${
+            className={`order-3 w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] space-y-4 xl:order-none xl:ml-auto xl:space-y-7 xl:flex xl:flex-col xl:items-end ${
               isAssigning && hoverSide === "red"
                 ? "rounded-[24px] outline-2 outline-dashed outline-[#e84545]"
                 : ""
@@ -887,7 +923,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
           >
             {/* Mobile-only: header do time vermelho antes dos cards (centralizado) */}
             <div className="mb-[32px] flex justify-center xl:hidden">
-              <TeamHeader label={resolveTeamLabel(redLeader)} leader={redLeader} side="red" align="center" hideAvatar />
+              <TeamHeader label={resolveTeamLabel(redLeader)} leader={redLeader} side="red" align="center" hideAvatar dimmed={losingSide === "red"} />
             </div>
             {isAssigning && redSlots
               ? redSlots.map((p, i) =>
@@ -913,6 +949,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
                     isLeader={player.id === inhouse.redLeaderId}
                     specialist={inhouse.mode === "leader"}
                     badernaRank={badernaRankByMemberId.get(player.id)}
+                    dimmed={losingSide === "red"}
                   />
                 ))}
           </div>
@@ -996,7 +1033,11 @@ function InhouseListCard({
       )}
 
       {/* Blue team row */}
-      <TeamRow leader={blueLeader} team={blueTeam} />
+      <TeamRow
+        leader={blueLeader}
+        team={blueTeam}
+        dimmed={inhouse.winner === "red"}
+      />
 
       {/* Vs divider */}
       <div className="my-[12px] flex items-center gap-[10px]">
@@ -1008,7 +1049,11 @@ function InhouseListCard({
       </div>
 
       {/* Red team row */}
-      <TeamRow leader={redLeader} team={redTeam} />
+      <TeamRow
+        leader={redLeader}
+        team={redTeam}
+        dimmed={inhouse.winner === "blue"}
+      />
 
       {/* Meta footer */}
       <div className="mt-[14px] flex items-center justify-between border-t border-[#f1eeec] pt-[10px]">
@@ -1051,9 +1096,11 @@ function CaptainAvatar({ player }: { player: InhousePlayer }) {
 function TeamRow({
   leader,
   team,
+  dimmed = false,
 }: {
   leader: InhousePlayer;
   team: InhousePlayer[];
+  dimmed?: boolean;
 }) {
   const teamNames = useTeamNames();
   const allMembers = useBadernaMembers();
@@ -1062,7 +1109,11 @@ function TeamRow({
   const label =
     apiTeam || teamNames[leader.id] || `Time ${leader.nickname}`;
   return (
-    <div className="flex items-center gap-[14px]">
+    <div
+      className={`flex items-center gap-[14px] transition-opacity duration-300 ${
+        dimmed ? "opacity-50 grayscale" : ""
+      }`}
+    >
       <CaptainAvatar player={leader} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
@@ -1156,7 +1207,7 @@ function DraggablePlayerRow({
   return (
     <div
       onPointerDown={isLeader ? undefined : onPointerDown}
-      className={`group block w-full max-w-[390px] touch-none select-none ${
+      className={`group block w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] touch-none select-none ${
         isLeader ? "cursor-default" : "cursor-grab active:cursor-grabbing"
       }`}
     >
@@ -1175,7 +1226,7 @@ function DraggablePlayerRow({
                 </p>
                 {badernaRank ? (
                   <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                    #{String(badernaRank).padStart(2, "0")}
+                    #{badernaRank}
                   </span>
                 ) : null}
                 {isLeader ? (
@@ -1200,7 +1251,7 @@ function DraggablePlayerRow({
                 ) : null}
                 {badernaRank ? (
                   <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                    #{String(badernaRank).padStart(2, "0")}
+                    #{badernaRank}
                   </span>
                 ) : null}
                 <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
@@ -1240,7 +1291,7 @@ function DraggablePlayerRow({
 function EmptySlot({ side, index }: { side: "blue" | "red"; index: number }) {
   return (
     <div
-      className={`flex h-[76px] w-full max-w-[390px] items-center rounded-[22px] border-2 border-dashed border-[#d9d4d1] bg-white/40 px-[20px] text-[14px] font-semibold text-[#b0a8a4] ${
+      className={`flex h-[76px] w-full max-w-[390px] md:max-w-[640px] xl:max-w-[390px] items-center rounded-[22px] border-2 border-dashed border-[#d9d4d1] bg-white/40 px-[20px] text-[14px] font-semibold text-[#b0a8a4] ${
         side === "red" ? "xl:justify-end" : ""
       }`}
     >

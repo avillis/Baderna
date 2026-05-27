@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 import { PanelShell } from "@/features/panel/components/panel-shell";
 
 /* ─── Tipos & cores das tags ────────────────────────────────────────────── */
@@ -396,6 +400,19 @@ function formatDateLong(iso: string): string {
   });
 }
 
+function formatDateShort(iso: string): string {
+  // 2026-05-26 → "26 mai"
+  const d = new Date(iso + "T12:00:00");
+  return d
+    .toLocaleDateString("pt-BR", { day: "numeric", month: "short" })
+    .replace(".", "")
+    .replace(" de ", " ");
+}
+
+function sectionIdFor(date: string): string {
+  return `log-${date}`;
+}
+
 /* ─── Página ────────────────────────────────────────────────────────────── */
 export default function LogsPage() {
   // Agrupa por data preservando a ordem do array (já está do mais recente
@@ -405,55 +422,123 @@ export default function LogsPage() {
     if (!byDate.has(log.date)) byDate.set(log.date, []);
     byDate.get(log.date)!.push(log);
   }
+  const dates = Array.from(byDate.keys());
+
+  const [activeId, setActiveId] = useState<string>(
+    dates.length > 0 ? sectionIdFor(dates[0]) : "",
+  );
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActiveId(entry.target.id);
+        }
+      },
+      { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
+    );
+    Object.values(sectionRefs.current).forEach((el) => {
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  function scrollTo(id: string) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <PanelShell showBanner={false}>
-      <div className="mx-auto w-full max-w-[760px] px-4 py-6 sm:px-6 sm:py-10">
-        {/* Timeline */}
-        <div className="space-y-[40px]">
-          {Array.from(byDate.entries()).map(([date, entries]) => (
-            <section key={date}>
-              <h2 className="mb-[14px] flex items-baseline gap-[10px] text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                <span>{formatDateLong(date)}</span>
-                <span className="text-[12px] font-medium text-[#a4a4a4]">
-                  {entries.length}{" "}
-                  {entries.length === 1 ? "atualização" : "atualizações"}
-                </span>
-              </h2>
-              <ul className="space-y-[12px]">
-                {entries.map((log, i) => {
-                  const meta = TYPE_META[log.type];
+      <div className="pt-[1.5vh] sm:pt-[6vh]">
+        <div className="flex gap-[48px] xl:gap-[64px]">
+
+          {/* ── Left sticky nav ── */}
+          <aside className="hidden w-[160px] shrink-0 md:block">
+            <div className="sticky top-[60px]">
+              <p className="mb-[10px] text-[12px] font-bold tracking-[-0.02em] text-[#c9bfba]">
+                Atualizações
+              </p>
+              <nav className="flex flex-col gap-[2px]">
+                {dates.map((date) => {
+                  const id = sectionIdFor(date);
+                  const isActive = activeId === id;
                   return (
-                    <li
-                      key={`${date}-${i}`}
-                      className="flex flex-col gap-[10px] rounded-[14px] bg-white p-[16px] shadow-[0px_4px_24px_rgba(0,0,0,0.04)] sm:flex-row sm:items-start sm:gap-[14px]"
+                    <button
+                      key={date}
+                      type="button"
+                      onClick={() => scrollTo(id)}
+                      className={`rounded-[8px] px-[8px] py-[5px] text-left text-[13px] font-semibold tracking-[-0.02em] transition-colors ${
+                        isActive
+                          ? "bg-[#f5f0ee] text-[#0f0f0f]"
+                          : "text-[#b0a8a4] hover:text-[#0f0f0f]"
+                      }`}
                     >
-                      <span
-                        className={`inline-flex h-[22px] w-fit flex-shrink-0 items-center justify-center rounded-full px-[10px] text-[11px] font-bold tracking-[-0.01em] ${meta.bg} ${meta.text}`}
-                      >
-                        {meta.label}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[14px] font-semibold leading-[1.35] tracking-[-0.01em] text-[#0f0f0f] sm:text-[15px]">
-                          {log.title}
-                        </p>
-                        {log.description && (
-                          <p className="mt-[4px] text-[12px] leading-[1.5] text-[#7c7c7c] sm:text-[13px]">
-                            {log.description}
-                          </p>
-                        )}
-                      </div>
-                    </li>
+                      {formatDateShort(date)}
+                    </button>
                   );
                 })}
-              </ul>
-            </section>
-          ))}
-        </div>
+              </nav>
+            </div>
+          </aside>
 
-        <footer className="mt-[48px] text-center text-[12px] text-[#a4a4a4]">
-          {LOGS.length} atualizações registradas
-        </footer>
+          {/* ── Main content ── */}
+          <div className="min-w-0 flex-1">
+            <div className="space-y-[40px]">
+              {Array.from(byDate.entries()).map(([date, entries]) => (
+                <section
+                  key={date}
+                  id={sectionIdFor(date)}
+                  ref={(el) => {
+                    sectionRefs.current[sectionIdFor(date)] = el;
+                  }}
+                  className="scroll-mt-[80px]"
+                >
+                  <h2 className="mb-[14px] flex items-baseline gap-[10px] text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+                    <span>{formatDateLong(date)}</span>
+                    <span className="text-[12px] font-medium text-[#a4a4a4]">
+                      {entries.length}{" "}
+                      {entries.length === 1 ? "atualização" : "atualizações"}
+                    </span>
+                  </h2>
+                  <ul className="space-y-[12px]">
+                    {entries.map((log, i) => {
+                      const meta = TYPE_META[log.type];
+                      return (
+                        <li
+                          key={`${date}-${i}`}
+                          className="flex flex-col gap-[10px] rounded-[14px] bg-white p-[16px] shadow-[0px_4px_24px_rgba(0,0,0,0.04)] sm:flex-row sm:items-start sm:gap-[14px]"
+                        >
+                          <span
+                            className={`inline-flex h-[22px] w-fit flex-shrink-0 items-center justify-center rounded-full px-[10px] text-[11px] font-bold tracking-[-0.01em] ${meta.bg} ${meta.text}`}
+                          >
+                            {meta.label}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[14px] font-semibold leading-[1.35] tracking-[-0.01em] text-[#0f0f0f] sm:text-[15px]">
+                              {log.title}
+                            </p>
+                            {log.description && (
+                              <p className="mt-[4px] text-[12px] leading-[1.5] text-[#7c7c7c] sm:text-[13px]">
+                                {log.description}
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
+
+            <footer className="mt-[48px] pb-[40px] text-center text-[12px] text-[#a4a4a4]">
+              {LOGS.length} atualizações registradas
+            </footer>
+          </div>
+
+        </div>
       </div>
     </PanelShell>
   );
