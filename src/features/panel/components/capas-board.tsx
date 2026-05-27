@@ -78,13 +78,57 @@ const TITLE_RARITY_RANK: Record<TitleRarity, number> = {
 
 // Rarity colors mirror titles-data (limitado is excluded as requested).
 const RARITY_COLOR = {
-  lendaria: "#E8B53C",
-  exclusivo: "#EE89B3",
+  lendaria: "#FFD700",
+  exclusivo: "#8b0000",
   epico: "#1D49FF",
-  raro: "#0c8c8c",
+  raro: "#EE89B3",
   comum: "#4a4a4a",
 } as const;
 type BannerRarity = keyof typeof RARITY_COLOR;
+
+// Skins icônicas/ultra-raras que recebem raridade lendária automaticamente.
+const LEGENDARY_SPLASHES = new Set([
+  // Ultimate skins
+  "Lux_Elementalist.webp",
+  "Sona_DJ.webp",
+  "Sona_DJConcussive.webp",
+  "Sona_DJEthereal.webp",
+  "Sona_DJSkin_Concussive.webp",
+  "Sona_DJSkin_Ethereal.webp",
+  "Udyr_SpiritGuardOld.webp",
+  "Udyr_SpiritGuardPhoenixOld.webp",
+  "Udyr_SpiritGuardTigerOld.webp",
+  "Udyr_SpiritGuardTurtleOld.webp",
+  "Seraphine_KDAALLOUTSuperstar.webp",
+  // Pulsefire (skins lendárias icônicas)
+  "Ezreal_Pulsefire.webp",
+  "Ezreal_PulsefireUpgradedOld2.webp",
+  "Ekko_Pulsefire.webp",
+  "Riven_Pulsefire.webp",
+  "Lucian_Pulsefire.webp",
+  "Thresh_Pulsefire.webp",
+  // Immortalized Legend / Risen Legend
+  "Ahri_ImmortalizedLegend.webp",
+  "Ahri_RisenLegend.webp",
+  "LeBlanc_RisenLegend.webp",
+  "Fiddlesticks_Risen.webp",
+  "Fiddlesticks_RisenOld.webp",
+  // Victorious (recompensa exclusiva de fim de temporada)
+  "Aatrox_Victorious.webp",
+  "Elise_Victorious.webp",
+  "Graves_Victorious.webp",
+  "Janna_Victorious.webp",
+  "Jarvan_IV_Victorious.webp",
+  "Kog_Maw_Victorious.webp",
+  "Lucian_Victorious.webp",
+  "Maokai_Victorious.webp",
+  "Morgana_Victorious.webp",
+  "Morgana_VictoriousOld.webp",
+  "Orianna_Victorious.webp",
+  "Sivir_Victorious.webp",
+  "Sona_Victorious.webp",
+  "Tryndamere_Victorious.webp",
+]);
 
 function hashString(s: string): number {
   let h = 2166136261;
@@ -95,9 +139,10 @@ function hashString(s: string): number {
   return (h >>> 0) / 4294967295; // 0..1
 }
 
-// Deterministic rarity per banner. Original (base) splashes are always common;
-// skins get the weighted distribution: 5% exclusivo, 15% épico, 30% raro, 50% comum.
+// Deterministic rarity per banner. Legendary splashes checked first; then
+// originals are common; skins get the weighted distribution.
 function getBannerRarity(fileName: string): BannerRarity {
+  if (LEGENDARY_SPLASHES.has(fileName)) return "lendaria";
   if (/_Original\.(jpg|jpeg|png|webp)$/i.test(fileName)) return "comum";
   // Legacy "_0" splashes are also the base.
   if (/_0\.(jpg|jpeg|png|webp)$/i.test(fileName)) return "comum";
