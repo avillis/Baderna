@@ -13,7 +13,7 @@ import {
   type InhousePlayer,
   type InhouseSide,
 } from "@/features/panel/inhouse-data";
-import { badernaMembers, getMemberSlug } from "@/features/panel/members-data";
+import { badernaMembers } from "@/features/panel/members-data";
 import { panelProfile } from "@/features/panel/panel-data";
 import { useTeamNames } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
@@ -53,10 +53,12 @@ import {
 } from "@/features/panel/use-inhouses";
 
 function getPlayerHref(player: InhousePlayer): string | null {
+  // Convidados não têm perfil — `id` começa com "guest-".
   if (player.id.startsWith("guest-")) return null;
-  const member = badernaMembers.find((m) => m.id === player.id);
-  if (!member) return null;
-  return `/membro/${getMemberSlug(member)}`;
+  // player.id é a slug canônica do user (users.slug do DB), igual o que
+  // a página /membro/{slug} usa pra lookup. Antes íamos no badernaMembers
+  // estático que ficou vazio depois da migração pra API.
+  return `/membro/${player.id}`;
 }
 const laneIconByKey = {
   TOP: "/images/lanes/Top_icon.png",
