@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { X as XIcon } from "lucide-react";
-import { getMemberSlug } from "@/features/panel/members-data";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { AddMemberModal } from "@/features/panel/components/add-member-modal";
 import { EditMemberNamesModal } from "@/features/panel/components/edit-member-names-modal";
 import { EditMemberTitlesModal } from "@/features/panel/components/edit-member-titles-modal";
 import { ConfirmDeleteMemberModal } from "@/features/panel/components/confirm-delete-member-modal";
-import { useAccount } from "@/features/panel/use-account";
-import { authToken } from "@/features/panel/use-auth";
+import { authToken, useAuth } from "@/features/panel/use-auth";
 import { useToast } from "@/components/toast";
 import { useDeletedMembers } from "@/features/panel/use-deleted-members";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
@@ -84,16 +82,18 @@ function MemberAvatar({ src, alt }: { src: string; alt: string }) {
 
 export function MembersTable() {
   const allMembers = useBadernaMembers();
-  const { account } = useAccount();
-  const selfId = getMemberSlug({
-    nickname: account.gameNick.split("#")[0] || "",
-  });
+  const { user } = useAuth();
   const [roles, setRoles] = useState<RoleMap>({});
   const toast = useToast();
   // Viewer eh o dono? Usa pra liberar mexer em cargos. Admins normais
   // veem a tabela inteira mas o toggle de cargo fica disabled.
-  const selfMember = allMembers.find((m) => m.id === selfId);
+  // Match por userId (estável) — antes era por slug computado do nick, que
+  // quebrava pra quem customizou a slug em Minha Conta.
+  const selfMember = user
+    ? allMembers.find((m) => m.userId === user.id)
+    : undefined;
   const viewerIsOwner = !!selfMember?.isOwner;
+  const selfId = selfMember?.id ?? "";
 
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editingNamesMemberId, setEditingNamesMemberId] = useState<string | null>(null);

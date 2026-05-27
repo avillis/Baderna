@@ -26,10 +26,10 @@ export function useMemberActiveName(
   const accountNick = account.gameNick.split("#")[0] ?? "";
   const authNick = user?.summoner_name ?? "";
   const selfNick = accountNick || authNick;
-  // memberId vem como slug (lord-crisp), então comparamos contra o slug
-  // do próprio nick — não contra o nick raw (lord crisp), que falharia
-  // pra qualquer user com espaço/acento.
-  const selfSlug = selfNick ? getMemberSlug({ nickname: selfNick }) : "";
+  // Slug canônica do user logado é `account.slug` (users.slug do DB).
+  // Fallback pro slug derivado do nick só enquanto account não hidratou.
+  const selfSlug =
+    account.slug || (selfNick ? getMemberSlug({ nickname: selfNick }) : "");
   const selfUserId = user ? String(user.id) : "";
   const isSelf =
     memberId === selfUserId ||
