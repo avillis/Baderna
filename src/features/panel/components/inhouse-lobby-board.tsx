@@ -6,6 +6,8 @@ import { ChevronLeft, X } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { createPortal } from "react-dom";
+
 import {
   inhouseLobby,
   type InhousePlayer,
@@ -428,8 +430,10 @@ function InhouseWinnerCard({
 
   if (!canMark) return null;
 
-  if (!picking) {
-    return (
+  // Botão inline + modal portalizado pra não crescer o layout (e
+  // empurrar a sidebar). Modal só monta enquanto `picking`.
+  return (
+    <>
       <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-4 xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
         <button
           type="button"
@@ -439,49 +443,97 @@ function InhouseWinnerCard({
           Definir vencedor
         </button>
       </section>
-    );
-  }
+      {picking && typeof document !== "undefined"
+        ? createPortal(
+            <WinnerPickerModal
+              blueLabel={blueLabel}
+              redLabel={redLabel}
+              saving={saving}
+              error={error}
+              onPick={(side) => void confirm(side)}
+              onClose={() => {
+                if (saving) return;
+                setPicking(false);
+                setError(null);
+              }}
+            />,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
+
+function WinnerPickerModal({
+  blueLabel,
+  redLabel,
+  saving,
+  error,
+  onPick,
+  onClose,
+}: {
+  blueLabel: string;
+  redLabel: string;
+  saving: boolean;
+  error: string | null;
+  onPick: (side: "blue" | "red") => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !saving) onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, saving]);
 
   return (
-    <section className="mx-auto mt-4 w-full max-w-[380px] rounded-[26px] border border-[#f0e7e2] bg-white p-4 xl:shadow-[0_18px_60px_rgba(0,0,0,0.08)]">
-      <p className="text-center text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-        Qual time venceu?
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => void confirm("blue")}
-          disabled={saving}
-          className="flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#0a4a8c] to-[#1a72d8] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
-        >
-          {blueLabel}
-        </button>
-        <button
-          type="button"
-          onClick={() => void confirm("red")}
-          disabled={saving}
-          className="flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#8b1a1a] to-[#d83333] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
-        >
-          {redLabel}
-        </button>
-      </div>
-      <button
-        type="button"
-        onClick={() => {
-          setPicking(false);
-          setError(null);
-        }}
-        disabled={saving}
-        className="mt-2 w-full text-center text-[11px] font-semibold tracking-[-0.02em] text-[#8d8d8d] transition-colors hover:text-[#0f0f0f] disabled:opacity-50"
-      >
-        Cancelar
-      </button>
-      {error && (
-        <p className="mt-2 text-center text-[11px] font-medium text-red-500">
-          {error}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="relative mx-4 w-full max-w-[420px] rounded-[28px] bg-white p-6 shadow-[0_32px_80px_rgba(0,0,0,0.22)]">
+        <p className="text-center text-[15px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
+          Qual time venceu?
         </p>
-      )}
-    </section>
+        <p className="mt-1 text-center text-[12px] font-medium text-[#8d8d8d]">
+          Credita as moedas configuradas em Recompensas.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onPick("blue")}
+            disabled={saving}
+            className="flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#0a4a8c] to-[#1a72d8] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
+          >
+            {blueLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => onPick("red")}
+            disabled={saving}
+            className="flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#8b1a1a] to-[#d83333] text-[12px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-60"
+          >
+            {redLabel}
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={saving}
+          className="mt-3 w-full text-center text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d] transition-colors hover:text-[#0f0f0f] disabled:opacity-50"
+        >
+          Cancelar
+        </button>
+        {error && (
+          <p className="mt-2 text-center text-[11px] font-medium text-red-500">
+            {error}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
