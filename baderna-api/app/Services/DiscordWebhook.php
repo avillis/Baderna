@@ -377,25 +377,26 @@ class DiscordWebhook
      * criar uma nova mensagem a cada sync — se a mensagem for apagada
      * manualmente no Discord, na próxima chamada cria uma nova.
      */
+    /**
+     * Posta (ou edita in-place) as regras da Baderna no canal #regras via
+     * webhook. Mesma estratégia do RankingWebhook: ?wait=true no POST pra
+     * capturar o message_id, PATCH para edições seguintes, fallback pra POST
+     * novo se a mensagem tiver sido apagada manualmente.
+     */
     public static function syncRulesToChannel(): bool
     {
-        $token     = config('services.discord.bot_token');
-        $channelId = config('services.discord.rules_channel_id');
-        if (! $token || ! $channelId) return false;
+        $url = config('services.discord.rules_webhook');
+        if (! $url) return false;
 
         $body       = self::buildRulesBody();
         $settingKey = 'discord_rules_message_id';
         $existingId = AppSetting::get($settingKey);
-        $apiBase    = "https://discord.com/api/v10/channels/{$channelId}/messages";
-        $headers    = ['Authorization' => "Bot {$token}"];
 
         if ($existingId) {
             try {
                 $res = Http::timeout(self::TIMEOUT_SECONDS)
-                    ->withHeaders($headers)
-                    ->patch("{$apiBase}/{$existingId}", $body);
+                    ->patch("{$url}/messages/{$existingId}", $body);
                 if ($res->successful()) return true;
-                // Mensagem foi apagada manualmente → cria nova abaixo.
                 if ($res->status() === 404) {
                     AppSetting::where('key', $settingKey)->delete();
                 } else {
@@ -413,8 +414,7 @@ class DiscordWebhook
 
         try {
             $res = Http::timeout(self::TIMEOUT_SECONDS)
-                ->withHeaders($headers)
-                ->post($apiBase, $body);
+                ->post("{$url}?wait=true", $body);
             if (! $res->successful()) {
                 Log::warning('DiscordWebhook::syncRules POST failed', [
                     'status' => $res->status(),
