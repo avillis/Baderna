@@ -49,6 +49,9 @@ class User extends Authenticatable
         'duo_user_id',
         'birthday',
         'birthday_hidden',
+        'spotify_access_token',
+        'spotify_refresh_token',
+        'spotify_token_expires_at',
     ];
 
     // Campos NUNCA expostos em respostas JSON automáticas (`return $user`).
@@ -66,6 +69,9 @@ class User extends Authenticatable
         'approval_status',
         'created_at',
         'updated_at',
+        'spotify_access_token',
+        'spotify_refresh_token',
+        'spotify_token_expires_at',
     ];
 
     /**
@@ -87,6 +93,7 @@ class User extends Authenticatable
             'duo_user_id' => 'integer',
             'birthday' => 'date',
             'birthday_hidden' => 'boolean',
+            'spotify_token_expires_at' => 'datetime',
             'cached_rank_at' => 'datetime',
             'cached_rank_lp' => 'integer',
             'banner_focus_y' => 'integer',

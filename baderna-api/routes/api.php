@@ -25,6 +25,12 @@ use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\PostReactionsController;
 use App\Http\Controllers\Api\TitlesController;
 use App\Http\Controllers\Api\BirthdaysController;
+use App\Http\Controllers\Api\SpotifyController;
+
+// ── Spotify callback (sem auth — recupera user pelo state criptografado) ──
+Route::get('/spotify/callback', [SpotifyController::class, 'callback']);
+// Perfil Spotify público (qualquer logado pode ver o de qualquer membro)
+Route::middleware('auth:sanctum')->get('/spotify/user/{slug}', [SpotifyController::class, 'forUser']);
 
 // ── Públicas (auth) ────────────────────────────────────────────────────
 // Únicas rotas SEM auth: register e login (não tem como ter token antes).
@@ -57,6 +63,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/store-prices', [AppSettingsController::class, 'showStorePrices']);
     Route::get('/titles', [TitlesController::class, 'index']);
     Route::get('/birthdays', [BirthdaysController::class, 'index']);
+
+    // Spotify OAuth + dados
+    Route::get('/spotify/redirect', [SpotifyController::class, 'redirect']);
+    Route::delete('/spotify/disconnect', [SpotifyController::class, 'disconnect']);
+    Route::get('/spotify/me', [SpotifyController::class, 'me']);
 
     // Listagens da comunidade
     Route::get('/members', [MembersController::class, 'index']);

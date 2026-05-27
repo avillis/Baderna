@@ -35,6 +35,12 @@ return [
         ],
     ],
 
+    'spotify' => [
+        'client_id'     => env('SPOTIFY_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+        'redirect_uri'  => env('SPOTIFY_REDIRECT_URI', 'https://bdrn.com.br/api/spotify/callback'),
+    ],
+
     'discord' => [
         // Webhook do canal #-inhouse- pro bot "Baderna Inhouse" anunciar
         // quando alguém cria um lobby novo. No-op se vazio.
