@@ -75,7 +75,7 @@ export function AdminStorePricesCard() {
         <label className="mb-[6px] block text-[12px] font-semibold tracking-[-0.01em] text-[#7c7c7c]">
           {label}
         </label>
-        <div className="flex h-[44px] items-center gap-[6px] rounded-[12px] border border-[#e8e3de] bg-[#fafafa] px-[12px]">
+        <div className="flex items-center gap-[8px] rounded-full bg-[#ededed] px-6 py-4 focus-within:ring-2 focus-within:ring-[#ff4100]/20">
           <Image
             src="/images/coin/Coin_icon2.png"
             alt="moedas"
@@ -88,7 +88,7 @@ export function AdminStorePricesCard() {
             min={0}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-transparent text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-full border-none bg-transparent text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
       </div>

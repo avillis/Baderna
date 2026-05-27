@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 
 import { useToast } from "@/components/toast";
 import {
@@ -27,7 +27,7 @@ function Avatar({ src, alt }: { src: string | null; alt: string }) {
 }
 
 export function PendingApprovalsCard() {
-  const { members, loading, approve, reject } = usePendingMembers();
+  const { members, loading, approve, reject, remove } = usePendingMembers();
   const [acting, setActing] = useState<number | null>(null);
   const toast = useToast();
 
@@ -48,6 +48,21 @@ export function PendingApprovalsCard() {
         action === "approve" ? "Conta aprovada." : "Conta rejeitada.",
         "success",
       );
+    } finally {
+      setActing(null);
+    }
+  }
+
+  async function handleDelete(member: PendingMember) {
+    if (!window.confirm(`Excluir a conta de ${member.summonerName || member.nickname}? Essa ação não pode ser desfeita.`)) return;
+    setActing(member.userId);
+    try {
+      const ok = await remove(member.userId);
+      if (!ok) {
+        toast.show("Não foi possível excluir a conta.");
+        return;
+      }
+      toast.show("Conta excluída.", "success");
     } finally {
       setActing(null);
     }
@@ -131,7 +146,17 @@ export function PendingApprovalsCard() {
                     <Check className="h-[14px] w-[14px]" strokeWidth={2.6} />
                     Aprovar
                   </button>
-                  {!isRejected && (
+                  {isRejected ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleDelete(member)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#ededed] px-3 py-1.5 text-[12px] font-bold text-[#c53030] transition-colors hover:bg-[#fff0f0] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Trash2 className="h-[14px] w-[14px]" strokeWidth={2.6} />
+                      Excluir
+                    </button>
+                  ) : (
                     <button
                       type="button"
                       disabled={busy}

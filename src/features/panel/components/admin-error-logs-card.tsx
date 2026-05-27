@@ -218,6 +218,15 @@ export function AdminErrorLogsCard() {
         <div className="flex items-center gap-[8px]">
           <button
             type="button"
+            onClick={() => void handleClearAll()}
+            disabled={loading || logs.length === 0}
+            className="flex h-[36px] items-center gap-[6px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#c53030] transition-colors hover:bg-[#fff0f0] disabled:opacity-40"
+          >
+            <TrashIcon className="h-[14px] w-[14px]" />
+            Limpar
+          </button>
+          <button
+            type="button"
             onClick={refresh}
             disabled={loading}
             className="flex h-[36px] items-center gap-[6px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:opacity-60"
