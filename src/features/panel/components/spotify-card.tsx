@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useMySpotify, useMemberSpotify, type SpotifyTrack } from "@/features/panel/use-spotify";
+import { useToast } from "@/components/toast";
 
 // ── Shared track row ─────────────────────────────────────────────────────────
 function TrackRow({ track, index }: { track: SpotifyTrack; index: number }) {
@@ -54,20 +55,25 @@ function SpotifyLogo({ className = "h-[20px] w-[20px]" }: { className?: string }
 // ── Connect card (Minha Conta) ────────────────────────────────────────────────
 export function SpotifyConnectCard() {
   const { data, loading, connect, disconnect } = useMySpotify();
+  const toast = useToast();
 
   // Handle ?spotify=connected / ?spotify=error after OAuth redirect
-  const [toast, setToast] = useState<"connected" | "error" | null>(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const s = params.get("spotify");
+    if (s === "connected") {
+      toast.show("Spotify conectado com sucesso!", "success");
+    } else if (s === "error") {
+      toast.show("Erro ao conectar o Spotify. Tente novamente.");
+    }
     if (s === "connected" || s === "error") {
-      setToast(s);
       // Clean up URL without reload
       const url = new URL(window.location.href);
       url.searchParams.delete("spotify");
       window.history.replaceState({}, "", url.toString());
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const connected = !!data?.connected;
@@ -98,17 +104,6 @@ export function SpotifyConnectCard() {
           )
         )}
       </div>
-
-      {toast === "connected" && (
-        <p className="mt-[12px] text-[13px] font-semibold text-[#1DB954]">
-          Spotify conectado com sucesso! 🎵
-        </p>
-      )}
-      {toast === "error" && (
-        <p className="mt-[12px] text-[13px] font-semibold text-[#e05a00]">
-          Erro ao conectar o Spotify. Tente novamente.
-        </p>
-      )}
 
       {loading && (
         <div className="mt-[20px] flex justify-center">
