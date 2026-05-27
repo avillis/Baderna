@@ -53,7 +53,6 @@ class BirthdayWebhook
             })
             ->where('is_deleted', false)
             ->where('approval_status', 'approved')
-            ->orderByRaw('MONTH(birthday), DAY(birthday)')
             ->get(['display_name', 'summoner_name', 'birthday']);
 
         $body = self::buildBody($members);
@@ -132,29 +131,31 @@ class BirthdayWebhook
             return '*Nenhum aniversário cadastrado ainda.*';
         }
 
-        // Agrupa por mês
-        $byMonth = [];
-        foreach ($members as $member) {
-            $month = (int) $member->birthday->format('n');
-            $day   = $member->birthday->format('d');
-            $nick  = $member->display_name ?: $member->summoner_name;
-            $byMonth[$month][] = "🎂 **{$day}** — {$nick}";
+        $today   = now()->startOfDay();
+        $entries = [];
+
+        foreach ($members as $m) {
+            // Próxima ocorrência do aniversário a partir de hoje
+            $bd = $m->birthday->copy()->setYear($today->year);
+            if ($bd->lt($today)) $bd->addYear();
+
+            $daysUntil = (int) $today->diffInDays($bd);
+            $day   = $m->birthday->format('d');
+            $month = $m->birthday->format('m');
+            $nick  = $m->summoner_name ?: $m->display_name;
+
+            if ($daysUntil === 0)     $when = '🎉 **HOJE!**';
+            elseif ($daysUntil === 1) $when = 'amanhã';
+            else                      $when = "em {$daysUntil} dias";
+
+            $entries[] = [
+                'days' => $daysUntil,
+                'line' => "🎂 **{$day}/{$month}** — {$nick} · {$when}",
+            ];
         }
 
-        $lines = [];
-        foreach ($byMonth as $month => $entries) {
-            $lines[] = '**' . self::MONTH_PT[$month] . '**';
-            foreach ($entries as $entry) {
-                $lines[] = $entry;
-            }
-            $lines[] = '';
-        }
+        usort($entries, fn ($a, $b) => $a['days'] - $b['days']);
 
-        // Remove trailing blank line
-        if (! empty($lines) && end($lines) === '') {
-            array_pop($lines);
-        }
-
-        return implode("\n", $lines);
+        return implode("\n", array_column($entries, 'line'));
     }
 }
