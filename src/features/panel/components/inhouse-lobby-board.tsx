@@ -1004,6 +1004,8 @@ function InhouseListCard({
   inhouse: Inhouse;
   onRemove: () => void;
 }) {
+  const { user } = useAuth();
+  const isAdmin = !!user?.is_admin;
   const blueTeam = inhouse.players.filter((p) => p.side === "blue");
   const redTeam = inhouse.players.filter((p) => p.side === "red");
   const blueLeader =
@@ -1016,7 +1018,7 @@ function InhouseListCard({
       href={`/inhouse/${inhouse.shortCode ?? matchIdFromInhouseId(inhouse.id)}`}
       className="group relative flex w-full flex-col rounded-[var(--panel-radius-card)] bg-white px-[20px] py-[18px] text-left shadow-[0_16px_38px_rgba(0,0,0,0.06)] transition-opacity hover:opacity-85"
     >
-      {panelProfile.isAdmin && (
+      {isAdmin && (
         <span
           role="button"
           aria-label="Excluir inhouse"

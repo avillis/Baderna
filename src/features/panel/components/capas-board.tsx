@@ -835,7 +835,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
       <div className="flex flex-col items-center pt-[28px]">
       {/* Roulette — extends edge-to-edge of the viewport on xl. The indicator
           stays aligned with the main column center (where the action button is). */}
-      <section className="relative z-0 -mx-[16px] w-[calc(100%+32px)] overflow-hidden sm:-mx-[24px] sm:w-[calc(100%+48px)] xl:-mx-[45px] xl:w-[calc(100%+90px)]">
+      <section className="relative z-0 -mx-[16px] w-[calc(100%+32px)] overflow-hidden sm:-mx-[24px] sm:w-[calc(100%+48px)] xl:mx-0 xl:-mr-[45px] xl:w-[calc(100%+45px)]">
         <div className="relative h-[150px] overflow-hidden sm:h-[240px]">
           <div
             ref={stripRef}
@@ -939,7 +939,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
 
           {/* Indicator wrapper — pinned to the main column area so its centre
               equals the action button's centre below. */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 right-0 xl:left-[45px] xl:right-[45px]">
+          <div className="pointer-events-none absolute inset-y-0 left-0 right-0 xl:right-[45px]">
             <div
               ref={indicatorRef}
               className="absolute left-1/2 top-0 z-10 h-full w-[2px] -translate-x-1/2 bg-[#ff4100]"
