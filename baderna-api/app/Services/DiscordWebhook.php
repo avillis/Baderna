@@ -471,7 +471,8 @@ class DiscordWebhook
                 'description' => $description,
                 'color'       => self::BRAND_COLOR,
                 'url'         => "{$siteBase}/regras",
-                'footer'      => ['text' => 'bdrn.com.br/regras'],
+                'footer'      => ['text' => 'bdrn.com.br/regras · última sync'],
+                'timestamp'   => now()->toIso8601String(),
             ]],
         ];
     }
