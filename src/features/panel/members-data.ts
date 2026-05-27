@@ -28,7 +28,13 @@ export type BadernaMember = {
 // Membros virão da API. Lista vazia enquanto a migração pro Laravel rola.
 export const badernaMembers: BadernaMember[] = [];
 
-export function getMemberSlug(member: Pick<BadernaMember, "nickname">) {
+export function getMemberSlug(
+  member: Pick<BadernaMember, "nickname"> & Partial<Pick<BadernaMember, "id">>,
+) {
+  // Prefere a slug canônica do backend (users.slug). Só cai no derivado-de-
+  // nickname quando o caller não tem o member completo (input livre de
+  // busca, etc).
+  if (member.id) return member.id;
   const slug = member.nickname
     .toLowerCase()
     .normalize("NFD")

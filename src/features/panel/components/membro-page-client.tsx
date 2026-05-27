@@ -104,15 +104,14 @@ function findMemberInList(
   list: ApiMember[],
   slug: string,
 ): { member: ApiMember | null; rank: number } {
+  // Match exclusivamente pelo slug canônico (users.slug). Sem fallback por
+  // summonerName/userId — assim slugs customizados não colidem com nicks
+  // alheios e URL antiga sem slug correspondente 404 conscientemente.
   const lowerSlug = slug.toLowerCase();
   const normSlug = normalizeSlug(slug);
-  const index = list.findIndex((m) => {
-    if (m.id === lowerSlug || m.id === normSlug) return true;
-    const summ = m.summonerName?.toLowerCase() ?? "";
-    if (summ === lowerSlug || normalizeSlug(summ) === normSlug) return true;
-    if (String(m.userId) === slug) return true;
-    return false;
-  });
+  const index = list.findIndex(
+    (m) => m.id === lowerSlug || m.id === normSlug,
+  );
   return {
     member: index === -1 ? null : list[index],
     rank: index === -1 ? 0 : index + 1,

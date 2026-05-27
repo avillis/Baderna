@@ -30,8 +30,17 @@ class AccountController extends Controller
      */
     public function update(Request $request, RiotAPIServices $riot)
     {
+        $user = $request->user();
         $data = $request->validate([
             'display_name'       => 'sometimes|nullable|string|max:80',
+            'slug'               => [
+                'sometimes',
+                'string',
+                'min:3',
+                'max:30',
+                'regex:/^[a-z0-9][a-z0-9-]*[a-z0-9]$/',
+                'unique:users,slug,' . $user->id,
+            ],
             'bio'                => 'sometimes|nullable|string|max:300',
             'team_name'          => 'sometimes|nullable|string|max:80',
             'avatar_src'         => 'sometimes|nullable|string|max:255',
@@ -56,7 +65,6 @@ class AccountController extends Controller
             'duo_user_id'        => 'sometimes|nullable|integer|exists:users,id',
         ]);
 
-        $user = $request->user();
         $changedRiotId =
             (isset($data['summoner_name']) && $data['summoner_name'] !== $user->summoner_name) ||
             (isset($data['tagLine']) && $data['tagLine'] !== $user->tagLine);
@@ -143,6 +151,7 @@ class AccountController extends Controller
 
         return [
             'id'                 => $user->id,
+            'slug'               => $user->slug,
             'name'               => $user->display_name ?: $user->name,
             'gameNick'           => $gameNick,
             'bio'                => $user->bio ?? '',
