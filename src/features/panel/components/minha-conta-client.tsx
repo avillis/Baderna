@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Eye, EyeOff, X } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, X } from "lucide-react";
 
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
@@ -264,10 +264,8 @@ function BasicInfoCard({
             <BirthdayField
               value={account.birthday ?? null}
               hidden={account.birthdayHidden ?? false}
-              onCommit={(date, hidden) => {
-                updateField("birthday", date);
-                updateField("birthdayHidden", hidden);
-              }}
+              onCommitDate={(date) => updateField("birthday", date)}
+              onCommitHidden={(h) => updateField("birthdayHidden", h)}
             />
           </div>
           <PasswordFields />
@@ -362,17 +360,20 @@ const MONTHS_PT = [
 function BirthdayField({
   value,
   hidden,
-  onCommit,
+  onCommitDate,
+  onCommitHidden,
 }: {
   value: string | null;
   hidden: boolean;
-  onCommit: (date: string | null, hidden: boolean) => void;
+  onCommitDate: (date: string | null) => void;
+  onCommitHidden: (hidden: boolean) => void;
 }) {
   const parsed = value ? new Date(value + "T00:00:00") : null;
   const [day, setDay] = useState(parsed ? String(parsed.getDate()) : "");
   const [month, setMonth] = useState(parsed ? String(parsed.getMonth() + 1) : "");
   const [year, setYear] = useState(parsed ? String(parsed.getFullYear()) : "");
   const [hiddenLocal, setHiddenLocal] = useState(hidden);
+  const [monthOpen, setMonthOpen] = useState(false);
 
   useEffect(() => {
     const p = value ? new Date(value + "T00:00:00") : null;
@@ -382,16 +383,13 @@ function BirthdayField({
   }, [value]);
   useEffect(() => { setHiddenLocal(hidden); }, [hidden]);
 
-  function commit(d = day, m = month, y = year, h = hiddenLocal) {
+  function commitDate(d = day, m = month, y = year) {
     const di = parseInt(d, 10);
     const mi = parseInt(m, 10);
     const yi = parseInt(y, 10);
-    if (!di || !mi || !yi || yi < 1900 || yi > new Date().getFullYear()) {
-      onCommit(null, h);
-      return;
-    }
+    if (!di || !mi || !yi || yi < 1900 || yi > new Date().getFullYear()) return;
     const padded = `${yi}-${String(mi).padStart(2, "0")}-${String(di).padStart(2, "0")}`;
-    onCommit(padded, h);
+    onCommitDate(padded);
   }
 
   const inputBase =
@@ -410,19 +408,30 @@ function BirthdayField({
           placeholder="Dia"
           value={day}
           onChange={(e) => setDay(e.target.value)}
-          onBlur={() => commit()}
+          onBlur={() => commitDate()}
           className={`${inputBase} w-[90px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
         />
-        <select
-          value={month}
-          onChange={(e) => { setMonth(e.target.value); commit(day, e.target.value, year); }}
-          className={`${inputBase} flex-1 min-w-[130px]`}
-        >
-          <option value="">Mês</option>
-          {MONTHS_PT.map((name, i) => (
-            <option key={i + 1} value={String(i + 1)}>{name}</option>
-          ))}
-        </select>
+        {/* Select com seta customizada animada */}
+        <div className="relative flex-1 min-w-[130px]">
+          <select
+            value={month}
+            onChange={(e) => { setMonth(e.target.value); commitDate(day, e.target.value, year); }}
+            onFocus={() => setMonthOpen(true)}
+            onBlur={() => setMonthOpen(false)}
+            className={`${inputBase} w-full appearance-none pr-10`}
+          >
+            <option value="">Mês</option>
+            {MONTHS_PT.map((name, i) => (
+              <option key={i + 1} value={String(i + 1)}>{name}</option>
+            ))}
+          </select>
+          <ChevronDown
+            className={`pointer-events-none absolute right-4 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-[#8d8d8d] transition-transform duration-200 ${
+              monthOpen ? "rotate-180" : "rotate-0"
+            }`}
+            strokeWidth={2.2}
+          />
+        </div>
         <input
           type="number"
           min={1900}
@@ -430,7 +439,7 @@ function BirthdayField({
           placeholder="Ano"
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          onBlur={() => commit()}
+          onBlur={() => commitDate()}
           className={`${inputBase} w-[110px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
         />
       </div>
@@ -441,7 +450,7 @@ function BirthdayField({
           onClick={() => {
             const next = !hiddenLocal;
             setHiddenLocal(next);
-            commit(day, month, year, next);
+            onCommitHidden(next);
           }}
           className={`relative h-[20px] w-[36px] shrink-0 cursor-pointer rounded-full transition-colors ${
             hiddenLocal ? "bg-[#ff4100]" : "bg-[#d4d4d4]"
