@@ -8,74 +8,103 @@ import { useToast } from "@/components/toast";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
+function DiscordIcon() {
+  return (
+    <svg
+      viewBox="0 0 127.14 96.36"
+      className="h-[20px] w-[20px] shrink-0 fill-[#5865F2]"
+    >
+      <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z" />
+    </svg>
+  );
+}
+
+async function postSync(endpoint: string, token: string) {
+  return fetch(`${API_BASE}/admin/${endpoint}`, {
+    method: "POST",
+    headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+  });
+}
+
 export function AdminDiscordRulesCard() {
-  const [syncing, setSyncing] = useState(false);
+  const [syncingRules, setSyncingRules] = useState(false);
+  const [syncingRanking, setSyncingRanking] = useState(false);
   const toast = useToast();
 
-  async function handleSync() {
-    if (syncing) return;
-    setSyncing(true);
+  async function handleSyncRules() {
+    if (syncingRules) return;
+    setSyncingRules(true);
     try {
       const token = authToken();
       if (!token) { toast.show("Sem autenticação."); return; }
-
-      const res = await fetch(`${API_BASE}/admin/sync-rules-discord`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await postSync("sync-rules-discord", token);
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.show(err.error ?? "Erro ao sincronizar.");
-        return;
+        toast.show(err.error ?? "Erro ao sincronizar."); return;
       }
-
       toast.show("Regras sincronizadas no Discord!", "success");
-    } catch {
-      toast.show("Erro de conexão.");
-    } finally {
-      setSyncing(false);
-    }
+    } catch { toast.show("Erro de conexão."); }
+    finally { setSyncingRules(false); }
+  }
+
+  async function handleSyncRanking() {
+    if (syncingRanking) return;
+    setSyncingRanking(true);
+    try {
+      const token = authToken();
+      if (!token) { toast.show("Sem autenticação."); return; }
+      const res = await postSync("sync-ranking-discord", token);
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.show(err.error ?? "Erro ao sincronizar."); return;
+      }
+      toast.show("Ranking sincronizado no Discord!", "success");
+    } catch { toast.show("Erro de conexão."); }
+    finally { setSyncingRanking(false); }
   }
 
   return (
     <aside className="rounded-[var(--panel-radius-card)] bg-white p-6 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-      <div className="mb-4 flex items-center gap-2">
-        {/* ícone Discord */}
-        <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0 fill-[#5865F2]">
-          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.03.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
-        </svg>
+      <div className="mb-4 flex items-center gap-[10px]">
+        <DiscordIcon />
         <h2 className="text-[18px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
           Discord
         </h2>
       </div>
 
-      <p className="mb-4 text-[12px] leading-[1.5] text-[#9a9a9a]">
-        Posta (ou edita) as regras da Baderna no canal{" "}
-        <span className="font-semibold text-[#5865F2]">#regras</span> do Discord.
-        Clique sempre que atualizar as regras no site.
-      </p>
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => void handleSyncRules()}
+          disabled={syncingRules}
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#5865F2] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {syncingRules ? (
+            <>
+              <svg className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white" viewBox="25 25 50 50">
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+              Sincronizando...
+            </>
+          ) : "Sincronizar #regras"}
+        </button>
 
-      <button
-        type="button"
-        onClick={() => void handleSync()}
-        disabled={syncing}
-        className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#5865F2] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {syncing ? (
-          <>
-            <svg className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white" viewBox="25 25 50 50">
-              <circle r="20" cy="50" cx="50" />
-            </svg>
-            Sincronizando...
-          </>
-        ) : (
-          "Sincronizar #regras"
-        )}
-      </button>
+        <button
+          type="button"
+          onClick={() => void handleSyncRanking()}
+          disabled={syncingRanking}
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#5865F2] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {syncingRanking ? (
+            <>
+              <svg className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white" viewBox="25 25 50 50">
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+              Sincronizando...
+            </>
+          ) : "Sincronizar #rank-baderna"}
+        </button>
+      </div>
     </aside>
   );
 }

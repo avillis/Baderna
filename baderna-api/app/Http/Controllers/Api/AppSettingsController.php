@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Services\DiscordWebhook;
+use App\Services\RankingWebhook;
 use Illuminate\Http\Request;
 
 class AppSettingsController extends Controller
@@ -96,6 +97,15 @@ class AppSettingsController extends Controller
         $ok = DiscordWebhook::syncRulesToChannel();
         if (! $ok) {
             return response()->json(['error' => 'Falha ao sincronizar. Verifique DISCORD_BOT_TOKEN e DISCORD_RULES_CHANNEL_ID.'], 500);
+        }
+        return response()->json(['ok' => true]);
+    }
+
+    public function syncRankingDiscord()
+    {
+        $ok = RankingWebhook::postOrUpdate();
+        if (! $ok) {
+            return response()->json(['error' => 'Falha ao sincronizar o ranking.'], 500);
         }
         return response()->json(['ok' => true]);
     }
