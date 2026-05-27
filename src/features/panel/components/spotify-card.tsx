@@ -167,7 +167,7 @@ export function SpotifyProfileModule({ slug }: { slug: string }) {
       </div>
       {data.topTracks.length > 0 && (
         <div className="mb-[12px]">
-          <SectionHeading>Mais ouvidas</SectionHeading>
+          <SectionHeading>Mais ouvidas (último mês)</SectionHeading>
           {data.topTracks.map((t, i) => <TrackRow key={t.id} track={t} index={i} />)}
         </div>
       )}
