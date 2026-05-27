@@ -221,4 +221,117 @@ class DiscordWebhook
             ]);
         }
     }
+
+    /**
+     * Manda anúncio no #inhouse quando o vencedor é definido. Mesmo padrão
+     * de notifyInhouseCreated — defensivo, log-only em erro.
+     *
+     * $winnerSide: 'blue' | 'red'
+     * $winAmount/$lossAmount: moedas creditadas (pra mostrar no embed)
+     */
+    public static function notifyInhouseWinner(
+        Inhouse $inhouse,
+        string $winnerSide,
+        int $winAmount,
+        int $lossAmount,
+    ): void {
+        $url = config('services.discord.inhouse_webhook');
+        if (! $url) {
+            return;
+        }
+
+        $payload  = is_array($inhouse->payload) ? $inhouse->payload : [];
+        $players  = is_array($payload['players'] ?? null) ? $payload['players'] : [];
+
+        $playerById = [];
+        foreach ($players as $p) {
+            if (is_array($p) && isset($p['id'])) {
+                $playerById[$p['id']] = $p;
+            }
+        }
+        $allSlugs = array_keys($playerById);
+
+        $slugToNickname = [];
+        $slugToTeamName = [];
+        if (! empty($allSlugs)) {
+            $users = User::select('id', 'summoner_name', 'display_name', 'name', 'team_name')->get();
+            foreach ($users as $u) {
+                $slug = Str::slug((string) ($u->summoner_name ?? ''));
+                if ($slug !== '' && in_array($slug, $allSlugs, true)) {
+                    $slugToNickname[$slug] = $u->summoner_name
+                        ?: ($u->display_name ?: $u->name);
+                    if (! empty($u->team_name)) {
+                        $slugToTeamName[$slug] = $u->team_name;
+                    }
+                }
+            }
+        }
+        $resolveNick = function (array $p) use ($slugToNickname): string {
+            $id = $p['id'] ?? null;
+            return $slugToNickname[$id] ?? ($p['nickname'] ?? '?');
+        };
+        $resolveTeamName = function (?array $leader) use ($slugToTeamName): ?string {
+            if (! $leader) return null;
+            $id = $leader['id'] ?? null;
+            return $id ? ($slugToTeamName[$id] ?? null) : null;
+        };
+
+        $blueLeader = $playerById[$payload['blueLeaderId'] ?? ''] ?? null;
+        $redLeader  = $playerById[$payload['redLeaderId'] ?? ''] ?? null;
+
+        $teamLabel = function (?array $leader, string $defaultLabel) use ($resolveNick, $resolveTeamName): string {
+            $leaderNick = $leader ? $resolveNick($leader) : null;
+            $customName = $resolveTeamName($leader);
+            return $customName
+                ?: ($leaderNick ? "Time {$leaderNick}" : "Time {$defaultLabel}");
+        };
+        $blueName = $teamLabel($blueLeader, 'Azul');
+        $redName  = $teamLabel($redLeader, 'Vermelho');
+
+        $isBlueWin = $winnerSide === 'blue';
+        $winnerName = $isBlueWin ? $blueName : $redName;
+        $loserName  = $isBlueWin ? $redName : $blueName;
+        $winnerEmoji = $isBlueWin ? '🔵' : '🔴';
+        $loserEmoji  = $isBlueWin ? '🔴' : '🔵';
+
+        $siteBase  = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
+        $inhouseUrl = "{$siteBase}/inhouse/{$inhouse->short_code}";
+
+        $description =
+            "{$winnerEmoji} **{$winnerName}** venceu!\n\n"
+            . "{$loserEmoji} _{$loserName}_\n\n"
+            . "💰 +{$winAmount} moedas pro time vencedor · +{$lossAmount} pro outro";
+
+        $body = [
+            'username'   => 'Baderna Inhouse',
+            'avatar_url' => "{$siteBase}/logo.svg",
+            'content'    => "🏆 **Resultado do inhouse!**",
+            'embeds'     => [[
+                'title'       => '🏆 Vencedor definido!',
+                'description' => $description,
+                'url'         => $inhouseUrl,
+                'color'       => self::BRAND_COLOR,
+                'fields' => [
+                    [
+                        'name'   => '🔑 Código',
+                        'value'  => "`{$inhouse->short_code}`",
+                        'inline' => true,
+                    ],
+                ],
+                'footer' => [
+                    'text' => 'bdrn.com.br · clique no título pra ver o lobby',
+                ],
+                'timestamp' => now()->toIso8601String(),
+            ]],
+        ];
+
+        try {
+            Http::timeout(self::TIMEOUT_SECONDS)->post($url, $body);
+        } catch (Throwable $e) {
+            Log::warning('DiscordWebhook::notifyInhouseWinner failed', [
+                'error' => $e->getMessage(),
+                'inhouse_id' => $inhouse->id,
+            ]);
+        }
+    }
 }
