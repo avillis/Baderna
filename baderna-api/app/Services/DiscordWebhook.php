@@ -454,7 +454,7 @@ class DiscordWebhook
         ];
 
         $lines = array_map(
-            fn($r) => "**{$r['n']}.** **{$r['s']}** — {$r['f']}",
+            fn($r) => "**{$r['n']}.** {$r['f']}",
             $rules
         );
         $description = implode("\n", $lines);
