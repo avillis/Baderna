@@ -1,0 +1,166 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\AppSetting;
+use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
+/**
+ * Posta (e atualiza) a lista de aniversários da Baderna no Discord.
+ *
+ * Strategy: na primeira chamada, faz POST com ?wait=true pra receber o
+ * message_id de volta. Guarda em app_settings. Nas próximas chamadas, faz
+ * PATCH no mesmo message_id — mensagem se atualiza no lugar, sem encher
+ * o canal de spam.
+ *
+ * Se o message_id ficar inválido (canal limpo, msg apagada manualmente),
+ * a próxima chamada cai pra POST novo automaticamente.
+ */
+class BirthdayWebhook
+{
+    private const BRAND_COLOR     = 0xFF4100;
+    private const TIMEOUT_SECONDS = 5;
+    private const SETTING_KEY     = 'discord_birthdays_bot_message_id';
+
+    private const MONTH_PT = [
+        1  => 'Janeiro',
+        2  => 'Fevereiro',
+        3  => 'Março',
+        4  => 'Abril',
+        5  => 'Maio',
+        6  => 'Junho',
+        7  => 'Julho',
+        8  => 'Agosto',
+        9  => 'Setembro',
+        10 => 'Outubro',
+        11 => 'Novembro',
+        12 => 'Dezembro',
+    ];
+
+    public static function postOrUpdate(): bool
+    {
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.birthdays_channel_id');
+
+        if (! $token || ! $channelId) {
+            return false;
+        }
+
+        $members = User::whereNotNull('birthday')
+            ->where('birthday_hidden', false)
+            ->where('is_deleted', false)
+            ->whereIn('approval_status', ['approved'])
+            ->orderByRaw('MONTH(birthday), DAY(birthday)')
+            ->get(['display_name', 'summoner_name', 'birthday']);
+
+        $body    = self::buildBody($members);
+        $apiBase = "https://discord.com/api/v10/channels/{$channelId}/messages";
+        $headers = ['Authorization' => "Bot {$token}"];
+
+        $existingId = AppSetting::get(self::SETTING_KEY);
+
+        if ($existingId) {
+            try {
+                $res = Http::timeout(self::TIMEOUT_SECONDS)
+                    ->withHeaders($headers)
+                    ->patch("{$apiBase}/{$existingId}", $body);
+
+                if ($res->successful()) {
+                    return true;
+                }
+
+                if ($res->status() === 404) {
+                    // Mensagem foi deletada — vai criar uma nova abaixo
+                    AppSetting::where('key', self::SETTING_KEY)->delete();
+                } else {
+                    Log::warning('BirthdayWebhook PATCH failed', [
+                        'status' => $res->status(),
+                        'body'   => $res->body(),
+                    ]);
+                    return false;
+                }
+            } catch (Throwable $e) {
+                Log::warning('BirthdayWebhook PATCH exception', ['err' => $e->getMessage()]);
+                return false;
+            }
+        }
+
+        // POST novo
+        try {
+            $res = Http::timeout(self::TIMEOUT_SECONDS)
+                ->withHeaders($headers)
+                ->post("{$apiBase}?wait=true", $body);
+
+            if (! $res->successful()) {
+                Log::warning('BirthdayWebhook POST failed', [
+                    'status' => $res->status(),
+                    'body'   => $res->body(),
+                ]);
+                return false;
+            }
+
+            $data = $res->json();
+            if (! empty($data['id'])) {
+                AppSetting::put(self::SETTING_KEY, $data['id']);
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            Log::warning('BirthdayWebhook POST exception', ['err' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    private static function buildBody($members): array
+    {
+        $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
+
+        $description = self::formatList($members);
+
+        return [
+            'embeds' => [[
+                'title'       => '🎂 Aniversários da Baderna',
+                'description' => $description,
+                'color'       => self::BRAND_COLOR,
+                'url'         => "{$siteBase}/members",
+                'footer'      => ['text' => 'Atualizado via bdrn.com.br'],
+                'timestamp'   => now()->toIso8601String(),
+            ]],
+        ];
+    }
+
+    private static function formatList($members): string
+    {
+        if ($members->isEmpty()) {
+            return '*Nenhum aniversário cadastrado ainda.*';
+        }
+
+        // Agrupa por mês
+        $byMonth = [];
+        foreach ($members as $member) {
+            $month = (int) $member->birthday->format('n');
+            $day   = $member->birthday->format('d');
+            $nick  = $member->display_name ?: $member->summoner_name;
+            $byMonth[$month][] = "🎂 **{$day}** — {$nick}";
+        }
+
+        $lines = [];
+        foreach ($byMonth as $month => $entries) {
+            $lines[] = '**' . self::MONTH_PT[$month] . '**';
+            foreach ($entries as $entry) {
+                $lines[] = $entry;
+            }
+            $lines[] = '';
+        }
+
+        // Remove trailing blank line
+        if (end($lines) === '') {
+            array_pop($lines);
+        }
+
+        return implode("\n", $lines);
+    }
+}

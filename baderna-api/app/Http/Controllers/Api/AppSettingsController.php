@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
+use App\Services\BirthdayWebhook;
 use App\Services\DiscordWebhook;
 use App\Services\RankingWebhook;
 use Illuminate\Http\Request;
@@ -130,6 +131,15 @@ class AppSettingsController extends Controller
         $ok = RankingWebhook::postOrUpdate();
         if (! $ok) {
             return response()->json(['error' => 'Falha ao sincronizar o ranking.'], 500);
+        }
+        return response()->json(['ok' => true]);
+    }
+
+    public function syncBirthdaysDiscord()
+    {
+        $ok = BirthdayWebhook::postOrUpdate();
+        if (! $ok) {
+            return response()->json(['error' => 'Falha ao sincronizar aniversários. Verifique DISCORD_BOT_TOKEN e DISCORD_BIRTHDAYS_CHANNEL_ID.'], 500);
         }
         return response()->json(['ok' => true]);
     }

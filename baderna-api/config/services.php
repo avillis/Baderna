@@ -56,8 +56,9 @@ return [
         'bot_token'        => env('DISCORD_BOT_TOKEN'),
         'blue_channel_id'  => env('DISCORD_BLUE_CHANNEL_ID'),
         'red_channel_id'   => env('DISCORD_RED_CHANNEL_ID'),
-        'rules_channel_id'  => env('DISCORD_RULES_CHANNEL_ID'),
-        'rules_webhook'     => env('DISCORD_RULES_WEBHOOK_URL'),
+        'rules_channel_id'      => env('DISCORD_RULES_CHANNEL_ID'),
+        'rules_webhook'         => env('DISCORD_RULES_WEBHOOK_URL'),
+        'birthdays_channel_id'  => env('DISCORD_BIRTHDAYS_CHANNEL_ID'),
     ],
 
 ];

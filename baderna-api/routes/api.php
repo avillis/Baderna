@@ -156,6 +156,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/store-prices', [AppSettingsController::class, 'updateStorePrices']);
         Route::post('/sync-rules-discord', [AppSettingsController::class, 'syncRulesDiscord']);
         Route::post('/sync-ranking-discord', [AppSettingsController::class, 'syncRankingDiscord']);
+        Route::post('/sync-birthdays-discord', [AppSettingsController::class, 'syncBirthdaysDiscord']);
         Route::post('/titles', [TitlesController::class, 'store']);
         Route::delete('/titles/{slug}', [TitlesController::class, 'destroy']);
         Route::get('/member-coins', [MemberCoinsController::class, 'index']);

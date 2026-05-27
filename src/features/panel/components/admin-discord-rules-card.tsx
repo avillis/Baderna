@@ -29,6 +29,7 @@ async function postSync(endpoint: string, token: string) {
 export function AdminDiscordRulesCard() {
   const [syncingRules, setSyncingRules] = useState(false);
   const [syncingRanking, setSyncingRanking] = useState(false);
+  const [syncingBirthdays, setSyncingBirthdays] = useState(false);
   const toast = useToast();
 
   async function handleSyncRules() {
@@ -61,6 +62,22 @@ export function AdminDiscordRulesCard() {
       toast.show("Ranking sincronizado no Discord!", "success");
     } catch { toast.show("Erro de conexão."); }
     finally { setSyncingRanking(false); }
+  }
+
+  async function handleSyncBirthdays() {
+    if (syncingBirthdays) return;
+    setSyncingBirthdays(true);
+    try {
+      const token = authToken();
+      if (!token) { toast.show("Sem autenticação."); return; }
+      const res = await postSync("sync-birthdays-discord", token);
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.show(err.error ?? "Erro ao sincronizar."); return;
+      }
+      toast.show("Aniversários sincronizados no Discord!", "success");
+    } catch { toast.show("Erro de conexão."); }
+    finally { setSyncingBirthdays(false); }
   }
 
   return (
@@ -103,6 +120,22 @@ export function AdminDiscordRulesCard() {
               Sincronizando...
             </>
           ) : "Sincronizar #rank-baderna"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void handleSyncBirthdays()}
+          disabled={syncingBirthdays}
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#5865F2] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {syncingBirthdays ? (
+            <>
+              <svg className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white" viewBox="25 25 50 50">
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+              Sincronizando...
+            </>
+          ) : "Sincronizar #aniversários"}
         </button>
       </div>
     </aside>
