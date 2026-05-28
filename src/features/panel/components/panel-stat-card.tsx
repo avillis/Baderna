@@ -31,28 +31,46 @@ function StatSkeleton({
 
 function getRankBadernaEffect(value: string) {
   const num = parseInt(value.replace(/\D/g, ""), 10);
+  // #01 — azul gelado (mantém)
   if (num === 1)
     return {
       gradient: "linear-gradient(135deg, rgba(208,231,255,0.33) 0%, #a0d8ff 100%)",
       glow: "0 0 22px rgba(160,216,255,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
       smoke: "rgba(160, 216, 255, 0.85)",
     };
+  // #02 — vermelho
   if (num === 2)
+    return {
+      gradient: "linear-gradient(135deg, rgba(255,80,80,0.33) 0%, #ff4040 100%)",
+      glow: "0 0 22px rgba(255,80,80,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+      smoke: "rgba(255, 80, 80, 0.85)",
+    };
+  // #03 — roxo
+  if (num === 3)
+    return {
+      gradient: "linear-gradient(135deg, rgba(155,89,182,0.33) 0%, #9b59b6 100%)",
+      glow: "0 0 22px rgba(155,89,182,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+      smoke: "rgba(155, 89, 182, 0.85)",
+    };
+  // #04–#08 — dourado
+  if (num <= 8)
     return {
       gradient: "linear-gradient(135deg, rgba(255,215,0,0.33) 0%, #ffcc00 100%)",
       glow: "0 0 22px rgba(255,215,0,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
       smoke: "rgba(255, 215, 0, 0.85)",
     };
-  if (num >= 7)
+  // #09–#13 — prata
+  if (num <= 13)
     return {
-      gradient: "linear-gradient(135deg, rgba(205,127,50,0.33) 0%, #cd7f32 100%)",
-      glow: "0 0 22px rgba(205,127,50,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-      smoke: "rgba(232, 180, 120, 0.85)",
+      gradient: "linear-gradient(135deg, rgba(192,192,192,0.33) 0%, #e0e0e0 100%)",
+      glow: "0 0 22px rgba(192,192,192,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+      smoke: "rgba(220, 220, 220, 0.85)",
     };
+  // #14+ — bronze
   return {
-    gradient: "linear-gradient(135deg, rgba(192,192,192,0.33) 0%, #e0e0e0 100%)",
-    glow: "0 0 22px rgba(192,192,192,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-    smoke: "rgba(220, 220, 220, 0.85)",
+    gradient: "linear-gradient(135deg, rgba(205,127,50,0.33) 0%, #cd7f32 100%)",
+    glow: "0 0 22px rgba(205,127,50,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+    smoke: "rgba(232, 180, 120, 0.85)",
   };
 }
 

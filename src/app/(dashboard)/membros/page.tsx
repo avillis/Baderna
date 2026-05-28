@@ -263,7 +263,7 @@ export default function MembrosPage() {
                         {member.nickname}
                       </StyledName>
                       <span className="ml-[5px] text-[12px] font-semibold tracking-normal text-[#aaaaaa]">
-                        #{badernaRank}
+                        #{String(badernaRank).padStart(2, "0")}
                       </span>
                     </h2>
                     <p className="mt-[6px] text-[13px] font-medium tracking-[-0.01em] text-[#989898]">
