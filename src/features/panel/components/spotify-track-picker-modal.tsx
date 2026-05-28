@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useMySpotify, type SpotifyTrack } from "@/features/panel/use-spotify";
+import { useMyLastFm } from "@/features/panel/use-lastfm";
+import type { SpotifyTrack } from "@/features/panel/use-spotify";
 
 type Props = {
   currentSongId: string | null;
@@ -19,7 +20,7 @@ function SpotifyLogo({ className = "h-[16px] w-[16px]" }: { className?: string }
 }
 
 export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Props) {
-  const { data, loading } = useMySpotify();
+  const { data, loading } = useMyLastFm();
   const [closing, setClosing] = useState(false);
 
   function handleClose() {
@@ -118,7 +119,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
             <div className="flex flex-col items-center py-[32px] text-center">
               <SpotifyLogo className="mb-[12px] h-[36px] w-[36px] opacity-30" />
               <p className="text-[14px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
-                Spotify não conectado
+                Last.fm não conectado
               </p>
               <p className="mt-[6px] text-[12px] font-medium text-[#b0b0b0]">
                 Conecte sua conta em{" "}
