@@ -142,7 +142,7 @@ export function LastFmConnectCard() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setEditing(false); }}
-            placeholder="seu username no Last.fm"
+            placeholder="User"
             className="min-w-0 flex-1 rounded-[12px] border border-[#e0e0e0] bg-[#f7f7f7] px-[14px] py-[10px] text-[13px] font-medium tracking-[-0.02em] text-[#0f0f0f] outline-none focus:border-[#D51007] focus:ring-1 focus:ring-[#D51007]"
           />
           <button

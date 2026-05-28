@@ -200,7 +200,7 @@ export function PanelProfileSummary({
             ringClassName="shadow-[0_0_0_4px_#f7f7f7]"
             priority
             levelFrameSrc={levelFrameSrc}
-            levelFrameOffsetY={0}
+            levelFrameOffsetY={5}
           />
           {isOwnProfile && (
             <button
