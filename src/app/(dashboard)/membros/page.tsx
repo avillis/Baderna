@@ -17,20 +17,33 @@ import { useMemberRanks } from "@/features/panel/use-member-ranks";
 
 type RankEffect = { gradient: string; glow: string };
 
-const RANK_EFFECTS: Record<number, RankEffect> = {
-  1: {
-    gradient: "linear-gradient(135deg, #c8e8ff, #6ab8f0)",
-    glow: "0 0 14px 3px rgba(100, 185, 255, 0.30)",
-  },
-  2: {
+// Segue a mesma lógica de cores do card "Rank da Baderna" no perfil.
+function getRankEffect(rank: number): RankEffect {
+  if (rank === 1) return {
+    gradient: "linear-gradient(135deg, #f0f8ff 0%, #88b8ff 14%, #c090ff 28%, #f8a8f8 42%, #90e8ff 56%, #d8eeff 70%, #a8c8ff 85%, #f0f8ff 100%)",
+    glow: "0 0 16px 5px rgba(65,150,255,0.70), 0 0 30px 3px rgba(150,90,255,0.28)",
+  };
+  if (rank === 2) return {
+    gradient: "linear-gradient(135deg, #ffe8e0 0%, #cc2020 14%, #ff4040 28%, #ff5820 42%, #ff1840 56%, #cc0020 70%, #ff8060 84%, #ffe0e0 100%)",
+    glow: "0 0 16px 4px rgba(255,55,55,0.60), 0 0 30px 2px rgba(220,30,30,0.25)",
+  };
+  if (rank === 3) return {
+    gradient: "linear-gradient(135deg, #f0e8ff 0%, #5010a0 14%, #9040ff 28%, #4030c0 42%, #c030e0 56%, #400090 70%, #a050ff 84%, #ead0ff 100%)",
+    glow: "0 0 16px 4px rgba(155,75,255,0.55), 0 0 30px 2px rgba(120,45,210,0.25)",
+  };
+  if (rank <= 8) return {
     gradient: "linear-gradient(135deg, #ffe066, #ffb300)",
     glow: "0 0 14px 3px rgba(255, 185, 0, 0.28)",
-  },
-  3: {
+  };
+  if (rank <= 13) return {
     gradient: "linear-gradient(135deg, #f2f2f2, #b0b0b0)",
     glow: "0 0 14px 3px rgba(140, 140, 140, 0.22)",
-  },
-};
+  };
+  return {
+    gradient: "linear-gradient(135deg, #e8b07a, #cd7f32)",
+    glow: "0 0 14px 3px rgba(205, 127, 50, 0.22)",
+  };
+}
 
 // `value` casa com o que a API manda em preferredRoles (inglês); `label` é o
 // texto em PT mostrado no chip.
@@ -42,9 +55,6 @@ const LANES = [
   { value: "Support", label: "Suporte" },
 ] as const;
 
-function getRankEffect(rank: number): RankEffect | null {
-  return RANK_EFFECTS[rank] ?? null;
-}
 
 function MemberAvatar({
   src,
@@ -244,11 +254,7 @@ export default function MembrosPage() {
                   {/* Avatar */}
                   <div
                     className="rounded-full p-[3px]"
-                    style={
-                      rankEffect
-                        ? { background: rankEffect.gradient, boxShadow: rankEffect.glow }
-                        : undefined
-                    }
+                    style={{ background: rankEffect.gradient, boxShadow: rankEffect.glow }}
                   >
                     <MemberAvatar
                       src={member.avatarSrc || getChampionAvatarSrc(member.id)}
@@ -263,7 +269,7 @@ export default function MembrosPage() {
                         {member.nickname}
                       </StyledName>
                       <span className="ml-[5px] text-[12px] font-semibold tracking-normal text-[#aaaaaa]">
-                        #{badernaRank}
+                        #{String(badernaRank).padStart(2, "0")}
                       </span>
                     </h2>
                     <p className="mt-[6px] text-[13px] font-medium tracking-[-0.01em] text-[#989898]">

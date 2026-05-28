@@ -26,10 +26,11 @@ const RANK_POINTS: Record<RankType, number> = {
   silver: 3,
   gold: 4,
   platinum: 5,
-  diamond: 6,
-  master: 7,
-  grandmaster: 8,
-  challenger: 9,
+  emerald: 6,
+  diamond: 7,
+  master: 8,
+  grandmaster: 9,
+  challenger: 10,
 };
 
 function pointsFor(player: InhousePlayer): number {
@@ -154,7 +155,7 @@ function PlayerRow({
               </p>
               {badernaRank ? (
                 <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                  #{badernaRank}
+                  #{String(badernaRank).padStart(2, "0")}
                 </span>
               ) : null}
               {isLeader ? (
@@ -189,7 +190,7 @@ function PlayerRow({
             ) : null}
             {badernaRank ? (
               <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                #{badernaRank}
+                #{String(badernaRank).padStart(2, "0")}
               </span>
             ) : null}
             <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
@@ -1228,7 +1229,7 @@ function DraggablePlayerRow({
                 </p>
                 {badernaRank ? (
                   <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                    #{badernaRank}
+                    #{String(badernaRank).padStart(2, "0")}
                   </span>
                 ) : null}
                 {isLeader ? (
@@ -1253,7 +1254,7 @@ function DraggablePlayerRow({
                 ) : null}
                 {badernaRank ? (
                   <span className="order-2 shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
-                    #{badernaRank}
+                    #{String(badernaRank).padStart(2, "0")}
                   </span>
                 ) : null}
                 <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">

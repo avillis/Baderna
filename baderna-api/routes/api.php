@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\TitlesController;
 use App\Http\Controllers\Api\BirthdaysController;
 use App\Http\Controllers\Api\SpotifyController;
 use App\Http\Controllers\Api\PostBookmarksController;
+use App\Http\Controllers\Api\PostPinController;
 use App\Http\Controllers\Api\LinkPreviewController;
 
 // ── Spotify callback (sem auth — recupera user pelo state criptografado) ──
@@ -101,6 +102,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Bookmarks
     Route::post('/posts/{id}/bookmark', [PostBookmarksController::class, 'toggle'])->whereNumber('id');
+
+    // Pin no perfil
+    Route::post('/posts/{id}/pin', [PostPinController::class, 'toggle'])->whereNumber('id');
     Route::get('/bookmarks', [PostBookmarksController::class, 'index']);
 
     // Link preview

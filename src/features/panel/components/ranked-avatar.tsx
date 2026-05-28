@@ -18,6 +18,8 @@ type RankedAvatarProps = {
   priority?: boolean;
   /** Quando true, não renderiza a moldura de rank ao redor. */
   unranked?: boolean;
+  /** Moldura de nível equipada — substitui a moldura de rank quando definida. */
+  levelFrameSrc?: string;
 };
 
 export function RankedAvatar({
@@ -31,6 +33,7 @@ export function RankedAvatar({
   ringClassName = "",
   priority = false,
   unranked = false,
+  levelFrameSrc,
 }: RankedAvatarProps) {
   const [errored, setErrored] = useState(false);
   return (
@@ -65,8 +68,8 @@ export function RankedAvatar({
 
       {!unranked && (
         <Image
-          src={getRankFrameSrc(rankType)}
-          alt={`${rankType} border`}
+          src={levelFrameSrc ?? getRankFrameSrc(rankType)}
+          alt={levelFrameSrc ? "level border" : `${rankType} border`}
           fill
           className="pointer-events-none object-contain"
           sizes={`${size}px`}

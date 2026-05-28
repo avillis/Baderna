@@ -18,6 +18,7 @@ const RANK_TYPES = new Set([
   "silver",
   "gold",
   "platinum",
+  "emerald",
   "diamond",
   "master",
   "grandmaster",

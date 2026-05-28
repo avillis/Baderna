@@ -15,11 +15,11 @@ const UPDATE_EVENT = "baderna:unlocks-updated";
 const COINS_CACHE_PREFIX = "baderna:member-coins-cache:";
 const COINS_UPDATE_EVENT = "baderna:member-coins-updated";
 
-export type UnlockKind = "title" | "capa" | "name";
+export type UnlockKind = "title" | "capa" | "name" | "moldura";
 
 type UnlocksMap = Record<UnlockKind, string[]>;
 
-const EMPTY: UnlocksMap = { title: [], capa: [], name: [] };
+const EMPTY: UnlocksMap = { title: [], capa: [], name: [], moldura: [] };
 
 function readCache(): UnlocksMap {
   if (typeof window === "undefined") return { ...EMPTY };
@@ -31,6 +31,7 @@ function readCache(): UnlocksMap {
       title: parsed.title ?? [],
       capa: parsed.capa ?? [],
       name: parsed.name ?? [],
+      moldura: parsed.moldura ?? [],
     };
   } catch {
     return { ...EMPTY };
@@ -55,6 +56,7 @@ async function fetchFromApi(): Promise<UnlocksMap | null> {
     title: body.title ?? [],
     capa: body.capa ?? [],
     name: body.name ?? [],
+    moldura: body.moldura ?? [],
   };
 }
 

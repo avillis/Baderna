@@ -8,6 +8,7 @@ import { ChevronDown, Eye, EyeOff, X } from "lucide-react";
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { AvatarPickerModal } from "@/features/panel/components/avatar-picker-modal";
+import { MolduraPickerModal } from "@/features/panel/components/moldura-picker-modal";
 import { NameStyleModal } from "@/features/panel/components/name-style-modal";
 import { PanelBannerPicker } from "@/features/panel/components/panel-banner-picker";
 import { TitleModal } from "@/features/panel/components/title-modal";
@@ -129,6 +130,7 @@ function BasicInfoCard({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);
   const [titlesOpen, setTitlesOpen] = useState(false);
+  const [molduraOpen, setMolduraOpen] = useState(false);
   const { unlocked: unlockedTitleIds } = useMemberUnlockedTitles(ownerId, ["aprendiz"]);
   const { unlocked: unlockedNameIds } = useMemberUnlockedNames(ownerId);
   const toast = useToast();
@@ -192,6 +194,13 @@ function BasicInfoCard({
             >
               Editar títulos
             </button>
+            <button
+              type="button"
+              onClick={() => setMolduraOpen(true)}
+              className="w-full rounded-[18px] bg-[#ededed] py-[14px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3]"
+            >
+              Molduras
+            </button>
           </div>
 
           <NameStyleModal
@@ -226,6 +235,19 @@ function BasicInfoCard({
             }}
             unlockedTitleIds={unlockedTitleIds}
             maxActive={2}
+          />
+
+          <MolduraPickerModal
+            open={molduraOpen}
+            onClose={() => setMolduraOpen(false)}
+            activeFrameId={account.activeFrameId}
+            onSelect={(slug) => {
+              updateField("activeFrameId", slug);
+              toast.show(
+                slug ? "Moldura equipada!" : "Voltando para a moldura do rank.",
+                "success",
+              );
+            }}
           />
         </div>
 

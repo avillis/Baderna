@@ -23,6 +23,8 @@ import { PanelCommentsCard } from "@/features/panel/components/panel-comments-ca
 import { PanelGameModeToggle } from "@/features/panel/components/panel-game-mode-toggle";
 import { PanelMemberWinratesCard } from "@/features/panel/components/panel-member-winrates-card";
 import { SpotifyProfileModule } from "@/features/panel/components/spotify-card";
+import { PinnedPostCard } from "@/features/panel/components/pinned-post-card";
+import { fetchPost, apiPinPost, type FeedPost } from "@/features/panel/use-posts";
 import { PanelProfileSummary } from "@/features/panel/components/panel-profile-summary";
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { ProfileLoadingOverlay } from "@/features/panel/components/profile-loading-overlay";
@@ -73,6 +75,7 @@ type ApiMember = {
   favoriteSongImage: string | null;
   favoriteSongUrl: string | null;
   duoUserId: number | null;
+  pinnedPostId: number | null;
   memberSince: string | null;
   postsCount: number;
   authoredCommentsCount: number;
@@ -149,6 +152,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const [showDuoPicker, setShowDuoPicker] = useState(false);
   const [showSongPicker, setShowSongPicker] = useState(false);
   const { titles: allTitles } = useTitles();
+  const [pinnedPost, setPinnedPost] = useState<FeedPost | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,6 +167,24 @@ export function MembroPageClient({ slug }: { slug: string }) {
       cancelled = true;
     };
   }, []);
+
+  // Busca o post fixado quando a lista de membros chega (ou quando o slug muda).
+  useEffect(() => {
+    if (!members) return;
+    const { member } = findMemberInList(members, slug);
+    const pid = member?.pinnedPostId;
+    if (!pid) {
+      setPinnedPost(null);
+      return;
+    }
+    let cancelled = false;
+    fetchPost(pid).then((post) => {
+      if (!cancelled) setPinnedPost(post);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [members, slug]);
 
   // Loading inicial: enquanto não chegou a lista de membros, mostra só o
   // shell com overlay (sem flash de "não encontrado").
@@ -526,6 +548,15 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 {hasRiotId ? <LiveHistoryCard riotId={riotId} /> : <NoLolCard />}
               </div>
               <div className="flex min-w-0 max-w-full flex-col gap-8">
+                {pinnedPost && (
+                  <PinnedPostCard
+                    post={pinnedPost}
+                    onUnpin={isOwnProfile ? async () => {
+                      await apiPinPost(pinnedPost.id);
+                      setPinnedPost(null);
+                    } : undefined}
+                  />
+                )}
                 <SpotifyProfileModule slug={slug} />
                 {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
               </div>
@@ -576,6 +607,15 @@ export function MembroPageClient({ slug }: { slug: string }) {
             </div>
             <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="col-start-1 col-span-1 flex flex-col gap-8">
+                {pinnedPost && (
+                  <PinnedPostCard
+                    post={pinnedPost}
+                    onUnpin={isOwnProfile ? async () => {
+                      await apiPinPost(pinnedPost.id);
+                      setPinnedPost(null);
+                    } : undefined}
+                  />
+                )}
                 <SpotifyProfileModule slug={slug} />
                 {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
               </div>

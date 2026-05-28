@@ -31,28 +31,61 @@ function StatSkeleton({
 
 function getRankBadernaEffect(value: string) {
   const num = parseInt(value.replace(/\D/g, ""), 10);
+  // #01 — diamante prismático (cores saturadas, tom claro — sem escurecer)
   if (num === 1)
     return {
-      gradient: "linear-gradient(135deg, rgba(208,231,255,0.33) 0%, #a0d8ff 100%)",
-      glow: "0 0 22px rgba(160,216,255,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-      smoke: "rgba(160, 216, 255, 0.85)",
+      gradient: [
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,255,255,0.30) 1px, rgba(255,255,255,0.06) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,255,255,0.20) 1px, rgba(255,255,255,0.04) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,255,255,0.10) 1px, transparent 2px, transparent 20px)",
+        "linear-gradient(125deg, #e8f4ff 0%, #58a2ff 11%, #9060ff 22%, #e858f0 33%, #ff88d0 44%, #ffcca0 54%, #50e4ff 64%, #5ca0ff 76%, #c098ff 88%, #e8f4ff 100%)",
+      ].join(", "),
+      glow: "0 0 26px rgba(155,210,255,0.75), 0 0 52px rgba(200,165,255,0.26), inset 1px 1px 6px rgba(255,255,255,0.38), inset -1px -1px 8px rgba(0,0,0,0.42)",
+      smoke: "rgba(218, 232, 255, 1)",
     };
+  // #02 — rubi facetado
   if (num === 2)
+    return {
+      gradient: [
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,220,200,0.30) 1px, rgba(255,200,180,0.06) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,220,200,0.20) 1px, rgba(255,200,180,0.04) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,220,200,0.10) 1px, transparent 2px, transparent 20px)",
+        "linear-gradient(125deg, #ffe8e8 0%, #aa1820 10%, #ff3535 20%, #c04000 30%, #ff5820 40%, #ff1848 50%, #880010 60%, #ff4040 70%, #ff9060 82%, #ffe0d8 92%, #ffe8e8 100%)",
+      ].join(", "),
+      glow: "0 0 26px rgba(255,55,55,0.78), 0 0 52px rgba(220,30,30,0.28), inset 1px 1px 6px rgba(255,200,180,0.40), inset -1px -1px 8px rgba(80,0,0,0.50)",
+      smoke: "rgba(255, 75, 55, 1)",
+    };
+  // #03 — ametista facetada
+  if (num === 3)
+    return {
+      gradient: [
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(220,190,255,0.30) 1px, rgba(200,170,255,0.06) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(220,190,255,0.20) 1px, rgba(200,170,255,0.04) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(220,190,255,0.10) 1px, transparent 2px, transparent 20px)",
+        "linear-gradient(125deg, #f0e8ff 0%, #501090 10%, #9040ff 20%, #3020c0 30%, #7060ff 40%, #c030e0 50%, #400090 60%, #a050ff 70%, #d080ff 82%, #f0e0ff 92%, #ead0ff 100%)",
+      ].join(", "),
+      glow: "0 0 26px rgba(155,75,255,0.78), 0 0 52px rgba(120,45,220,0.28), inset 1px 1px 6px rgba(220,180,255,0.40), inset -1px -1px 8px rgba(30,0,60,0.50)",
+      smoke: "rgba(165, 85, 255, 1)",
+    };
+  // #04–#08 — dourado
+  if (num <= 8)
     return {
       gradient: "linear-gradient(135deg, rgba(255,215,0,0.33) 0%, #ffcc00 100%)",
       glow: "0 0 22px rgba(255,215,0,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
       smoke: "rgba(255, 215, 0, 0.85)",
     };
-  if (num >= 7)
+  // #09–#13 — prata
+  if (num <= 13)
     return {
-      gradient: "linear-gradient(135deg, rgba(205,127,50,0.33) 0%, #cd7f32 100%)",
-      glow: "0 0 22px rgba(205,127,50,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-      smoke: "rgba(232, 180, 120, 0.85)",
+      gradient: "linear-gradient(135deg, rgba(192,192,192,0.33) 0%, #e0e0e0 100%)",
+      glow: "0 0 22px rgba(192,192,192,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+      smoke: "rgba(220, 220, 220, 0.85)",
     };
+  // #14+ — bronze
   return {
-    gradient: "linear-gradient(135deg, rgba(192,192,192,0.33) 0%, #e0e0e0 100%)",
-    glow: "0 0 22px rgba(192,192,192,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-    smoke: "rgba(220, 220, 220, 0.85)",
+    gradient: "linear-gradient(135deg, rgba(205,127,50,0.33) 0%, #cd7f32 100%)",
+    glow: "0 0 22px rgba(205,127,50,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+    smoke: "rgba(232, 180, 120, 0.85)",
   };
 }
 

@@ -72,8 +72,9 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
   );
 }
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
-import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
+import { apiPinPost, formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 import { LinkPreview } from "@/features/panel/components/link-preview";
+import { PostCommentsSection } from "@/features/panel/components/post-comments-section";
 
 const URL_RE = /https?:\/\/[^\s]+/g;
 
@@ -95,6 +96,11 @@ export function PostCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [localCommentsCount, setLocalCommentsCount] = useState(post.commentsCount);
+
+  // Mantém o contador local sincronizado quando o post é atualizado pelo pai.
+  useEffect(() => { setLocalCommentsCount(post.commentsCount); }, [post.commentsCount]);
   const menuRef = useRef<HTMLDivElement>(null);
   const media = post.imageUrl ?? post.gifUrl;
   const canDelete =
@@ -139,6 +145,25 @@ export function PostCard({
       toast.show("Texto copiado!", "success");
     } catch {
       toast.show("Não foi possível copiar o texto.");
+    }
+  }
+
+  /** Fixa/desfixar o post no perfil do usuário (toggle no backend). */
+  async function handlePin() {
+    setMenuOpen(false);
+    if (post.id < 0) return; // Mock post
+    try {
+      const result = await apiPinPost(post.id);
+      if (result) {
+        toast.show(
+          result.pinned ? "Post fixado no perfil!" : "Post removido do perfil.",
+          "success",
+        );
+      } else {
+        toast.show("Não foi possível fixar o post.");
+      }
+    } catch {
+      toast.show("Não foi possível fixar o post.");
     }
   }
 
@@ -211,10 +236,12 @@ export function PostCard({
 
   // Click no card → permalink do post. Buttons/links internos param
   // propagação pra não disparar duas navegações.
+  // Quando os comentários estão abertos inline, o card fica em "modo leitura"
+  // e o click não navega (o usuário provavelmente quer interagir com os comentários).
   function handleCardClick(e: React.MouseEvent) {
-    // Ignora clicks em mídia (deixa zoom no futuro), texto selecionado, etc.
+    if (commentsOpen) return;
     const target = e.target as HTMLElement;
-    if (window.getSelection()?.toString()) return; // user selecionando texto
+    if (window.getSelection()?.toString()) return;
     if (target.closest("a, button")) return;
     router.push(`/post/${post.shortCode || post.id}`);
   }
@@ -241,9 +268,10 @@ export function PostCard({
   }
 
   return (
+    <>
     <article
       onClick={handleCardClick}
-      className="cursor-pointer rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa] sm:p-[24px]"
+      className={`rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors sm:p-[24px] ${commentsOpen ? "cursor-default" : "cursor-pointer hover:bg-[#fafafa]"}`}
     >
       {/* Header: avatar + nome + nick + (menu). Sempre em linha. */}
       <div className="flex items-start gap-[12px] sm:gap-[14px]">
@@ -411,6 +439,26 @@ export function PostCard({
                       Reportar
                     </button>
                   )}
+                  {isOwnPost && (
+                    <button
+                      type="button"
+                      onClick={handlePin}
+                      className="flex w-full items-center gap-[8px] border-t border-[#f4f4f4] px-[14px] py-[10px] text-[13px] font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f4f4f4]"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="h-[14px] w-[14px]"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M8.3767 15.6163L2.71985 21.2732M11.6944 6.64181L10.1335 8.2027C10.0062 8.33003 9.94252 8.39369 9.86999 8.44427C9.80561 8.48917 9.73616 8.52634 9.66309 8.555C9.58077 8.58729 9.49249 8.60495 9.31592 8.64026L5.65145 9.37315C4.69915 9.56361 4.223 9.65884 4.00024 9.9099C3.80617 10.1286 3.71755 10.4213 3.75771 10.7109C3.8038 11.0434 4.14715 11.3867 4.83387 12.0735L11.9196 19.1592C12.6063 19.8459 12.9497 20.1893 13.2821 20.2354C13.5718 20.2755 13.8645 20.1869 14.0832 19.9928C14.3342 19.7701 14.4294 19.2939 14.6199 18.3416L15.3528 14.6771C15.3881 14.5006 15.4058 14.4123 15.4381 14.33C15.4667 14.2569 15.5039 14.1875 15.5488 14.1231C15.5994 14.0505 15.663 13.9869 15.7904 13.8596L17.3512 12.2987C17.4326 12.2173 17.4734 12.1766 17.5181 12.141C17.5578 12.1095 17.5999 12.081 17.644 12.0558C17.6936 12.0274 17.7465 12.0048 17.8523 11.9594L20.3467 10.8904C21.0744 10.5785 21.4383 10.4226 21.6035 10.1706C21.7481 9.95025 21.7998 9.68175 21.7474 9.42348C21.6875 9.12813 21.4076 8.84822 20.8478 8.28839L15.7047 3.14526C15.1448 2.58543 14.8649 2.30552 14.5696 2.24565C14.3113 2.19329 14.0428 2.245 13.8225 2.38953C13.5705 2.55481 13.4145 2.91866 13.1027 3.64636L12.0337 6.14071C11.9883 6.24653 11.9656 6.29944 11.9373 6.34905C11.9121 6.39313 11.8836 6.43522 11.852 6.47496C11.8165 6.51971 11.7758 6.56041 11.6944 6.64181Z" />
+                      </svg>
+                      Fixar no perfil
+                    </button>
+                  )}
                   {canDelete && (
                     <button
                       type="button"
@@ -502,8 +550,10 @@ export function PostCard({
             onClick={() => onLike?.(post.id)}
           />
           <CommentButton
-            count={post.commentsCount}
+            count={localCommentsCount}
             href={`/post/${post.shortCode || post.id}`}
+            active={commentsOpen}
+            onClick={expanded ? undefined : () => setCommentsOpen((v) => !v)}
           />
           <PostReactions postId={post.id} />
           <BookmarkButton postId={post.id} initialBookmarked={post.bookmarked ?? false} />
@@ -511,11 +561,13 @@ export function PostCard({
         {/* Data em linha própria abaixo das ações — só na view expandida.
             Separada pra não comprimir o espaço das reações no mobile. */}
         {expanded && (
-          <p className="mt-[10px] text-[12px] text-[#8d8d8d]">
+          <p className="mt-[10px] text-right text-[12px] text-[#8d8d8d]">
             {formatPostDateLong(post.createdAt)}
           </p>
         )}
       </div>
+
+      {/* Seção de comentários inline — só quando aberta no feed (não no expanded). */}
 
       {confirmOpen && (
         <div
@@ -555,6 +607,14 @@ export function PostCard({
         </div>
       )}
     </article>
+    {commentsOpen && !expanded && (
+      <PostCommentsSection
+        postId={post.id}
+        postOwnerId={post.author.id ?? null}
+        onCountChange={setLocalCommentsCount}
+      />
+    )}
+    </>
   );
 }
 
@@ -562,29 +622,45 @@ export function PostCard({
  * Botão de comentários: ícone muda quando o post já tem comentários
  * (balão com 3 pontinhos) vs vazio (balão sem dots). Link pro permalink.
  */
-function CommentButton({ count, href }: { count: number; href: string }) {
+function CommentButton({
+  count,
+  href,
+  onClick,
+  active = false,
+}: {
+  count: number;
+  href: string;
+  onClick?: () => void;
+  active?: boolean;
+}) {
+  const cls = `group flex items-center gap-[6px] text-[13px] font-semibold transition-colors ${
+    active ? "text-[#ff4100]" : "text-[#8d8d8d] hover:text-[#ff4100]"
+  }`;
+  const icon = (
+    <span className="relative inline-flex h-[22px] w-[22px] items-center justify-center">
+      <svg className="h-[20px] w-[20px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M21 12C21 16.9706 16.9706 21 12 21C10.8029 21 9.6603 20.7663 8.61549 20.3419C8.41552 20.2607 8.31554 20.2201 8.23472 20.202C8.15566 20.1843 8.09715 20.1778 8.01613 20.1778C7.9333 20.1778 7.84309 20.1928 7.66265 20.2229L4.10476 20.8159C3.73218 20.878 3.54589 20.909 3.41118 20.8512C3.29328 20.8007 3.19933 20.7067 3.14876 20.5888C3.09098 20.4541 3.12203 20.2678 3.18413 19.8952L3.77711 16.3374C3.80718 16.1569 3.82222 16.0667 3.82221 15.9839C3.8222 15.9028 3.81572 15.8443 3.798 15.7653C3.77988 15.6845 3.73927 15.5845 3.65806 15.3845C3.23374 14.3397 3 13.1971 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+  // No feed (onClick passado): toggle inline. Na view expandida: link pro permalink.
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} aria-label="Comentários" className={cls}>
+        {icon}
+        <span>{count}</span>
+      </button>
+    );
+  }
   return (
-    <Link
-      href={href}
-      aria-label="Comentários"
-      className="group flex items-center gap-[6px] text-[13px] font-semibold text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
-    >
-      <span className="relative inline-flex h-[22px] w-[22px] items-center justify-center">
-        <svg
-          className="h-[20px] w-[20px]"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M21 12C21 16.9706 16.9706 21 12 21C10.8029 21 9.6603 20.7663 8.61549 20.3419C8.41552 20.2607 8.31554 20.2201 8.23472 20.202C8.15566 20.1843 8.09715 20.1778 8.01613 20.1778C7.9333 20.1778 7.84309 20.1928 7.66265 20.2229L4.10476 20.8159C3.73218 20.878 3.54589 20.909 3.41118 20.8512C3.29328 20.8007 3.19933 20.7067 3.14876 20.5888C3.09098 20.4541 3.12203 20.2678 3.18413 19.8952L3.77711 16.3374C3.80718 16.1569 3.82222 16.0667 3.82221 15.9839C3.8222 15.9028 3.81572 15.8443 3.798 15.7653C3.77988 15.6845 3.73927 15.5845 3.65806 15.3845C3.23374 14.3397 3 13.1971 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
+    <Link href={href} aria-label="Comentários" className={cls}>
+      {icon}
       <span>{count}</span>
     </Link>
   );

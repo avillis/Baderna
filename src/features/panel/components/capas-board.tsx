@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { History, RotateCcw, Zap } from "lucide-react";
 
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
+import { MoldurasTab } from "@/features/panel/components/molduras-tab";
 import { PurchaseHistoryModal } from "@/features/panel/components/purchase-history-modal";
 import { useToast } from "@/components/toast";
 import {
@@ -350,7 +351,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  const [tab, setTab] = useState<"capas" | "titulos" | "nomes">("capas");
+  const [tab, setTab] = useState<"capas" | "titulos" | "nomes" | "molduras">("capas");
   const [spinning, setSpinning] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   // Briefly suppresses the transition so the strip can snap back to 0
@@ -870,6 +871,16 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
         >
           Nomes
         </button>
+        <button
+          ref={(el) => { tabRefs.current.molduras = el; }}
+          type="button"
+          onClick={() => setTab("molduras")}
+          className={`relative px-[4px] py-[10px] text-[14px] font-bold tracking-[-0.02em] transition-colors ${
+            tab === "molduras" ? "text-[#0f0f0f]" : "text-[#c3bdb8] hover:text-[#0f0f0f]"
+          }`}
+        >
+          Molduras
+        </button>
         <span
           aria-hidden
           className="pointer-events-none absolute -bottom-px h-[2px] bg-[#ff4100] transition-[left,width] duration-300 ease-out"
@@ -877,6 +888,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
         />
       </div>
 
+      {tab !== "molduras" && (
       <div className="flex flex-col items-center pt-[28px]">
       {/* Roulette — extends edge-to-edge of the viewport on xl. The indicator
           stays aligned with the main column center (where the action button is). */}
@@ -1140,7 +1152,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
         )}
       </div>
       </div>
+      )}
 
+      {tab !== "molduras" && (<>
       {/* Case contents — all possible banners */}
       <div className="mt-12 flex items-center px-1 pb-2">
         <h3 className="text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
@@ -1255,6 +1269,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
           </div>
         )}
       </section>
+      </>)}
+
+      {tab === "molduras" && <MoldurasTab />}
 
       <PurchaseHistoryModal
         open={historyOpen}

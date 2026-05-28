@@ -78,6 +78,7 @@ class MembersController extends Controller
                 'favoriteGameTitle' => $u->favorite_game_title,
                 'favoriteGameCoverUrl' => $u->favorite_game_cover_url,
                 'duoUserId'       => $u->duo_user_id,
+                'pinnedPostId'    => $u->pinned_post_id,
                 'memberSince'     => optional($u->created_at)->toIso8601String(),
                 'activeNameId'    => $u->active_name_id,
                 'activeFrameId'   => $u->active_frame_id,

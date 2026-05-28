@@ -428,7 +428,7 @@ function LiveLolRankModuleCard({
       SILVER: "/images/ranks/silver.png",
       GOLD: "/images/ranks/gold.png",
       PLATINUM: "/images/ranks/platinum.png",
-      EMERALD: "/images/ranks/platinum.png",
+      EMERALD: "/images/ranks/emerald.png",
       DIAMOND: "/images/ranks/diamond.png",
       MASTER: "/images/ranks/master.png",
       GRANDMASTER: "/images/ranks/grandmaster.png",
