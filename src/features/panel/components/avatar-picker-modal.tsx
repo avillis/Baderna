@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Cropper from "react-easy-crop";
 
 import {
   CHAMPION_AVATAR_FILES,
@@ -11,6 +12,37 @@ import {
 import { useAccount } from "@/features/panel/use-account";
 import { authToken } from "@/features/panel/use-auth";
 import { useToast } from "@/components/toast";
+
+async function getCroppedImg(
+  imageSrc: string,
+  pixelCrop: { x: number; y: number; width: number; height: number },
+): Promise<File> {
+  const img = new window.Image();
+  img.src = imageSrc;
+  await new Promise<void>((resolve) => { img.onload = () => resolve(); });
+
+  const size = Math.min(pixelCrop.width, pixelCrop.height, 800);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.drawImage(
+    img,
+    pixelCrop.x, pixelCrop.y,
+    pixelCrop.width, pixelCrop.height,
+    0, 0,
+    size, size,
+  );
+
+  return new Promise((resolve) => {
+    canvas.toBlob(
+      (blob) => resolve(new File([blob!], "avatar.jpg", { type: "image/jpeg" })),
+      "image/jpeg",
+      0.92,
+    );
+  });
+}
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -38,6 +70,10 @@ export function AvatarPickerModal({
   const [tab, setTab] = useState<Tab>(riotIconUrl ? "riot" : "champions");
   const [query, setQuery] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const toast = useToast();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -260,7 +296,73 @@ export function AvatarPickerModal({
               )}
             </div>
           </div>
+        ) : imageSrc ? (
+          /* ── Crop mode ───────────────────────────────────────── */
+          <div className="flex flex-1 flex-col">
+            <div className="relative h-[320px] w-full overflow-hidden bg-[#111]">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_croppedArea, croppedAreaPixels) => {
+                  setCroppedAreaPixels(croppedAreaPixels);
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-[16px] px-[28px] py-[20px]">
+              <div className="flex items-center gap-[12px]">
+                <span className="text-[12px] font-semibold text-[#8d8d8d]">Zoom</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="flex-1 accent-[#ff4100]"
+                />
+              </div>
+              <div className="flex gap-[10px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageSrc(null);
+                    setCrop({ x: 0, y: 0 });
+                    setZoom(1);
+                  }}
+                  className="flex-1 rounded-[14px] bg-[#ededed] py-[14px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] transition-opacity hover:opacity-80"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={!croppedAreaPixels || uploading}
+                  onClick={async () => {
+                    if (!croppedAreaPixels) return;
+                    const file = await getCroppedImg(imageSrc, croppedAreaPixels);
+                    await handleFile(file);
+                    setImageSrc(null);
+                    setCrop({ x: 0, y: 0 });
+                    setZoom(1);
+                  }}
+                  className="flex flex-1 items-center justify-center gap-[8px] rounded-[14px] bg-[#ff4100] py-[14px] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                >
+                  {uploading ? (
+                    <svg className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white" viewBox="25 25 50 50">
+                      <circle r="20" cy="50" cx="50" />
+                    </svg>
+                  ) : "Salvar corte"}
+                </button>
+              </div>
+            </div>
+          </div>
         ) : (
+          /* ── File picker ─────────────────────────────────────── */
           <div className="flex flex-1 flex-col items-center justify-center gap-[18px] px-[28px] py-[40px]">
             <input
               ref={fileInput}
@@ -269,40 +371,23 @@ export function AvatarPickerModal({
               hidden
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) handleFile(f);
+                if (f) {
+                  const reader = new FileReader();
+                  reader.onload = () => setImageSrc(reader.result as string);
+                  reader.readAsDataURL(f);
+                }
                 if (fileInput.current) fileInput.current.value = "";
               }}
             />
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              disabled={uploading}
-              className="flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-8 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] bg-[#ff4100] px-8 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
             >
-              {uploading ? (
-                <svg
-                  className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white"
-                  viewBox="25 25 50 50"
-                >
-                  <circle r="20" cy="50" cx="50" />
-                </svg>
-              ) : (
-                <svg
-                  className="h-[18px] w-[18px]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7 11C6.07003 11 5.60504 11 5.22354 11.1022C4.18827 11.3796 3.37962 12.1883 3.10222 13.2235C3 13.605 3 14.07 3 15V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H16.2C17.8802 21 18.7202 21 19.362 20.673C19.9265 20.3854 20.3854 19.9265 20.673 19.362C21 18.7202 21 17.8802 21 16.2V15C21 14.07 21 13.605 20.8978 13.2235C20.6204 12.1883 19.8117 11.3796 18.7765 11.1022C18.395 11 17.93 11 17 11M16 7L12 3M12 3L8 7M12 3V15"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-              {uploading ? "Enviando..." : "Escolher arquivo"}
+              <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 11C6.07003 11 5.60504 11 5.22354 11.1022C4.18827 11.3796 3.37962 12.1883 3.10222 13.2235C3 13.605 3 14.07 3 15V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H16.2C17.8802 21 18.7202 21 19.362 20.673C19.9265 20.3854 20.3854 19.9265 20.673 19.362C21 18.7202 21 17.8802 21 16.2V15C21 14.07 21 13.605 20.8978 13.2235C20.6204 12.1883 19.8117 11.3796 18.7765 11.1022C18.395 11 17.93 11 17 11M16 7L12 3M12 3L8 7M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Escolher arquivo
             </button>
             <p className="max-w-[320px] text-center text-[12px] text-[#8d8d8d]">
               PNG, JPG, WEBP ou GIF. Máx. 5 MB. A imagem fica salva no servidor

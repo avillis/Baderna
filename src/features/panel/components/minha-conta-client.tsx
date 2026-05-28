@@ -655,6 +655,7 @@ function GameNickField({
 }
 
 function PasswordFields() {
+  const [expanded, setExpanded] = useState(false);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -689,15 +690,47 @@ function PasswordFields() {
     setCurrent("");
     setNext("");
     setConfirm("");
+    setExpanded(false);
     toast.show("Senha alterada com sucesso!", "success");
+  }
+
+  if (!expanded) {
+    return (
+      <>
+        <div className="flex items-center justify-between rounded-full bg-[#ededed] px-6 py-4 md:col-span-2">
+          <span className="text-[14px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">Senha</span>
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="text-[13px] font-bold tracking-[-0.02em] text-[#ff4100] hover:opacity-80 transition-opacity"
+          >
+            Alterar senha
+          </button>
+        </div>
+      </>
+    );
   }
 
   return (
     <>
       <label className="flex flex-col gap-[8px] sm:col-span-2">
-        <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
-          Redefinir senha
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+            Redefinir senha
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setExpanded(false);
+              setCurrent("");
+              setNext("");
+              setConfirm("");
+            }}
+            className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d] hover:opacity-70 transition-opacity"
+          >
+            Cancelar
+          </button>
+        </div>
         <div className="relative">
           <input
             type={showCurrent ? "text" : "password"}
