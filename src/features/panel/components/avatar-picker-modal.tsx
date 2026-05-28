@@ -314,7 +314,7 @@ export function AvatarPickerModal({
                 }}
               />
               {/* Botões de zoom — canto superior esquerdo sobre o cropper */}
-              <div className="absolute left-[12px] top-[12px] z-10 flex flex-col overflow-hidden rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
+              <div className="absolute right-[12px] top-[12px] z-10 flex flex-col overflow-hidden rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
                 <button
                   type="button"
                   aria-label="Aumentar zoom"
