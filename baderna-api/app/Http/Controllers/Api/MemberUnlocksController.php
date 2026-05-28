@@ -11,17 +11,43 @@ use Illuminate\Support\Facades\DB;
 
 class MemberUnlocksController extends Controller
 {
-    private const KINDS = ['title', 'capa', 'name'];
+    private const KINDS = ['title', 'capa', 'name', 'moldura'];
 
     /**
-     * Custo server-side por tipo de spin. NUNCA confie no preço enviado pelo
-     * cliente — esses valores são autoritativos. Mantenha em sync com o
-     * front (capas-board.tsx).
+     * Custo server-side por tipo de spin (roleta). NUNCA confie no preço
+     * enviado pelo cliente — esses valores são autoritativos.
      */
     private const SPIN_COST = [
         'capa'  => 10,
         'title' => 50,
         'name'  => 80,
+    ];
+
+    /**
+     * Preço server-side por slug de moldura de nível.
+     * Mantém em sync com molduras-data.ts no frontend.
+     */
+    private const MOLDURA_PRICE = [
+        'level-frame-1'   => 50,
+        'level-frame-30'  => 100,
+        'level-frame-50'  => 150,
+        'level-frame-75'  => 200,
+        'level-frame-100' => 250,
+        'level-frame-125' => 350,
+        'level-frame-150' => 450,
+        'level-frame-175' => 550,
+        'level-frame-200' => 650,
+        'level-frame-225' => 750,
+        'level-frame-250' => 850,
+        'level-frame-275' => 970,
+        'level-frame-300' => 1090,
+        'level-frame-325' => 1210,
+        'level-frame-350' => 1330,
+        'level-frame-375' => 1450,
+        'level-frame-425' => 1850,
+        'level-frame-450' => 2050,
+        'level-frame-475' => 2250,
+        'level-frame-500' => 2450,
     ];
 
     /**
@@ -31,9 +57,11 @@ class MemberUnlocksController extends Controller
     public function index(Request $request)
     {
         $rows = $request->user()->memberUnlocks()->get(['kind', 'slug']);
-        $out = ['title' => [], 'capa' => [], 'name' => []];
+        $out = ['title' => [], 'capa' => [], 'name' => [], 'moldura' => []];
         foreach ($rows as $r) {
-            $out[$r->kind][] = $r->slug;
+            if (array_key_exists($r->kind, $out)) {
+                $out[$r->kind][] = $r->slug;
+            }
         }
         return response()->json($out);
     }
@@ -54,11 +82,20 @@ class MemberUnlocksController extends Controller
         ]);
 
         $user = $request->user();
-        // Free só é válido pra capas (único tipo com free spin na UI)
-        $isFree = !empty($data['free']) && $data['kind'] === 'capa';
-        // Custo dinâmico via AppSetting (admin pode ajustar); fallback pro valor fixo
-        $costs = AppSetting::get('store_prices', self::SPIN_COST);
-        $cost = $isFree ? 0 : ($costs[$data['kind']] ?? self::SPIN_COST[$data['kind']] ?? 0);
+
+        // Molduras têm preço por slug (não por tipo). Slug desconhecido = inválido.
+        if ($data['kind'] === 'moldura') {
+            if (!array_key_exists($data['slug'], self::MOLDURA_PRICE)) {
+                return response()->json(['error' => 'Moldura inválida.'], 422);
+            }
+            $cost = self::MOLDURA_PRICE[$data['slug']];
+        } else {
+            // Free só é válido pra capas (único tipo com free spin na UI)
+            $isFree = !empty($data['free']) && $data['kind'] === 'capa';
+            // Custo dinâmico via AppSetting (admin pode ajustar); fallback pro valor fixo
+            $costs = AppSetting::get('store_prices', self::SPIN_COST);
+            $cost = $isFree ? 0 : ($costs[$data['kind']] ?? self::SPIN_COST[$data['kind']] ?? 0);
+        }
 
         $result = DB::transaction(function () use ($user, $data, $cost) {
             $coin = MemberCoin::lockForUpdate()->firstOrCreate(
@@ -111,9 +148,11 @@ class MemberUnlocksController extends Controller
     public function adminIndex(int $user)
     {
         $rows = MemberUnlock::where('user_id', $user)->get(['kind', 'slug']);
-        $out = ['title' => [], 'capa' => [], 'name' => []];
+        $out = ['title' => [], 'capa' => [], 'name' => [], 'moldura' => []];
         foreach ($rows as $r) {
-            $out[$r->kind][] = $r->slug;
+            if (array_key_exists($r->kind, $out)) {
+                $out[$r->kind][] = $r->slug;
+            }
         }
         return response()->json($out);
     }
