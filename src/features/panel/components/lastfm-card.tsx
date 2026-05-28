@@ -22,7 +22,7 @@ function TrackRow({ track, index }: { track: LastFmTrack; index: number }) {
       href={track.url ?? "#"}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-[12px] rounded-[10px] px-[10px] py-[8px] transition-colors hover:bg-[#f5f5f5]"
+      className={`group flex items-center gap-[12px] rounded-[10px] px-[10px] py-[8px] transition-colors ${track.nowPlaying ? "bg-[#D51007]/10 hover:bg-[#D51007]/15" : "hover:bg-[#f5f5f5]"}`}
     >
       {track.nowPlaying ? (
         <span className="flex w-[18px] shrink-0 items-center justify-center">
@@ -48,11 +48,6 @@ function TrackRow({ track, index }: { track: LastFmTrack; index: number }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] group-hover:text-[#D51007]">
           {track.name}
-          {track.nowPlaying && (
-            <span className="ml-[6px] text-[11px] font-semibold text-[#D51007]">
-              ouvindo agora
-            </span>
-          )}
         </p>
         <p className="truncate text-[12px] font-medium text-[#8d8d8d]">
           {track.artist}
@@ -208,11 +203,40 @@ export function LastFmConnectCard() {
   );
 }
 
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+function LastFmSkeleton() {
+  return (
+    <div className="rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+      {/* Header */}
+      <div className="mb-[16px] flex items-center gap-[8px]">
+        <div className="h-[18px] w-[18px] rounded-full skeleton-shimmer" />
+        <div className="h-[13px] w-[52px] rounded-[5px] skeleton-shimmer" />
+      </div>
+      {/* Section label */}
+      <div className="mb-[8px] px-[10px]">
+        <div className="h-[11px] w-[160px] rounded-[4px] skeleton-shimmer" />
+      </div>
+      {/* 5 track rows */}
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-[12px] px-[10px] py-[8px]">
+          <div className="h-[12px] w-[18px] shrink-0 rounded-[3px] skeleton-shimmer" />
+          <div className="h-[40px] w-[40px] shrink-0 rounded-[6px] skeleton-shimmer" />
+          <div className="flex-1 space-y-[6px]">
+            <div className="h-[12px] w-3/4 rounded-[4px] skeleton-shimmer" />
+            <div className="h-[10px] w-1/2 rounded-[4px] skeleton-shimmer" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Public profile module ─────────────────────────────────────────────────────
 export function LastFmProfileModule({ slug }: { slug: string }) {
   const { data, loading } = useMemberLastFm(slug);
 
-  if (loading || !data?.connected) return null;
+  if (loading) return <LastFmSkeleton />;
+  if (!data?.connected) return null;
 
   const nowPlaying = data.recentlyPlayed.find((t) => t.nowPlaying);
 
