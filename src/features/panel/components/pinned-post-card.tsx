@@ -52,7 +52,13 @@ function YouTubeThumbnail({ videoId }: { videoId: string }) {
   );
 }
 
-export function PinnedPostCard({ post }: { post: FeedPost }) {
+export function PinnedPostCard({
+  post,
+  onUnpin,
+}: {
+  post: FeedPost;
+  onUnpin?: () => void;
+}) {
   const router = useRouter();
   const media = post.imageUrl ?? post.gifUrl;
   const href = `/post/${post.shortCode || post.id}`;
@@ -72,12 +78,26 @@ export function PinnedPostCard({ post }: { post: FeedPost }) {
   return (
     <div
       onClick={() => router.push(href)}
-      className="cursor-pointer rounded-[var(--panel-radius-card)] bg-white p-[22px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa]"
+      className="relative cursor-pointer rounded-[var(--panel-radius-card)] bg-white p-[22px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa]"
     >
       {/* Cabeçalho — mesmo estilo de "Histórico de Partidas" etc. */}
       <h3 className="mb-[14px] text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
         Post em destaque
       </h3>
+
+      {/* Botão remover (só aparece quando onUnpin for passado) */}
+      {onUnpin && (
+        <button
+          type="button"
+          aria-label="Remover post em destaque"
+          onClick={(e) => { e.stopPropagation(); onUnpin(); }}
+          className="absolute right-[14px] top-[14px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
+        >
+          <svg viewBox="0 0 10 10" className="h-[10px] w-[10px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" />
+          </svg>
+        </button>
+      )}
 
       {/* YouTube thumbnail estática com play */}
       {ytId && <YouTubeThumbnail videoId={ytId} />}
