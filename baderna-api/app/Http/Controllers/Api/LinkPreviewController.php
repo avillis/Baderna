@@ -23,6 +23,11 @@ class LinkPreviewController extends Controller
         }
 
         try {
+            // Instagram: Meta oEmbed API (requires APP_ID|APP_SECRET)
+            if (preg_match('/instagram\.com/i', $host)) {
+                return $this->instagramPreview($url);
+            }
+
             // TikTok: oEmbed API (free, no auth needed, returns thumbnail_url)
             if (preg_match('/tiktok\.com/i', $host)) {
                 return $this->tiktokPreview($url);
@@ -58,6 +63,58 @@ class LinkPreviewController extends Controller
         } catch (\Throwable) {
             return response()->json(['error' => 'Erro ao buscar preview.'], 422);
         }
+    }
+
+    /** Instagram oEmbed via Meta Graph API — retorna thumbnail_url sem precisar de auth do usuário. */
+    private function instagramPreview(string $url): \Illuminate\Http\JsonResponse
+    {
+        $appId     = env('META_APP_ID', '');
+        $appSecret = env('META_APP_SECRET', '');
+
+        if ($appId && $appSecret) {
+            try {
+                $oembed = Http::timeout(5)
+                    ->get('https://graph.facebook.com/v18.0/instagram_oembed', [
+                        'url'          => $url,
+                        'access_token' => "{$appId}|{$appSecret}",
+                        'fields'       => 'thumbnail_url,title,author_name',
+                    ]);
+
+                if ($oembed->successful()) {
+                    $d = $oembed->json();
+                    return response()->json([
+                        'url'         => $url,
+                        'title'       => $d['title'] ?? $d['author_name'] ?? null,
+                        'description' => null,
+                        'image'       => $d['thumbnail_url'] ?? null,
+                        'siteName'    => 'Instagram',
+                    ]);
+                }
+            } catch (\Throwable) {}
+        }
+
+        // Fallback: Chrome UA scraping (sem thumbnail, mas retorna título)
+        try {
+            $response = Http::timeout(8)
+                ->withHeaders(['User-Agent' => self::CHROME_UA])
+                ->get($url);
+
+            if ($response->successful()) {
+                $html = $response->body();
+                $data = [
+                    'url'         => $url,
+                    'title'       => $this->getMeta($html, 'og:title') ?? $this->getTitle($html),
+                    'description' => null,
+                    'image'       => $this->getMeta($html, 'og:image'),
+                    'siteName'    => 'Instagram',
+                ];
+                if ($data['title'] || $data['image']) {
+                    return response()->json($data);
+                }
+            }
+        } catch (\Throwable) {}
+
+        return response()->json(['error' => 'Sem dados de preview.'], 422);
     }
 
     /** TikTok: resolve short links → oEmbed (videos) → og:image fallback (photos). */
