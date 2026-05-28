@@ -214,7 +214,7 @@ export function PanelProfileSummary({
           )}
         </div>
 
-        <div className="relative z-10 flex items-center gap-x-[10px] sm:gap-x-[14px]">
+        <div className="relative z-[40] flex items-center gap-x-[10px] sm:gap-x-[14px]">
           {isOwnProfile ? (
             <button
               type="button"
