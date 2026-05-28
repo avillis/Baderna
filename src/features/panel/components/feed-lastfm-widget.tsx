@@ -2,7 +2,37 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useFeedLastFm } from "@/features/panel/use-lastfm";
+
+function MarqueeText({ text, className }: { text: string; className: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [distance, setDistance] = useState(0);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const el = textRef.current;
+    if (!container || !el) return;
+    setDistance(Math.max(0, el.scrollWidth - container.clientWidth));
+  }, [text]);
+
+  return (
+    <div ref={containerRef} className="overflow-hidden">
+      <span
+        ref={textRef}
+        className={`inline-block whitespace-nowrap ${className}`}
+        style={
+          distance > 0
+            ? ({ "--md": `-${distance}px`, animation: "marquee-title 7s linear infinite" } as React.CSSProperties)
+            : undefined
+        }
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
 
 function LastFmLogo({ className = "h-[16px] w-[16px]" }: { className?: string }) {
   return (
@@ -63,10 +93,10 @@ export function FeedLastFmWidget() {
               <p className="truncate text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] group-hover:text-[#D51007]">
                 {entry.memberName}
               </p>
-              <p className="truncate text-[11px] font-medium text-[#8d8d8d]">
-                {entry.track.name}
-                {entry.track.artist ? ` · ${entry.track.artist}` : ""}
-              </p>
+              <MarqueeText
+                text={`${entry.track.name}${entry.track.artist ? ` · ${entry.track.artist}` : ""}`}
+                className="text-[11px] font-medium text-[#8d8d8d]"
+              />
             </div>
 
             {/* Capa do álbum */}
