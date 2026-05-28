@@ -165,7 +165,11 @@ class SpotifyController extends Controller
     {
         if (!$user->spotify_access_token) return null;
 
-        if ($user->spotify_token_expires_at && now()->gte($user->spotify_token_expires_at)) {
+        // Trata expires_at null como expirado para forçar o refresh na primeira chamada
+        // após a migration (evita usar token antigo inválido indefinidamente).
+        $expired = !$user->spotify_token_expires_at || now()->gte($user->spotify_token_expires_at);
+
+        if ($expired) {
             if (!$user->spotify_refresh_token) return null;
             if (!$this->refreshToken($user)) return null;
         }
