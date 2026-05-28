@@ -42,6 +42,8 @@ export type Account = {
   favoriteSongArtist?: string | null;
   favoriteSongImage?: string | null;
   favoriteSongUrl?: string | null;
+  /** Slug da moldura de nível equipada. null = usa moldura do rank. */
+  activeFrameId?: string | null;
 };
 
 function buildDefaults(user: AuthUser | null): Account {
@@ -183,6 +185,7 @@ const FIELD_TO_API: Partial<Record<keyof Account, string>> = {
   favoriteSongArtist: "favorite_song_artist",
   favoriteSongImage: "favorite_song_image",
   favoriteSongUrl: "favorite_song_url",
+  activeFrameId: "active_frame_id",
 };
 
 export function useCurrentUserId(): string | null {

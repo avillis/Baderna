@@ -23,6 +23,8 @@ export type BadernaMember = {
   teamName?: string | null;
   /** Estilo de nome ativo (loja → ex. "preto", "neon", etc). */
   activeNameId?: string;
+  /** Slug da moldura de nível equipada (ex. "level-frame-100"). null = usa moldura do rank. */
+  activeFrameId?: string | null;
 };
 
 // Membros virão da API. Lista vazia enquanto a migração pro Laravel rola.

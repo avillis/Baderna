@@ -79,6 +79,7 @@ type ApiMember = {
   cachedRankTier: string | null;
   cachedRankDivision: string | null;
   cachedRankLp: number | null;
+  activeFrameId: string | null;
 };
 
 function readCache(): ApiMember[] {
@@ -157,10 +158,11 @@ export function useBadernaMembers(): BadernaMember[] {
             bio: account.bio || m.bio,
             teamName: account.teamName || m.teamName,
             activeNameId: account.activeNameId ?? m.activeNameId,
+            activeFrameId: account.activeFrameId !== undefined ? account.activeFrameId : m.activeFrameId,
           }
         : m,
     );
-  }, [apiMembers, user, account.primaryLane, account.secondaryLane, account.avatarSrc, account.bio, account.teamName, account.activeNameId]);
+  }, [apiMembers, user, account.primaryLane, account.secondaryLane, account.avatarSrc, account.bio, account.teamName, account.activeNameId, account.activeFrameId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -279,6 +281,7 @@ export function useBadernaMembers(): BadernaMember[] {
         tagLine: m.tagLine ?? undefined,
         teamName: m.teamName ?? null,
         activeNameId: m.activeNameId ?? undefined,
+        activeFrameId: m.activeFrameId ?? null,
       };
     });
 

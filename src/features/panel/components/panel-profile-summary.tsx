@@ -12,6 +12,7 @@ import { StyledName } from "@/features/panel/components/styled-name";
 import { TitleModal } from "@/features/panel/components/title-modal";
 import type { RankType } from "@/features/panel/rank-utils";
 import { RARITY_META } from "@/features/panel/titles-data";
+import { LEVEL_FRAMES } from "@/features/panel/molduras-data";
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
 import { useMemberActiveName } from "@/features/panel/use-member-active-name";
@@ -59,6 +60,8 @@ type PanelProfileSummaryProps = {
   bannerSrc?: string;
   /** Botão extra (ex: "Editar cards") exibido junto às ações no mobile. */
   editButton?: ReactNode;
+  /** Moldura de nível do membro (quando diferente da moldura de rank). */
+  levelFrameSrc?: string;
 };
 
 export function PanelProfileSummary({
@@ -77,6 +80,7 @@ export function PanelProfileSummary({
   badernaRank,
   bannerSrc,
   editButton,
+  levelFrameSrc: levelFrameSrcProp,
 }: PanelProfileSummaryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
@@ -116,6 +120,14 @@ export function PanelProfileSummary({
   const liveBio = isOwnProfile && account.bio ? account.bio : bio;
   const liveAvatarSrc =
     isOwnProfile && account.avatarSrc ? account.avatarSrc : avatarSrc;
+
+  // Moldura de nível: para o próprio perfil, usa a do account (mais fresca).
+  // Para outros membros, usa o prop passado pelo caller.
+  const ownFrameId = isOwnProfile ? account.activeFrameId : undefined;
+  const ownFrameSrc = ownFrameId
+    ? (LEVEL_FRAMES.find((f) => f.slug === ownFrameId)?.imageSrc ?? undefined)
+    : undefined;
+  const levelFrameSrc = ownFrameSrc ?? levelFrameSrcProp;
 
   const { unlocked: persistedUnlocked } = useMemberUnlockedTitles(
     memberId ?? "__none__",
@@ -185,6 +197,7 @@ export function PanelProfileSummary({
             frameOffsetY={-40}
             ringClassName="shadow-[0_0_0_4px_#f7f7f7]"
             priority
+            levelFrameSrc={levelFrameSrc}
           />
           {isOwnProfile && (
             <button
