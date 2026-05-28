@@ -133,6 +133,15 @@ async function apiDeletePost(id: number): Promise<boolean> {
   return res.ok;
 }
 
+export async function apiPinPost(id: number): Promise<{ pinned: boolean } | null> {
+  const res = await fetch(`${API_BASE}/posts/${id}/pin`, {
+    method: "POST",
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as { pinned: boolean };
+}
+
 const PAGE_SIZE = 5;
 
 // ── Mock pra testes locais ─────────────────────────────────────────────

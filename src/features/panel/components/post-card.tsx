@@ -72,7 +72,7 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
   );
 }
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
-import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
+import { apiPinPost, formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 import { LinkPreview } from "@/features/panel/components/link-preview";
 
 const URL_RE = /https?:\/\/[^\s]+/g;
@@ -139,6 +139,25 @@ export function PostCard({
       toast.show("Texto copiado!", "success");
     } catch {
       toast.show("Não foi possível copiar o texto.");
+    }
+  }
+
+  /** Fixa/desfixar o post no perfil do usuário (toggle no backend). */
+  async function handlePin() {
+    setMenuOpen(false);
+    if (post.id < 0) return; // Mock post
+    try {
+      const result = await apiPinPost(post.id);
+      if (result) {
+        toast.show(
+          result.pinned ? "Post fixado no perfil!" : "Post removido do perfil.",
+          "success",
+        );
+      } else {
+        toast.show("Não foi possível fixar o post.");
+      }
+    } catch {
+      toast.show("Não foi possível fixar o post.");
     }
   }
 
@@ -409,6 +428,27 @@ export function PostCard({
                     >
                       <Flag className="h-[14px] w-[14px]" strokeWidth={2} />
                       Reportar
+                    </button>
+                  )}
+                  {isOwnPost && (
+                    <button
+                      type="button"
+                      onClick={handlePin}
+                      className="flex w-full items-center gap-[8px] border-t border-[#f4f4f4] px-[14px] py-[10px] text-[13px] font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f4f4f4]"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="h-[14px] w-[14px]"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 17v5" />
+                        <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v3.76z" />
+                      </svg>
+                      Fixar no perfil
                     </button>
                   )}
                   {canDelete && (

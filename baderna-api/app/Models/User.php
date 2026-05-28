@@ -47,6 +47,7 @@ class User extends Authenticatable
         'favorite_game_title',
         'favorite_game_cover_url',
         'duo_user_id',
+        'pinned_post_id',
         'birthday',
         'birthday_hidden',
         'spotify_access_token',
@@ -96,6 +97,7 @@ class User extends Authenticatable
             'profile_module_order' => 'array',
             'favorite_champion_slugs' => 'array',
             'duo_user_id' => 'integer',
+            'pinned_post_id' => 'integer',
             'birthday' => 'date',
             'birthday_hidden' => 'boolean',
             'spotify_token_expires_at' => 'datetime',
@@ -137,6 +139,11 @@ class User extends Authenticatable
     public function posts()
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function pinnedPost()
+    {
+        return $this->belongsTo(Post::class, 'pinned_post_id');
     }
 
     /**
