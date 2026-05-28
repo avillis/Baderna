@@ -26,10 +26,11 @@ const RANK_POINTS: Record<RankType, number> = {
   silver: 3,
   gold: 4,
   platinum: 5,
-  diamond: 6,
-  master: 7,
-  grandmaster: 8,
-  challenger: 9,
+  emerald: 6,
+  diamond: 7,
+  master: 8,
+  grandmaster: 9,
+  challenger: 10,
 };
 
 function pointsFor(player: InhousePlayer): number {
