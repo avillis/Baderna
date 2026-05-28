@@ -31,6 +31,36 @@ interface LogEntry {
 
 /* ─── Histórico (do mais recente pro mais antigo) ───────────────────────── */
 const LOGS: LogEntry[] = [
+  // ╔══════ 28 de Maio de 2026 ══════╗
+  {
+    date: "2026-05-28",
+    type: "feat",
+    title: "Post em destaque no perfil",
+    description:
+      "Fixe um dos seus posts no próprio perfil pelo menu ··· do post. Ele aparece acima do Spotify com thumbnail de YouTube, preview de link e rodapé de curtidas/comentários. Desafixar pelo mesmo menu.",
+  },
+  {
+    date: "2026-05-28",
+    type: "feat",
+    title: "Notificações de curtida e resposta em comentários",
+    description:
+      "Agora você é notificado quando alguém curte o seu comentário ou responde diretamente a ele — sem duplicar caso o autor do post e o autor do comentário sejam a mesma pessoa.",
+  },
+  {
+    date: "2026-05-28",
+    type: "fix",
+    title: "Data do post alinhada à direita na view expandida",
+    description:
+      "A data/hora no rodapé do post expandido ficava à esquerda junto com as ações. Agora aparece em linha própria, alinhada à direita.",
+  },
+  {
+    date: "2026-05-28",
+    type: "fix",
+    title: "Badge de notificação maior e mais próxima do sino",
+    description:
+      "A bolinha vermelha do sino estava pequena e ligeiramente deslocada para fora. Agora é levemente maior e posicionada colada ao ícone.",
+  },
+
   // ╔══════ 26 de Maio de 2026 ══════╗
   {
     date: "2026-05-26",
