@@ -57,17 +57,10 @@ export function MoldurasTab() {
                   width={120}
                   height={120}
                   className={`h-[80%] w-[80%] object-contain transition-opacity duration-200 ${
-                    owned ? "opacity-40" : "opacity-100"
+                    owned ? "opacity-50" : "opacity-100"
                   }`}
                   unoptimized
                 />
-                {owned && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                    <span className="text-[28px] font-bold text-green-500">
-                      ✓
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Info area */}
@@ -77,9 +70,13 @@ export function MoldurasTab() {
                 </p>
 
                 {owned ? (
-                  <div className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#e8f5e9] text-[13px] font-bold tracking-[-0.02em] text-green-600">
+                  <button
+                    type="button"
+                    disabled
+                    className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white opacity-40 cursor-not-allowed"
+                  >
                     Desbloqueada
-                  </div>
+                  </button>
                 ) : (
                   <>
                     {/* Price row */}
