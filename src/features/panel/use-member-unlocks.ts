@@ -131,7 +131,13 @@ export function useMemberUnlocks() {
         setUnlocks(next);
         writeCache(next);
       }
-      const result = await postUnlockToApi(kind, slug, free);
+      let result: UnlockResponse | null = null;
+      try {
+        result = await postUnlockToApi(kind, slug, free);
+      } catch {
+        // erro de rede ou JSON inválido — trata como falha
+        result = null;
+      }
       if (!result) {
         // rollback otimista
         setUnlocks(unlocks);
