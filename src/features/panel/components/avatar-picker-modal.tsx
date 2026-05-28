@@ -313,20 +313,28 @@ export function AvatarPickerModal({
                   setCroppedAreaPixels(croppedAreaPixels);
                 }}
               />
+              {/* Botões de zoom — canto superior esquerdo sobre o cropper */}
+              <div className="absolute left-[12px] top-[12px] z-10 flex flex-col overflow-hidden rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
+                <button
+                  type="button"
+                  aria-label="Aumentar zoom"
+                  onClick={() => setZoom((z) => Math.min(3, +(z + 0.2).toFixed(2)))}
+                  className="flex h-[36px] w-[36px] items-center justify-center bg-white/90 text-[20px] font-bold text-[#0f0f0f] transition-colors hover:bg-white active:bg-[#f0f0f0]"
+                >
+                  +
+                </button>
+                <div className="h-[1px] bg-black/10" />
+                <button
+                  type="button"
+                  aria-label="Diminuir zoom"
+                  onClick={() => setZoom((z) => Math.max(1, +(z - 0.2).toFixed(2)))}
+                  className="flex h-[36px] w-[36px] items-center justify-center bg-white/90 text-[20px] font-bold text-[#0f0f0f] transition-colors hover:bg-white active:bg-[#f0f0f0]"
+                >
+                  −
+                </button>
+              </div>
             </div>
             <div className="flex flex-col gap-[16px] px-[28px] py-[20px]">
-              <div className="flex items-center gap-[12px]">
-                <span className="text-[12px] font-semibold text-[#8d8d8d]">Zoom</span>
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.01}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="flex-1 accent-[#ff4100]"
-                />
-              </div>
               <div className="flex gap-[10px]">
                 <button
                   type="button"
