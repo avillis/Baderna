@@ -509,9 +509,6 @@ function SidebarInner({
           </Link>
 
           <div className="flex items-center gap-1">
-            <NotificationBell
-              placement={dropdownPlacement === "above" ? "above" : "up"}
-            />
             <SidebarIconButton
               label={darkMode ? "Modo claro" : "Modo noturno"}
               onClick={() => setDarkMode((v) => !v)}
@@ -528,6 +525,9 @@ function SidebarInner({
                 </svg>
               )}
             </SidebarIconButton>
+            <NotificationBell
+              placement={dropdownPlacement === "above" ? "above" : "up"}
+            />
             <SidebarIconButton
               label="Mais opções"
               onClick={toggleAcct}
