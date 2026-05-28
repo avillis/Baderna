@@ -215,7 +215,7 @@ function TopChampionsModuleCard({
                     unoptimized
                   />
                 </div>
-                <p className="mt-[6px] line-clamp-2 break-words text-[10px] font-bold leading-[1.2] tracking-[-0.03em] text-[#0f0f0f]">
+                <p className="mt-[6px] truncate text-[10px] font-bold leading-[1.2] tracking-[-0.03em] text-[#0f0f0f]">
                   {formatChampionName(champ)}
                 </p>
               </div>
