@@ -131,7 +131,7 @@ export function SpotifyConnectCard() {
           )}
           {data.topTracks.length === 0 && data.recentlyPlayed.length === 0 && (
             <p className="px-[10px] text-[13px] font-medium text-[#9d9d9d]">
-              Nenhuma música encontrada ainda. Ouça mais no Spotify! 🎧
+              Nenhuma música encontrada ainda. Ouça mais no Spotify!
             </p>
           )}
         </div>
@@ -176,7 +176,7 @@ export function SpotifyProfileModule({ slug }: { slug: string }) {
       )}
       {data.topTracks.length === 0 && data.recentlyPlayed.length === 0 && (
         <p className="px-[10px] text-[13px] font-medium text-[#9d9d9d]">
-          Nenhuma música encontrada ainda. 🎧
+          Nenhuma música encontrada ainda.
         </p>
       )}
     </div>
