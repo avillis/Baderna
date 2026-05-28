@@ -323,6 +323,11 @@ class DiscordWebhook
                 'color'       => self::BRAND_COLOR,
                 'fields' => [
                     [
+                        'name'   => "\u{200B}",
+                        'value'  => "\u{200B}",
+                        'inline' => false,
+                    ],
+                    [
                         'name'   => '<:Mission_icon:1509345989696163991> Código',
                         'value'  => "`{$inhouse->short_code}`",
                         'inline' => true,
