@@ -31,18 +31,17 @@ function StatSkeleton({
 
 function getRankBadernaEffect(value: string) {
   const num = parseInt(value.replace(/\D/g, ""), 10);
-  // #01 — diamante prismático (alto contraste: escuros profundos alternando com brilhos)
+  // #01 — diamante prismático (cores saturadas, tom claro — sem escurecer)
   if (num === 1)
     return {
       gradient: [
-        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,255,255,0.42) 1px, rgba(255,255,255,0.08) 2px, transparent 3px, transparent 22px)",
-        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,255,255,0.30) 1px, rgba(255,255,255,0.06) 2px, transparent 3px, transparent 22px)",
-        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,255,255,0.16) 1px, transparent 2px, transparent 16px)",
-        "linear-gradient(125deg, #f4faff 0%, #08112a 7%, #a0c8ff 14%, #040212 21%, #b088ff 28%, #040108 35%, #f0a0f8 42%, #060208 49%, #68e4ff 56%, #070f20 63%, #eef6ff 70%, #0e051c 77%, #c0d8ff 84%, #030a18 91%, #e4f0ff 100%)",
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,255,255,0.30) 1px, rgba(255,255,255,0.06) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,255,255,0.20) 1px, rgba(255,255,255,0.04) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,255,255,0.10) 1px, transparent 2px, transparent 20px)",
+        "linear-gradient(125deg, #e8f4ff 0%, #58a2ff 11%, #9060ff 22%, #e858f0 33%, #ff88d0 44%, #ffcca0 54%, #50e4ff 64%, #5ca0ff 76%, #c098ff 88%, #e8f4ff 100%)",
       ].join(", "),
-      glow: "0 0 28px rgba(155,210,255,0.80), 0 0 55px rgba(200,165,255,0.28), 0 0 85px rgba(255,200,255,0.10), inset 1px 1px 8px rgba(255,255,255,0.45), inset -1px -1px 10px rgba(0,0,0,0.55)",
+      glow: "0 0 26px rgba(155,210,255,0.75), 0 0 52px rgba(200,165,255,0.26), inset 1px 1px 6px rgba(255,255,255,0.38), inset -1px -1px 8px rgba(0,0,0,0.42)",
       smoke: "rgba(218, 232, 255, 1)",
-      isDiamond: true,
     };
   // #02 — vermelho
   if (num === 2)
@@ -93,7 +92,7 @@ export function PanelStatCard({
   const isRankBaderna = tone === "rank-baderna";
 
   if (isRankBaderna) {
-    const { gradient, glow, smoke, isDiamond } = getRankBadernaEffect(value);
+    const { gradient, glow, smoke } = getRankBadernaEffect(value);
     return (
       <article
         className="relative h-[122px] overflow-hidden rounded-[var(--panel-radius-card)] bg-[#0c0c0c]"
@@ -119,18 +118,6 @@ export function PanelStatCard({
             </p>
             {placeholder ? (
               <StatSkeleton featured />
-            ) : isDiamond ? (
-              <p
-                className="mt-[8px] text-[28px] font-bold leading-none tracking-[-0.03em]"
-                style={{
-                  background: "linear-gradient(135deg, #f0f8ff 0%, #a8ccff 22%, #d8a8ff 44%, #ffa8f4 66%, #a8eeff 88%, #f0f8ff 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                {value}
-              </p>
             ) : (
               <p className="mt-[8px] text-[28px] font-bold leading-none tracking-[-0.03em] text-white">
                 {value}
