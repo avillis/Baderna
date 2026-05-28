@@ -4,6 +4,7 @@ export type RankType =
   | "silver"
   | "gold"
   | "platinum"
+  | "emerald"
   | "diamond"
   | "master"
   | "grandmaster"
@@ -15,6 +16,7 @@ const rankFrameByType: Record<RankType, string> = {
   silver: "/images/rank-frames/silver.png",
   gold: "/images/rank-frames/gold.png",
   platinum: "/images/rank-frames/platinum.png",
+  emerald: "/images/rank-frames/emerald.png",
   diamond: "/images/rank-frames/diamond.png",
   master: "/images/rank-frames/master.png",
   grandmaster: "/images/rank-frames/grandmaster.png",

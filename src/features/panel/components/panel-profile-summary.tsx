@@ -27,7 +27,7 @@ const TIER_TO_RANK_TYPE: Record<string, RankType> = {
   SILVER: "silver",
   GOLD: "gold",
   PLATINUM: "platinum",
-  EMERALD: "platinum",
+  EMERALD: "emerald",
   DIAMOND: "diamond",
   MASTER: "master",
   GRANDMASTER: "grandmaster",
