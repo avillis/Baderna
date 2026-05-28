@@ -42,13 +42,16 @@ const TIER_COLOR: Record<string, string> = {
   CHALLENGER: "#f0c674",
 };
 
-// Cor do número do top 3, no mesmo esquema do banner de rank da Baderna:
-// 1º Platina, 2º Ouro, 3º Prata.
-const POSITION_COLOR: Record<number, string> = {
-  1: TIER_COLOR.PLATINUM,
-  2: TIER_COLOR.GOLD,
-  3: TIER_COLOR.SILVER,
-};
+// Cor do número por posição no ranking Baderna (mesma lógica do card de perfil).
+// Flex não usa cor — números ficam no cinza padrão.
+function getBadernaPositionColor(position: number): string {
+  if (position === 1) return "#a0d8ff"; // azul
+  if (position === 2) return "#ff4040"; // vermelho
+  if (position === 3) return "#9b59b6"; // roxo
+  if (position <= 8)  return "#ffcc00"; // dourado
+  if (position <= 13) return "#b0b0b0"; // prata
+  return "#cd7f32";                      // bronze
+}
 
 function eloScore(rank: MemberRank | undefined): number {
   const tier = rank?.tier?.toUpperCase();
@@ -145,8 +148,7 @@ export default function RankingPage() {
         <div className="overflow-hidden rounded-[25px] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
           {(mode === "baderna" ? badernaList : sorted).map(({ member, rank, score }, index) => {
             const position = index + 1;
-            const isPodium = score >= 0 && position <= 3;
-            const posColor = isPodium ? POSITION_COLOR[position] : undefined;
+            const posColor = mode === "baderna" ? getBadernaPositionColor(position) : undefined;
             const tier = rank?.tier?.toUpperCase();
             const tierColor = (tier && TIER_COLOR[tier]) || "#b0a8a4";
             const hasRank = score >= 0;

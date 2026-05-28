@@ -17,20 +17,33 @@ import { useMemberRanks } from "@/features/panel/use-member-ranks";
 
 type RankEffect = { gradient: string; glow: string };
 
-const RANK_EFFECTS: Record<number, RankEffect> = {
-  1: {
+// Segue a mesma lógica de cores do card "Rank da Baderna" no perfil.
+function getRankEffect(rank: number): RankEffect {
+  if (rank === 1) return {
     gradient: "linear-gradient(135deg, #c8e8ff, #6ab8f0)",
-    glow: "0 0 14px 3px rgba(100, 185, 255, 0.30)",
-  },
-  2: {
+    glow: "0 0 14px 3px rgba(100, 185, 255, 0.35)",
+  };
+  if (rank === 2) return {
+    gradient: "linear-gradient(135deg, #ff8080, #ff4040)",
+    glow: "0 0 14px 3px rgba(255, 64, 64, 0.35)",
+  };
+  if (rank === 3) return {
+    gradient: "linear-gradient(135deg, #c89eff, #9b59b6)",
+    glow: "0 0 14px 3px rgba(155, 89, 182, 0.30)",
+  };
+  if (rank <= 8) return {
     gradient: "linear-gradient(135deg, #ffe066, #ffb300)",
     glow: "0 0 14px 3px rgba(255, 185, 0, 0.28)",
-  },
-  3: {
+  };
+  if (rank <= 13) return {
     gradient: "linear-gradient(135deg, #f2f2f2, #b0b0b0)",
     glow: "0 0 14px 3px rgba(140, 140, 140, 0.22)",
-  },
-};
+  };
+  return {
+    gradient: "linear-gradient(135deg, #e8b07a, #cd7f32)",
+    glow: "0 0 14px 3px rgba(205, 127, 50, 0.22)",
+  };
+}
 
 // `value` casa com o que a API manda em preferredRoles (inglês); `label` é o
 // texto em PT mostrado no chip.
@@ -42,9 +55,6 @@ const LANES = [
   { value: "Support", label: "Suporte" },
 ] as const;
 
-function getRankEffect(rank: number): RankEffect | null {
-  return RANK_EFFECTS[rank] ?? null;
-}
 
 function MemberAvatar({
   src,
@@ -244,11 +254,7 @@ export default function MembrosPage() {
                   {/* Avatar */}
                   <div
                     className="rounded-full p-[3px]"
-                    style={
-                      rankEffect
-                        ? { background: rankEffect.gradient, boxShadow: rankEffect.glow }
-                        : undefined
-                    }
+                    style={{ background: rankEffect.gradient, boxShadow: rankEffect.glow }}
                   >
                     <MemberAvatar
                       src={member.avatarSrc || getChampionAvatarSrc(member.id)}
