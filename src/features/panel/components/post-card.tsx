@@ -74,6 +74,7 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { apiPinPost, formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 import { LinkPreview } from "@/features/panel/components/link-preview";
+import { PostCommentsSection } from "@/features/panel/components/post-comments-section";
 
 const URL_RE = /https?:\/\/[^\s]+/g;
 
@@ -95,6 +96,11 @@ export function PostCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [localCommentsCount, setLocalCommentsCount] = useState(post.commentsCount);
+
+  // Mantém o contador local sincronizado quando o post é atualizado pelo pai.
+  useEffect(() => { setLocalCommentsCount(post.commentsCount); }, [post.commentsCount]);
   const menuRef = useRef<HTMLDivElement>(null);
   const media = post.imageUrl ?? post.gifUrl;
   const canDelete =
@@ -230,10 +236,12 @@ export function PostCard({
 
   // Click no card → permalink do post. Buttons/links internos param
   // propagação pra não disparar duas navegações.
+  // Quando os comentários estão abertos inline, o card fica em "modo leitura"
+  // e o click não navega (o usuário provavelmente quer interagir com os comentários).
   function handleCardClick(e: React.MouseEvent) {
-    // Ignora clicks em mídia (deixa zoom no futuro), texto selecionado, etc.
+    if (commentsOpen) return;
     const target = e.target as HTMLElement;
-    if (window.getSelection()?.toString()) return; // user selecionando texto
+    if (window.getSelection()?.toString()) return;
     if (target.closest("a, button")) return;
     router.push(`/post/${post.shortCode || post.id}`);
   }
@@ -260,9 +268,10 @@ export function PostCard({
   }
 
   return (
+    <>
     <article
       onClick={handleCardClick}
-      className="cursor-pointer rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa] sm:p-[24px]"
+      className={`rounded-[20px] bg-white p-[20px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors sm:p-[24px] ${commentsOpen ? "cursor-default" : "cursor-pointer hover:bg-[#fafafa]"}`}
     >
       {/* Header: avatar + nome + nick + (menu). Sempre em linha. */}
       <div className="flex items-start gap-[12px] sm:gap-[14px]">
@@ -541,8 +550,10 @@ export function PostCard({
             onClick={() => onLike?.(post.id)}
           />
           <CommentButton
-            count={post.commentsCount}
+            count={localCommentsCount}
             href={`/post/${post.shortCode || post.id}`}
+            active={commentsOpen}
+            onClick={expanded ? undefined : () => setCommentsOpen((v) => !v)}
           />
           <PostReactions postId={post.id} />
           <BookmarkButton postId={post.id} initialBookmarked={post.bookmarked ?? false} />
@@ -555,6 +566,8 @@ export function PostCard({
           </p>
         )}
       </div>
+
+      {/* Seção de comentários inline — só quando aberta no feed (não no expanded). */}
 
       {confirmOpen && (
         <div
@@ -594,6 +607,16 @@ export function PostCard({
         </div>
       )}
     </article>
+    {commentsOpen && !expanded && (
+      <div className="mt-[8px]">
+        <PostCommentsSection
+          postId={post.id}
+          postOwnerId={post.author.id ?? null}
+          onCountChange={setLocalCommentsCount}
+        />
+      </div>
+    )}
+    </>
   );
 }
 
@@ -601,29 +624,45 @@ export function PostCard({
  * Botão de comentários: ícone muda quando o post já tem comentários
  * (balão com 3 pontinhos) vs vazio (balão sem dots). Link pro permalink.
  */
-function CommentButton({ count, href }: { count: number; href: string }) {
+function CommentButton({
+  count,
+  href,
+  onClick,
+  active = false,
+}: {
+  count: number;
+  href: string;
+  onClick?: () => void;
+  active?: boolean;
+}) {
+  const cls = `group flex items-center gap-[6px] text-[13px] font-semibold transition-colors ${
+    active ? "text-[#ff4100]" : "text-[#8d8d8d] hover:text-[#ff4100]"
+  }`;
+  const icon = (
+    <span className="relative inline-flex h-[22px] w-[22px] items-center justify-center">
+      <svg className="h-[20px] w-[20px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M21 12C21 16.9706 16.9706 21 12 21C10.8029 21 9.6603 20.7663 8.61549 20.3419C8.41552 20.2607 8.31554 20.2201 8.23472 20.202C8.15566 20.1843 8.09715 20.1778 8.01613 20.1778C7.9333 20.1778 7.84309 20.1928 7.66265 20.2229L4.10476 20.8159C3.73218 20.878 3.54589 20.909 3.41118 20.8512C3.29328 20.8007 3.19933 20.7067 3.14876 20.5888C3.09098 20.4541 3.12203 20.2678 3.18413 19.8952L3.77711 16.3374C3.80718 16.1569 3.82222 16.0667 3.82221 15.9839C3.8222 15.9028 3.81572 15.8443 3.798 15.7653C3.77988 15.6845 3.73927 15.5845 3.65806 15.3845C3.23374 14.3397 3 13.1971 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+  // No feed (onClick passado): toggle inline. Na view expandida: link pro permalink.
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} aria-label="Comentários" className={cls}>
+        {icon}
+        <span>{count}</span>
+      </button>
+    );
+  }
   return (
-    <Link
-      href={href}
-      aria-label="Comentários"
-      className="group flex items-center gap-[6px] text-[13px] font-semibold text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
-    >
-      <span className="relative inline-flex h-[22px] w-[22px] items-center justify-center">
-        <svg
-          className="h-[20px] w-[20px]"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M21 12C21 16.9706 16.9706 21 12 21C10.8029 21 9.6603 20.7663 8.61549 20.3419C8.41552 20.2607 8.31554 20.2201 8.23472 20.202C8.15566 20.1843 8.09715 20.1778 8.01613 20.1778C7.9333 20.1778 7.84309 20.1928 7.66265 20.2229L4.10476 20.8159C3.73218 20.878 3.54589 20.909 3.41118 20.8512C3.29328 20.8007 3.19933 20.7067 3.14876 20.5888C3.09098 20.4541 3.12203 20.2678 3.18413 19.8952L3.77711 16.3374C3.80718 16.1569 3.82222 16.0667 3.82221 15.9839C3.8222 15.9028 3.81572 15.8443 3.798 15.7653C3.77988 15.6845 3.73927 15.5845 3.65806 15.3845C3.23374 14.3397 3 13.1971 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
+    <Link href={href} aria-label="Comentários" className={cls}>
+      {icon}
       <span>{count}</span>
     </Link>
   );
