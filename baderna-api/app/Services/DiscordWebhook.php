@@ -312,7 +312,7 @@ class DiscordWebhook
             "{$winnerEmoji} **{$winnerName}** venceu!\n\n"
             . "{$loserEmoji} _{$loserName}_\n\n"
             . "<:Coin_icon_plus:1509296400666460433> +{$winAmount} moedas pro time vencedor\n\n"
-            . "<:Coin_icon:1509296350997778603> +{$lossAmount} moedas pro time perdedor";
+            . "<:Coin_default:1509348466432937984> +{$lossAmount} moedas pro time perdedor";
 
         $body = [
             'content' => "<:Reward_icon:1509346254096826368> **Resultado do inhouse!**",
