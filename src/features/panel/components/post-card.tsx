@@ -65,7 +65,7 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white/95 text-[#0f0f0f] shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-transform group-hover:scale-105">
-          <Play className="ml-[2px] h-[24px] w-[24px]" fill="currentColor" />
+          <Play className="h-[24px] w-[24px]" fill="currentColor" />
         </span>
       </div>
     </button>
