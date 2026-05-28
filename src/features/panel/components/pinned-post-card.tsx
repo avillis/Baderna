@@ -96,7 +96,7 @@ export function PinnedPostCard({
   return (
     <div
       onClick={() => router.push(href)}
-      className="relative cursor-pointer rounded-[var(--panel-radius-card)] bg-white p-[22px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa]"
+      className="group relative cursor-pointer rounded-[var(--panel-radius-card)] bg-white p-[22px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-colors hover:bg-[#fafafa]"
     >
       {/* Cabeçalho — mesmo estilo de "Histórico de Partidas" etc. */}
       <h3 className="mb-[14px] text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
@@ -109,10 +109,10 @@ export function PinnedPostCard({
           type="button"
           aria-label="Remover post em destaque"
           onClick={(e) => { e.stopPropagation(); onUnpin(); }}
-          className="absolute right-[14px] top-[14px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
+          className="absolute right-[12px] top-[12px] flex h-[22px] w-[22px] items-center justify-center rounded-full text-[#b0a8a4] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#fee2e2] hover:text-[#c53030]"
         >
-          <svg viewBox="0 0 10 10" className="h-[10px] w-[10px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-            <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" />
+          <svg viewBox="0 0 24 24" className="h-[11px] w-[11px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
       )}
