@@ -63,6 +63,29 @@ export function useMyLastFm() {
   return { data, loading, saving, saveUsername, reload: load };
 }
 
+export type FeedLastFmEntry = {
+  memberName: string;
+  memberSlug: string;
+  memberAvatar: string | null;
+  activeNameId: string;
+  track: LastFmTrack;
+};
+
+/** Hook para o feed Last.fm — última música de cada membro conectado. */
+export function useFeedLastFm() {
+  const [data, setData] = useState<FeedLastFmEntry[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/lastfm/feed`, { headers: { Accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) setData(d); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { data, loading };
+}
+
 /** Hook para os dados Last.fm públicos de um membro (página de perfil). */
 export function useMemberLastFm(slug: string | null) {
   const [data, setData] = useState<LastFmData | null>(null);

@@ -7,14 +7,16 @@ export type LevelFrame = {
 };
 
 // Pricing per frame (sequential, not per level number):
-// Tier 1 (1–100):   +50 each  → 50, 100, 150, 200, 250
+// Tier 1 (1–100):   +50 each  → 50, 100, 150, 175, 175, 200, 250
 // Tier 2 (125–250): +100 each → 350, 450, 550, 650, 750, 850
 // Tier 3 (275–375): +120 each → 970, 1090, 1210, 1330, 1450
-// Tier 4 (400+):    +200 each → 400=1650 (missing), 425=1850, 450=2050, 475=2250, 500=2450
+// Tier 4 (400+):    +200 each → 425=1850, 450=2050, 475=2250, 500=2450, 525=2650, 550=2850, 575=3050, 600=3250
 export const LEVEL_FRAMES: LevelFrame[] = [
   { level: 1,   slug: "level-frame-1",   imageSrc: "/images/level-frames/Level_1_Summoner_Icon_Border.png",   price: 50,   tier: 1 },
   { level: 30,  slug: "level-frame-30",  imageSrc: "/images/level-frames/Level_30_Summoner_Icon_Border.png",  price: 100,  tier: 1 },
   { level: 50,  slug: "level-frame-50",  imageSrc: "/images/level-frames/Level_50_Summoner_Icon_Border.png",  price: 150,  tier: 1 },
+  { level: 68,  slug: "level-frame-68",  imageSrc: "/images/level-frames/Level_68.png",                       price: 175,  tier: 1 },
+  { level: 69,  slug: "level-frame-69",  imageSrc: "/images/level-frames/Level_69.png",                       price: 175,  tier: 1 },
   { level: 75,  slug: "level-frame-75",  imageSrc: "/images/level-frames/Level_75_Summoner_Icon_Border.png",  price: 200,  tier: 1 },
   { level: 100, slug: "level-frame-100", imageSrc: "/images/level-frames/Level_100_Summoner_Icon_Border.png", price: 250,  tier: 1 },
   { level: 125, slug: "level-frame-125", imageSrc: "/images/level-frames/Level_125_Summoner_Icon_Border.png", price: 350,  tier: 2 },
@@ -32,6 +34,10 @@ export const LEVEL_FRAMES: LevelFrame[] = [
   { level: 450, slug: "level-frame-450", imageSrc: "/images/level-frames/Level_450_Summoner_Icon_Border.png", price: 2050, tier: 4 },
   { level: 475, slug: "level-frame-475", imageSrc: "/images/level-frames/Level_475_Summoner_Icon_Border.png", price: 2250, tier: 4 },
   { level: 500, slug: "level-frame-500", imageSrc: "/images/level-frames/Level_500_Summoner_Icon_Border.png", price: 2450, tier: 4 },
+  { level: 525, slug: "level-frame-525", imageSrc: "/images/level-frames/Level_525.png",                      price: 2650, tier: 4 },
+  { level: 550, slug: "level-frame-550", imageSrc: "/images/level-frames/Level_550.png",                      price: 2850, tier: 4 },
+  { level: 575, slug: "level-frame-575", imageSrc: "/images/level-frames/Level_575.png",                      price: 3050, tier: 4 },
+  { level: 600, slug: "level-frame-600", imageSrc: "/images/level-frames/Level_600.png",                      price: 3250, tier: 4 },
 ];
 
 export const TIER_INFO: Record<1 | 2 | 3 | 4, { label: string; levels: string; color: string }> = {

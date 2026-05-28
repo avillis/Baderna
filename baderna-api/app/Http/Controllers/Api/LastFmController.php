@@ -31,6 +31,38 @@ class LastFmController extends Controller
         return $this->dataForUser($user);
     }
 
+    /** GET /lastfm/feed — última música ouvida de cada membro conectado (público) */
+    public function feed(): JsonResponse
+    {
+        $users = User::whereNotNull('lastfm_username')
+            ->where('is_deleted', false)
+            ->select(['name', 'display_name', 'slug', 'avatar_src', 'active_name_id', 'lastfm_username'])
+            ->get();
+
+        $result = [];
+        foreach ($users as $user) {
+            if (!$user->slug) continue;
+
+            $tracks = $this->fetchRecentTracks($user->lastfm_username, 1);
+            if (empty($tracks)) continue;
+
+            $result[] = [
+                'memberName'   => $user->display_name ?: $user->name,
+                'memberSlug'   => $user->slug,
+                'memberAvatar' => $user->avatar_src,
+                'activeNameId' => $user->active_name_id ?? 'preto',
+                'track'        => $tracks[0],
+            ];
+        }
+
+        // ouvindo agora fica no topo
+        usort($result, fn($a, $b) =>
+            (bool)($b['track']['nowPlaying'] ?? false) <=> (bool)($a['track']['nowPlaying'] ?? false)
+        );
+
+        return response()->json($result);
+    }
+
     /** POST /lastfm/username — salva o username Last.fm do usuário autenticado */
     public function updateUsername(Request $request): JsonResponse
     {
@@ -86,15 +118,33 @@ class LastFmController extends Controller
             $items = $r->json('toptracks.track', []);
             if (!is_array($items)) continue;
 
-            $tracks = collect($items)->map(fn($t) => [
-                'id'      => md5(($t['name'] ?? '') . ($t['artist']['name'] ?? '')),
-                'name'    => $t['name'] ?? '',
-                'artist'  => $t['artist']['name'] ?? '',
-                'album'   => null,
-                'image'   => $this->bestImage($t['image'] ?? []),
-                'url'     => $t['url'] ?? null,
-                'preview' => null,
-            ])->all();
+            $tracks = collect($items)->map(function ($t) {
+                $image = $this->bestImage($t['image'] ?? []);
+
+                // getTopTracks never returns real album art — enrich via track.getInfo
+                if (!$image && !empty($t['name']) && !empty($t['artist']['name'])) {
+                    $info = Http::get('https://ws.audioscrobbler.com/2.0/', [
+                        'method'  => 'track.getInfo',
+                        'track'   => $t['name'],
+                        'artist'  => $t['artist']['name'],
+                        'api_key' => $this->apiKey,
+                        'format'  => 'json',
+                    ]);
+                    if ($info->successful()) {
+                        $image = $this->bestImage($info->json('track.album.image', []));
+                    }
+                }
+
+                return [
+                    'id'      => md5(($t['name'] ?? '') . ($t['artist']['name'] ?? '')),
+                    'name'    => $t['name'] ?? '',
+                    'artist'  => $t['artist']['name'] ?? '',
+                    'album'   => null,
+                    'image'   => $image,
+                    'url'     => $t['url'] ?? null,
+                    'preview' => null,
+                ];
+            })->all();
 
             if (!empty($tracks)) return [$tracks, $label];
         }
@@ -102,14 +152,14 @@ class LastFmController extends Controller
         return [[], 'short'];
     }
 
-    private function fetchRecentTracks(string $username): array
+    private function fetchRecentTracks(string $username, int $limit = 5): array
     {
         $r = Http::get('https://ws.audioscrobbler.com/2.0/', [
             'method'  => 'user.getRecentTracks',
             'user'    => $username,
             'api_key' => $this->apiKey,
             'format'  => 'json',
-            'limit'   => 5,
+            'limit'   => $limit,
         ]);
 
         if (!$r->successful()) return [];

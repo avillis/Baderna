@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 
 import { FeedHistoryWidget } from "@/features/panel/components/feed-history-widget";
 import { FeedInhousesWidget } from "@/features/panel/components/feed-inhouses-widget";
+import { FeedLastFmWidget } from "@/features/panel/components/feed-lastfm-widget";
 import { FeedMembersWidget } from "@/features/panel/components/feed-members-widget";
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { PostCard } from "@/features/panel/components/post-card";
@@ -101,10 +102,11 @@ export default function FeedPage() {
           )}
         </div>
 
-        {/* Coluna direita: histórico + inhouses + membros */}
+        {/* Coluna direita: histórico + inhouses + last.fm + membros */}
         <aside className="flex flex-col gap-[20px] pt-[72px] sm:gap-[14px] sm:pt-0">
           <FeedHistoryWidget />
           <FeedInhousesWidget />
+          <FeedLastFmWidget />
           <FeedMembersWidget />
         </aside>
       </section>

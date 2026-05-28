@@ -37,6 +37,7 @@ Route::get('/spotify/callback', [SpotifyController::class, 'callback']);
 Route::get('/spotify/user/{slug}', [SpotifyController::class, 'forUser']);
 
 // ── Last.fm público — sem auth ──
+Route::get('/lastfm/feed', [LastFmController::class, 'feed']);
 Route::get('/lastfm/user/{slug}', [LastFmController::class, 'forUser']);
 
 // ── Públicas (auth) ────────────────────────────────────────────────────
