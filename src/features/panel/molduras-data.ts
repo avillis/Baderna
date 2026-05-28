@@ -48,20 +48,32 @@ export const LEVEL_FRAMES: LevelFrame[] = [
 ];
 
 export const CHAMPION_FRAMES: ChampionFrame[] = [
-  { champion: "Gnar",     slug: "champion-frame-gnar",     imageSrc: "/images/level-frames/Level_Gnar.png",     price: 700 },
-  { champion: "Illaoi",   slug: "champion-frame-illaoi",   imageSrc: "/images/level-frames/Level_Illaoi.png",   price: 700 },
-  { champion: "Jinx",     slug: "champion-frame-jinx",     imageSrc: "/images/level-frames/Level_Jinx.png",     price: 700 },
-  { champion: "Katarina", slug: "champion-frame-katarina", imageSrc: "/images/level-frames/Level_Katarina.png", price: 700 },
-  { champion: "Leona",    slug: "champion-frame-leona",    imageSrc: "/images/level-frames/Level_Leona.png",    price: 700 },
-  { champion: "Lilia",    slug: "champion-frame-lilia",    imageSrc: "/images/level-frames/Level_Lilia.png",    price: 700 },
-  { champion: "Lux",      slug: "champion-frame-lux",      imageSrc: "/images/level-frames/Level_Lux.png",      price: 700 },
-  { champion: "Nautilus", slug: "champion-frame-nautilus", imageSrc: "/images/level-frames/Level_Nautilus.png", price: 700 },
-  { champion: "Rell",     slug: "champion-frame-rell",     imageSrc: "/images/level-frames/Level_Rell.png",     price: 700 },
-  { champion: "Smolder",  slug: "champion-frame-smolder",  imageSrc: "/images/level-frames/Level_Smolder.png",  price: 700 },
-  { champion: "Thresh",   slug: "champion-frame-thresh",   imageSrc: "/images/level-frames/Level_Thresh.png",   price: 700 },
-  { champion: "Veigar",   slug: "champion-frame-veigar",   imageSrc: "/images/level-frames/Level_Veigar.png",   price: 700 },
-  { champion: "Vex",      slug: "champion-frame-vex",      imageSrc: "/images/level-frames/Level_Vex.png",      price: 700 },
+  { champion: "Azir",     slug: "champion-frame-azir",     imageSrc: "/images/level-frames/Level_Azir.png",     price: 500 },
+  { champion: "Gnar",     slug: "champion-frame-gnar",     imageSrc: "/images/level-frames/Level_Gnar.png",     price: 500 },
+  { champion: "Illaoi",   slug: "champion-frame-illaoi",   imageSrc: "/images/level-frames/Level_Illaoi.png",   price: 500 },
+  { champion: "Jinx",     slug: "champion-frame-jinx",     imageSrc: "/images/level-frames/Level_Jinx.png",     price: 500 },
+  { champion: "Katarina", slug: "champion-frame-katarina", imageSrc: "/images/level-frames/Level_Katarina.png", price: 500 },
+  { champion: "Leona",    slug: "champion-frame-leona",    imageSrc: "/images/level-frames/Level_Leona.png",    price: 500 },
+  { champion: "Lilia",    slug: "champion-frame-lilia",    imageSrc: "/images/level-frames/Level_Lilia.png",    price: 500 },
+  { champion: "Lux",      slug: "champion-frame-lux",      imageSrc: "/images/level-frames/Level_Lux.png",      price: 500 },
+  { champion: "Nautilus", slug: "champion-frame-nautilus", imageSrc: "/images/level-frames/Level_Nautilus.png", price: 500 },
+  { champion: "Rell",     slug: "champion-frame-rell",     imageSrc: "/images/level-frames/Level_Rell.png",     price: 500 },
+  { champion: "Smolder",  slug: "champion-frame-smolder",  imageSrc: "/images/level-frames/Level_Smolder.png",  price: 500 },
+  { champion: "Thresh",   slug: "champion-frame-thresh",   imageSrc: "/images/level-frames/Level_Thresh.png",   price: 500 },
+  { champion: "Veigar",   slug: "champion-frame-veigar",   imageSrc: "/images/level-frames/Level_Veigar.png",   price: 500 },
+  { champion: "Vex",      slug: "champion-frame-vex",      imageSrc: "/images/level-frames/Level_Vex.png",      price: 500 },
+  { champion: "Zoe",      slug: "champion-frame-zoe",      imageSrc: "/images/level-frames/Level_Zoe.png",      price: 500 },
 ];
+
+/** Resolve qualquer slug de moldura (nível ou campeão) para o imageSrc.
+ *  Retorna undefined se o slug não for reconhecido ou for nulo. */
+export function resolveFrameSrc(slug: string | null | undefined): string | undefined {
+  if (!slug || slug === "none") return undefined;
+  return (
+    LEVEL_FRAMES.find((f) => f.slug === slug)?.imageSrc ??
+    CHAMPION_FRAMES.find((f) => f.slug === slug)?.imageSrc
+  );
+}
 
 export const TIER_INFO: Record<1 | 2 | 3 | 4, { label: string; levels: string; color: string }> = {
   1: { label: "Iniciante",  levels: "Nível 1–100",   color: "#b0a8a4" },

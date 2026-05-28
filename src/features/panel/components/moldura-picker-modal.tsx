@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { LEVEL_FRAMES } from "@/features/panel/molduras-data";
+import { LEVEL_FRAMES, CHAMPION_FRAMES } from "@/features/panel/molduras-data";
 import { getRankFrameSrc } from "@/features/panel/rank-utils";
 import type { RankType } from "@/features/panel/rank-utils";
 import { useAccount } from "@/features/panel/use-account";
@@ -199,59 +199,126 @@ export function MolduraPickerModal({
             </div>
           </div>
         ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto p-[24px] no-scrollbar">
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-              {LEVEL_FRAMES.map((frame) => {
-                const owned = isUnlocked("moldura", frame.slug);
-                const isActive = activeFrameId === frame.slug;
-                return (
-                  <button
-                    key={frame.slug}
-                    type="button"
-                    disabled={!owned}
-                    onClick={() => {
-                      onSelect(frame.slug);
-                      handleClose();
-                    }}
-                    className={`relative flex flex-col items-center gap-[6px] overflow-hidden rounded-[16px] p-[8px] transition-all focus:outline-none ${
-                      owned ? "cursor-pointer hover:bg-[#f7f7f7]" : "cursor-default"
-                    } ${isActive ? "ring-2 ring-[#ff4100] bg-[#fff5f2]" : ""}`}
-                  >
-                    <div
-                      className={`relative flex aspect-square w-full items-center justify-center rounded-[12px] bg-[#ededed] ${
-                        !owned ? "opacity-40" : ""
-                      }`}
+          <div className="min-h-0 flex-1 overflow-y-auto p-[24px] no-scrollbar space-y-[24px]">
+
+            {/* ── Campeões ── */}
+            <div>
+              <p className="mb-[12px] text-[12px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
+                Campeões
+              </p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                {CHAMPION_FRAMES.map((frame) => {
+                  const owned = isUnlocked("moldura", frame.slug);
+                  const isActive = activeFrameId === frame.slug;
+                  return (
+                    <button
+                      key={frame.slug}
+                      type="button"
+                      disabled={!owned}
+                      onClick={() => {
+                        onSelect(frame.slug);
+                        handleClose();
+                      }}
+                      className={`relative flex flex-col items-center gap-[6px] overflow-hidden rounded-[16px] p-[8px] transition-all focus:outline-none ${
+                        owned ? "cursor-pointer hover:bg-[#f7f7f7]" : "cursor-default"
+                      } ${isActive ? "ring-2 ring-[#ff4100] bg-[#fff5f2]" : ""}`}
                     >
-                      <Image
-                        src={frame.imageSrc}
-                        alt={`Moldura Nível ${frame.level}`}
-                        width={80}
-                        height={80}
-                        className="h-[80%] w-[80%] object-contain"
-                        unoptimized
-                      />
-                    </div>
-                    <span
-                      className={`text-[11px] font-semibold tracking-[-0.01em] ${
-                        !owned ? "text-[#c0b8b4]" : "text-[#0f0f0f]"
-                      }`}
-                    >
-                      Nível {frame.level}
-                    </span>
-                    {isActive && (
-                      <span className="text-[10px] font-bold text-[#ff4100]">
-                        Ativa
+                      <div
+                        className={`relative flex aspect-square w-full items-center justify-center rounded-[12px] bg-[#ededed] ${
+                          !owned ? "opacity-40" : ""
+                        }`}
+                      >
+                        <Image
+                          src={frame.imageSrc}
+                          alt={`Moldura ${frame.champion}`}
+                          width={80}
+                          height={80}
+                          className="h-[80%] w-[80%] object-contain"
+                          unoptimized
+                        />
+                      </div>
+                      <span
+                        className={`text-[11px] font-semibold tracking-[-0.01em] ${
+                          !owned ? "text-[#c0b8b4]" : "text-[#0f0f0f]"
+                        }`}
+                      >
+                        {frame.champion}
                       </span>
-                    )}
-                    {!owned && !isActive && (
-                      <span className="text-[10px] font-bold text-[#c0b8b4]">
-                        Bloqueada
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+                      {isActive && (
+                        <span className="text-[10px] font-bold text-[#ff4100]">
+                          Ativa
+                        </span>
+                      )}
+                      {!owned && !isActive && (
+                        <span className="text-[10px] font-bold text-[#c0b8b4]">
+                          Bloqueada
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* ── Nível ── */}
+            <div>
+              <p className="mb-[12px] text-[12px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
+                Nível
+              </p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                {LEVEL_FRAMES.map((frame) => {
+                  const owned = isUnlocked("moldura", frame.slug);
+                  const isActive = activeFrameId === frame.slug;
+                  return (
+                    <button
+                      key={frame.slug}
+                      type="button"
+                      disabled={!owned}
+                      onClick={() => {
+                        onSelect(frame.slug);
+                        handleClose();
+                      }}
+                      className={`relative flex flex-col items-center gap-[6px] overflow-hidden rounded-[16px] p-[8px] transition-all focus:outline-none ${
+                        owned ? "cursor-pointer hover:bg-[#f7f7f7]" : "cursor-default"
+                      } ${isActive ? "ring-2 ring-[#ff4100] bg-[#fff5f2]" : ""}`}
+                    >
+                      <div
+                        className={`relative flex aspect-square w-full items-center justify-center rounded-[12px] bg-[#ededed] ${
+                          !owned ? "opacity-40" : ""
+                        }`}
+                      >
+                        <Image
+                          src={frame.imageSrc}
+                          alt={`Moldura Nível ${frame.level}`}
+                          width={80}
+                          height={80}
+                          className="h-[80%] w-[80%] object-contain"
+                          unoptimized
+                        />
+                      </div>
+                      <span
+                        className={`text-[11px] font-semibold tracking-[-0.01em] ${
+                          !owned ? "text-[#c0b8b4]" : "text-[#0f0f0f]"
+                        }`}
+                      >
+                        Nível {frame.level}
+                      </span>
+                      {isActive && (
+                        <span className="text-[10px] font-bold text-[#ff4100]">
+                          Ativa
+                        </span>
+                      )}
+                      {!owned && !isActive && (
+                        <span className="text-[10px] font-bold text-[#c0b8b4]">
+                          Bloqueada
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         )}
       </div>

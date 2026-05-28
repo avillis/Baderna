@@ -40,6 +40,7 @@ import {
 } from "@/features/panel/components/profile-modules";
 import { NAME_STYLES } from "@/features/panel/names-data";
 import { useTitles } from "@/features/panel/use-titles";
+import { resolveFrameSrc } from "@/features/panel/molduras-data";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -521,6 +522,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                 badernaRank={badernaRank}
                 bannerSrc={profile.bannerSrc}
                 editButton={editCardsButton}
+                levelFrameSrc={resolveFrameSrc(viewedBaderna?.activeFrameId)}
               />
             </div>
 
@@ -590,6 +592,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                   onCompare={handleCompare}
                   badernaRank={badernaRank}
                   bannerSrc={profile.bannerSrc}
+                  levelFrameSrc={resolveFrameSrc(viewedBaderna?.activeFrameId)}
                 />
               </div>
 
