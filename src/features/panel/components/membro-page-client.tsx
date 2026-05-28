@@ -22,7 +22,7 @@ import { LiveHistoryCard } from "@/features/panel/components/live-history-card";
 import { PanelCommentsCard } from "@/features/panel/components/panel-comments-card";
 import { PanelGameModeToggle } from "@/features/panel/components/panel-game-mode-toggle";
 import { PanelMemberWinratesCard } from "@/features/panel/components/panel-member-winrates-card";
-import { SpotifyProfileModule } from "@/features/panel/components/spotify-card";
+import { LastFmProfileModule } from "@/features/panel/components/lastfm-card";
 import { PinnedPostCard } from "@/features/panel/components/pinned-post-card";
 import { fetchPost, apiPinPost, type FeedPost } from "@/features/panel/use-posts";
 import { PanelProfileSummary } from "@/features/panel/components/panel-profile-summary";
@@ -557,7 +557,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                     } : undefined}
                   />
                 )}
-                <SpotifyProfileModule slug={slug} />
+                <LastFmProfileModule slug={slug} />
                 {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
               </div>
               <div className="flex min-w-0 max-w-full flex-col gap-8 pb-[32px] xl:pb-0">
@@ -616,7 +616,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
                     } : undefined}
                   />
                 )}
-                <SpotifyProfileModule slug={slug} />
+                <LastFmProfileModule slug={slug} />
                 {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
               </div>
               <div className="col-start-2 col-span-2">

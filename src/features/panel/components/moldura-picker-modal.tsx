@@ -156,7 +156,7 @@ export function MolduraPickerModal({
               <br />
               Atualiza junto com o seu rank.
             </p>
-            <div className="relative h-[380px] w-[380px]" style={{ marginTop: "-56px", marginBottom: "-16px" }}>
+            <div className="relative h-[380px] w-[380px]" style={{ marginTop: "-110px", marginBottom: "-32px" }}>
               <Image
                 src={rankFrameSrc}
                 alt="Moldura do rank"
@@ -165,21 +165,38 @@ export function MolduraPickerModal({
                 unoptimized
               />
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                onSelect(null);
-                handleClose();
-              }}
-              className={`flex h-[50px] items-center justify-center rounded-[16px] px-8 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 ${
-                !activeFrameId
-                  ? "bg-[#ff4100] opacity-50 cursor-default"
-                  : "bg-[#ff4100]"
-              }`}
-              disabled={!activeFrameId}
-            >
-              {!activeFrameId ? "Moldura atual" : "Usar moldura do Rank"}
-            </button>
+            <div className="flex flex-col items-center gap-[10px] w-full max-w-[260px]">
+              <button
+                type="button"
+                onClick={() => {
+                  onSelect(null);
+                  handleClose();
+                }}
+                className={`flex h-[50px] w-full items-center justify-center rounded-[16px] px-8 text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 ${
+                  activeFrameId === null || activeFrameId === undefined
+                    ? "bg-[#ff4100] opacity-50 cursor-default"
+                    : "bg-[#ff4100]"
+                }`}
+                disabled={activeFrameId === null || activeFrameId === undefined}
+              >
+                {activeFrameId === null || activeFrameId === undefined ? "Moldura atual" : "Usar moldura do Rank"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onSelect("none");
+                  handleClose();
+                }}
+                className={`flex h-[50px] w-full items-center justify-center rounded-[16px] px-8 text-[13px] font-bold tracking-[-0.02em] transition-opacity hover:opacity-85 ${
+                  activeFrameId === "none"
+                    ? "bg-[#ededed] text-[#0f0f0f] opacity-50 cursor-default"
+                    : "bg-[#ededed] text-[#0f0f0f]"
+                }`}
+                disabled={activeFrameId === "none"}
+              >
+                {activeFrameId === "none" ? "Sem moldura (atual)" : "Sem moldura"}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-y-auto p-[24px] no-scrollbar">

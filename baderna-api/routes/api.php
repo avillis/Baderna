@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\PostReactionsController;
 use App\Http\Controllers\Api\TitlesController;
 use App\Http\Controllers\Api\BirthdaysController;
 use App\Http\Controllers\Api\SpotifyController;
+use App\Http\Controllers\Api\LastFmController;
 use App\Http\Controllers\Api\PostBookmarksController;
 use App\Http\Controllers\Api\PostPinController;
 use App\Http\Controllers\Api\LinkPreviewController;
@@ -34,6 +35,9 @@ use App\Http\Controllers\Api\LinkPreviewController;
 Route::get('/spotify/callback', [SpotifyController::class, 'callback']);
 // Perfil Spotify público — sem auth, qualquer visitante pode ver
 Route::get('/spotify/user/{slug}', [SpotifyController::class, 'forUser']);
+
+// ── Last.fm público — sem auth ──
+Route::get('/lastfm/user/{slug}', [LastFmController::class, 'forUser']);
 
 // ── Públicas (auth) ────────────────────────────────────────────────────
 // Únicas rotas SEM auth: register e login (não tem como ter token antes).
@@ -67,10 +71,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/titles', [TitlesController::class, 'index']);
     Route::get('/birthdays', [BirthdaysController::class, 'index']);
 
-    // Spotify OAuth + dados
+    // Spotify OAuth + dados (mantido para compatibilidade)
     Route::get('/spotify/redirect', [SpotifyController::class, 'redirect']);
     Route::delete('/spotify/disconnect', [SpotifyController::class, 'disconnect']);
     Route::get('/spotify/me', [SpotifyController::class, 'me']);
+
+    // Last.fm — autenticados
+    Route::get('/lastfm/me', [LastFmController::class, 'me']);
+    Route::post('/lastfm/username', [LastFmController::class, 'updateUsername']);
 
     // Listagens da comunidade
     Route::get('/members', [MembersController::class, 'index']);

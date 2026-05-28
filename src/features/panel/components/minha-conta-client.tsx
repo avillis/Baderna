@@ -24,7 +24,7 @@ import { useMemberUnlockedNames } from "@/features/panel/use-member-unlocked-nam
 import { useTitles } from "@/features/panel/use-titles";
 import { useUnlockedBanners } from "@/features/panel/use-unlocked-banners";
 import { RARITY_META, type Title } from "@/features/panel/titles-data";
-import { SpotifyConnectCard } from "@/features/panel/components/spotify-card";
+import { LastFmConnectCard } from "@/features/panel/components/lastfm-card";
 
 type CollectionKey = "capas" | "titulos" | "nomes";
 
@@ -67,7 +67,7 @@ export function MinhaContaClient({
       />
 
       <section className="flex flex-col gap-[18px]">
-        <SpotifyConnectCard />
+        <LastFmConnectCard />
         <CollectionSummary
           title="Capas"
           count={unlockedBanners.length}

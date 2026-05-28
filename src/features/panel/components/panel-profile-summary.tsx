@@ -124,7 +124,9 @@ export function PanelProfileSummary({
   // Moldura de nível: para o próprio perfil, usa a do account (mais fresca).
   // Para outros membros, usa o prop passado pelo caller.
   const ownFrameId = isOwnProfile ? account.activeFrameId : undefined;
-  const ownFrameSrc = ownFrameId
+  // "none" = sem moldura alguma; null/undefined = usa moldura do rank
+  const noFrame = ownFrameId === "none";
+  const ownFrameSrc = ownFrameId && ownFrameId !== "none"
     ? (LEVEL_FRAMES.find((f) => f.slug === ownFrameId)?.imageSrc ?? undefined)
     : undefined;
   const levelFrameSrc = ownFrameSrc ?? levelFrameSrcProp;
@@ -190,7 +192,7 @@ export function PanelProfileSummary({
             src={liveAvatarSrc}
             alt={liveDisplayName}
             rankType={liveRankType}
-            unranked={isUnranked}
+            unranked={isUnranked || noFrame}
             size={156}
             avatarInset={21}
             frameScale={2.72}
@@ -198,6 +200,7 @@ export function PanelProfileSummary({
             ringClassName="shadow-[0_0_0_4px_#f7f7f7]"
             priority
             levelFrameSrc={levelFrameSrc}
+            levelFrameOffsetY={5}
           />
           {isOwnProfile && (
             <button
