@@ -38,7 +38,7 @@ export function RankedAvatar({
   priority = false,
   unranked = false,
   levelFrameSrc,
-  levelFrameScale = 1.8, // moldura de nível — ajustar conforme formato
+  levelFrameScale = 1.75, // moldura de nível — ajustar conforme formato
   levelFrameOffsetY = 0,
 }: RankedAvatarProps) {
   const [errored, setErrored] = useState(false);
