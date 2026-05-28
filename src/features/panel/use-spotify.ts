@@ -64,7 +64,7 @@ export function useMySpotify() {
       method: "DELETE",
       headers: authHeaders(),
     });
-    setData({ connected: false, topTracks: [], recentlyPlayed: [] });
+    setData({ connected: false, topTracks: [], topTracksRange: "short", recentlyPlayed: [] });
   }, []);
 
   return { data, loading, connect, disconnect, reload: load };
