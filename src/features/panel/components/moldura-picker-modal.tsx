@@ -112,7 +112,7 @@ export function MolduraPickerModal({
         {/* Header */}
         <div className="border-b border-[#ededed] px-[28px] pb-[16px] pt-[28px]">
           <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-            Moldura
+            Editar moldura
           </h2>
           <div className="mt-[14px]">
             <div
@@ -156,7 +156,7 @@ export function MolduraPickerModal({
               <br />
               Atualiza junto com o seu rank.
             </p>
-            <div className="relative h-[160px] w-[160px]">
+            <div className="relative h-[260px] w-[260px]">
               <Image
                 src={rankFrameSrc}
                 alt="Moldura do rank"
