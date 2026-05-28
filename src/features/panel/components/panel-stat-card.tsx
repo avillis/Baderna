@@ -31,12 +31,18 @@ function StatSkeleton({
 
 function getRankBadernaEffect(value: string) {
   const num = parseInt(value.replace(/\D/g, ""), 10);
-  // #01 — azul gelado (mantém)
+  // #01 — diamante prismático
   if (num === 1)
     return {
-      gradient: "linear-gradient(135deg, rgba(208,231,255,0.33) 0%, #a0d8ff 100%)",
-      glow: "0 0 22px rgba(160,216,255,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-      smoke: "rgba(160, 216, 255, 0.85)",
+      gradient: [
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,255,255,0.22) 1px, rgba(255,255,255,0.05) 2px, transparent 3px, transparent 34px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,255,255,0.15) 1px, rgba(255,255,255,0.03) 2px, transparent 3px, transparent 34px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,255,255,0.09) 1px, transparent 2px, transparent 24px)",
+        "linear-gradient(125deg, #f0f8ff 0%, #bcd4ff 12%, #c0b4ff 25%, #f0b0ff 38%, #ffd8e8 50%, #ffecd0 60%, #c8f4ff 72%, #b8d4ff 84%, #e8f4ff 100%)",
+      ].join(", "),
+      glow: "0 0 30px rgba(160,216,255,0.75), 0 0 60px rgba(200,170,255,0.22), inset 1px 1px 6px rgba(255,255,255,0.35), inset -1px -1px 8px rgba(0,0,0,0.4)",
+      smoke: "rgba(215, 230, 255, 0.95)",
+      isDiamond: true,
     };
   // #02 — vermelho
   if (num === 2)
@@ -87,7 +93,7 @@ export function PanelStatCard({
   const isRankBaderna = tone === "rank-baderna";
 
   if (isRankBaderna) {
-    const { gradient, glow, smoke } = getRankBadernaEffect(value);
+    const { gradient, glow, smoke, isDiamond } = getRankBadernaEffect(value);
     return (
       <article
         className="relative h-[122px] overflow-hidden rounded-[var(--panel-radius-card)] bg-[#0c0c0c]"
@@ -106,6 +112,12 @@ export function PanelStatCard({
           className="absolute inset-0"
           style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}
         />
+        {/* Diagonal shimmer sweep — só no card de diamante (#01) */}
+        {isDiamond && (
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="rank-diamond-shimmer absolute inset-0" />
+          </div>
+        )}
         <div className="relative z-10 flex h-full items-center px-[26px]">
           <div>
             <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
