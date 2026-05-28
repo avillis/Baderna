@@ -82,7 +82,7 @@ export function LinkPreview({ url }: { url: string }) {
       )}
       <div className="p-[14px]">
         {data.siteName && (
-          <p className="text-[11px] text-[#8d8d8d] uppercase tracking-[0.04em] mb-[4px]">
+          <p className="text-[11px] text-[#8d8d8d] mb-[4px]">
             {data.siteName}
           </p>
         )}
