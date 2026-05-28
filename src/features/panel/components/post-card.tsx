@@ -551,7 +551,7 @@ export function PostCard({
         {/* Data em linha própria abaixo das ações — só na view expandida.
             Separada pra não comprimir o espaço das reações no mobile. */}
         {expanded && (
-          <p className="mt-[10px] text-[12px] text-[#8d8d8d]">
+          <p className="mt-[10px] text-right text-[12px] text-[#8d8d8d]">
             {formatPostDateLong(post.createdAt)}
           </p>
         )}
