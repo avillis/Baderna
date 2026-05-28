@@ -60,13 +60,13 @@ class LinkPreviewController extends Controller
         }
     }
 
-    /** TikTok oEmbed — resolves vt.tiktok.com short links first. */
+    /** TikTok: resolve short links → oEmbed (videos) → og:image fallback (photos). */
     private function tiktokPreview(string $url): \Illuminate\Http\JsonResponse
     {
         $resolved = $url;
 
-        // Short links (vt.tiktok.com) don't have /video/ in them — follow redirects to get full URL
-        if (!str_contains($url, '/video/')) {
+        // Resolve short links (vt.tiktok.com) or any URL that isn't already a full /video/ or /photo/ path
+        if (!str_contains($url, '/video/') && !str_contains($url, '/photo/')) {
             try {
                 $ch = curl_init($url);
                 curl_setopt_array($ch, [
@@ -83,20 +83,47 @@ class LinkPreviewController extends Controller
             } catch (\Throwable) {}
         }
 
-        try {
-            $oembed = Http::timeout(5)
-                ->withHeaders(['User-Agent' => self::CHROME_UA])
-                ->get('https://www.tiktok.com/oembed', ['url' => $resolved]);
+        // oEmbed only works for /video/ URLs — skip it for photo posts
+        if (str_contains($resolved, '/video/')) {
+            try {
+                $oembed = Http::timeout(5)
+                    ->withHeaders(['User-Agent' => self::CHROME_UA])
+                    ->get('https://www.tiktok.com/oembed', ['url' => $resolved]);
 
-            if ($oembed->successful()) {
-                $d = $oembed->json();
-                return response()->json([
-                    'url'         => $url,
-                    'title'       => $d['title'] ?? null,
-                    'description' => null,
-                    'image'       => $d['thumbnail_url'] ?? null,
-                    'siteName'    => 'TikTok',
-                ]);
+                if ($oembed->successful()) {
+                    $d = $oembed->json();
+                    if (!empty($d['thumbnail_url'])) {
+                        return response()->json([
+                            'url'         => $url,
+                            'title'       => $d['title'] ?? null,
+                            'description' => null,
+                            'image'       => $d['thumbnail_url'],
+                            'siteName'    => 'TikTok',
+                        ]);
+                    }
+                }
+            } catch (\Throwable) {}
+        }
+
+        // Fallback: scrape og:image from the page (works for /photo/ posts and when oEmbed is blocked)
+        try {
+            $page = Http::timeout(8)
+                ->withHeaders(['User-Agent' => self::CHROME_UA])
+                ->get($resolved);
+
+            if ($page->successful()) {
+                $html  = $page->body();
+                $image = $this->getMeta($html, 'og:image');
+                $title = $this->getMeta($html, 'og:title') ?? $this->getMeta($html, 'og:description');
+                if ($image || $title) {
+                    return response()->json([
+                        'url'         => $url,
+                        'title'       => $title,
+                        'description' => null,
+                        'image'       => $image,
+                        'siteName'    => 'TikTok',
+                    ]);
+                }
             }
         } catch (\Throwable) {}
 
