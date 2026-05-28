@@ -5,11 +5,11 @@ import { Play } from "lucide-react";
 
 import { authToken } from "@/features/panel/use-auth";
 
-const VIDEO_HOST_RE = /instagram\.com|tiktok\.com|twitter\.com|x\.com\/.*\/video|youtube\.com\/shorts/i;
-function isVideoUrl(url: string) { return VIDEO_HOST_RE.test(url); }
-
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+
+const VIDEO_HOST_RE = /instagram\.com|tiktok\.com|twitter\.com|x\.com\/.*\/video|youtube\.com\/shorts/i;
+function isVideoUrl(url: string) { return VIDEO_HOST_RE.test(url); }
 
 type PreviewData = {
   url: string;
