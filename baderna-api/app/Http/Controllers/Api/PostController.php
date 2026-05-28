@@ -140,6 +140,20 @@ class PostController extends Controller
         } else {
             PostLike::create(['user_id' => $userId, 'post_id' => $id]);
             $liked = true;
+
+            // Notifica o autor do post (nunca self-like).
+            if ($post->user_id !== $userId) {
+                $post->loadMissing('user:id,name,display_name,summoner_name,avatar_src');
+                if ($post->user) {
+                    $liker     = $request->user();
+                    $actionUrl = '/post/' . ($post->short_code ?: $post->id);
+                    $post->user->notify(new MemberNotification(
+                        Mentions::authorDisplayName($liker) . ' curtiu seu post',
+                        $actionUrl,
+                        $liker->avatar_src,
+                    ));
+                }
+            }
         }
         $count = PostLike::where('post_id', $id)->count();
         return response()->json(['liked' => $liked, 'likesCount' => $count]);
