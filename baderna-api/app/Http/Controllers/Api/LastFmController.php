@@ -74,7 +74,14 @@ class LastFmController extends Controller
         $user->lastfm_username = $request->input('username') ?: null;
         $user->save();
 
-        return $this->dataForUser($user);
+        // Retorna só o estado de conexão — o frontend recarrega os tracks separadamente
+        return response()->json([
+            'connected'      => !is_null($user->lastfm_username),
+            'username'       => $user->lastfm_username,
+            'topTracks'      => [],
+            'topTracksRange' => 'short',
+            'recentlyPlayed' => [],
+        ]);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

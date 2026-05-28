@@ -78,7 +78,7 @@ export function RankedAvatar({
           src={levelFrameSrc ?? getRankFrameSrc(rankType)}
           alt={levelFrameSrc ? "level border" : `${rankType} border`}
           fill
-          className="pointer-events-none object-contain"
+          className="pointer-events-none object-contain z-[30]"
           sizes={`${size}px`}
           unoptimized
           style={{

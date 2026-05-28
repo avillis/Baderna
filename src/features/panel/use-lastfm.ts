@@ -54,11 +54,15 @@ export function useMyLastFm() {
         headers: { ...authHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ username: username || null }),
       });
-      if (r.ok) setData(await r.json());
+      if (r.ok) {
+        // Save retorna estado básico imediatamente; recarrega tracks completos em seguida
+        setData(await r.json());
+        load();
+      }
     } finally {
       setSaving(false);
     }
-  }, []);
+  }, [load]);
 
   return { data, loading, saving, saveUsername, reload: load };
 }
