@@ -48,6 +48,7 @@ export const LEVEL_FRAMES: LevelFrame[] = [
 ];
 
 export const CHAMPION_FRAMES: ChampionFrame[] = [
+  { champion: "Azir",     slug: "champion-frame-azir",     imageSrc: "/images/level-frames/Level_Azir.png",     price: 700 },
   { champion: "Gnar",     slug: "champion-frame-gnar",     imageSrc: "/images/level-frames/Level_Gnar.png",     price: 700 },
   { champion: "Illaoi",   slug: "champion-frame-illaoi",   imageSrc: "/images/level-frames/Level_Illaoi.png",   price: 700 },
   { champion: "Jinx",     slug: "champion-frame-jinx",     imageSrc: "/images/level-frames/Level_Jinx.png",     price: 700 },
@@ -61,6 +62,7 @@ export const CHAMPION_FRAMES: ChampionFrame[] = [
   { champion: "Thresh",   slug: "champion-frame-thresh",   imageSrc: "/images/level-frames/Level_Thresh.png",   price: 700 },
   { champion: "Veigar",   slug: "champion-frame-veigar",   imageSrc: "/images/level-frames/Level_Veigar.png",   price: 700 },
   { champion: "Vex",      slug: "champion-frame-vex",      imageSrc: "/images/level-frames/Level_Vex.png",      price: 700 },
+  { champion: "Zoe",      slug: "champion-frame-zoe",      imageSrc: "/images/level-frames/Level_Zoe.png",      price: 700 },
 ];
 
 /** Resolve qualquer slug de moldura (nível ou campeão) para o imageSrc.
