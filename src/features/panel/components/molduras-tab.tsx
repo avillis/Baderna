@@ -30,34 +30,40 @@ export function MoldurasTab() {
   async function handleBuyLevel(frame: LevelFrame) {
     if (buying) return;
     setBuying(frame.slug);
-    const result = await unlock("moldura", frame.slug);
-    setBuying(null);
-    if (!result) {
-      toast.show("Saldo insuficiente ou erro ao comprar.", "error");
-      return;
-    }
-    if (result.duplicate) {
-      toast.show("Você já tem essa moldura.", "info");
-    } else {
-      syncBalance(result.balance);
-      toast.show(`Moldura Nível ${frame.level} desbloqueada!`, "success");
+    try {
+      const result = await unlock("moldura", frame.slug);
+      if (!result) {
+        toast.show("Saldo insuficiente ou erro ao comprar.", "error");
+        return;
+      }
+      if (result.duplicate) {
+        toast.show("Você já tem essa moldura.", "info");
+      } else {
+        syncBalance(result.balance);
+        toast.show(`Moldura Nível ${frame.level} desbloqueada!`, "success");
+      }
+    } finally {
+      setBuying(null);
     }
   }
 
   async function handleBuyChampion(frame: ChampionFrame) {
     if (buying) return;
     setBuying(frame.slug);
-    const result = await unlock("moldura", frame.slug);
-    setBuying(null);
-    if (!result) {
-      toast.show("Saldo insuficiente ou erro ao comprar.", "error");
-      return;
-    }
-    if (result.duplicate) {
-      toast.show("Você já tem essa moldura.", "info");
-    } else {
-      syncBalance(result.balance);
-      toast.show(`Moldura ${frame.champion} desbloqueada!`, "success");
+    try {
+      const result = await unlock("moldura", frame.slug);
+      if (!result) {
+        toast.show("Saldo insuficiente ou erro ao comprar.", "error");
+        return;
+      }
+      if (result.duplicate) {
+        toast.show("Você já tem essa moldura.", "info");
+      } else {
+        syncBalance(result.balance);
+        toast.show(`Moldura ${frame.champion} desbloqueada!`, "success");
+      }
+    } finally {
+      setBuying(null);
     }
   }
 
