@@ -1,8 +1,38 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useMyLastFm, useMemberLastFm, type LastFmTrack } from "@/features/panel/use-lastfm";
+
+// Mesmo padrão de MarqueeTitle em profile-modules.tsx — desliza quando transborda
+function MarqueeText({ text, className }: { text: string; className: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [distance, setDistance] = useState(0);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const el = textRef.current;
+    if (!container || !el) return;
+    setDistance(Math.max(0, el.scrollWidth - container.clientWidth));
+  }, [text]);
+
+  return (
+    <div ref={containerRef} className="overflow-hidden">
+      <span
+        ref={textRef}
+        className={`inline-block whitespace-nowrap ${className}`}
+        style={
+          distance > 0
+            ? ({ "--md": `-${distance}px`, animation: "marquee-title 7s linear infinite" } as React.CSSProperties)
+            : undefined
+        }
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
 
 // ── Last.fm logo ──────────────────────────────────────────────────────────────
 function LastFmLogo({ className = "h-[20px] w-[20px]" }: { className?: string }) {
@@ -46,9 +76,10 @@ function TrackRow({ track, index }: { track: LastFmTrack; index: number }) {
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] group-hover:text-[#D51007]">
-          {track.name}
-        </p>
+        <MarqueeText
+          text={track.name}
+          className="text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] group-hover:text-[#D51007]"
+        />
         <p className="truncate text-[12px] font-medium text-[#8d8d8d]">
           {track.artist}
         </p>
