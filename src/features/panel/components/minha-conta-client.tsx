@@ -131,6 +131,7 @@ function BasicInfoCard({
   const [titlesOpen, setTitlesOpen] = useState(false);
   const { unlocked: unlockedTitleIds } = useMemberUnlockedTitles(ownerId, ["aprendiz"]);
   const { unlocked: unlockedNameIds } = useMemberUnlockedNames(ownerId);
+  const toast = useToast();
   return (
     <section className="rounded-[25px] bg-white px-[20px] py-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] sm:px-[36px] sm:py-[32px]">
       <SectionTitle>Informações básicas</SectionTitle>
@@ -160,7 +161,10 @@ function BasicInfoCard({
             onClose={() => setPickerOpen(false)}
             currentSrc={avatarSrc}
             ownerId={ownerId}
-            onSelect={onChangeAvatar}
+            onSelect={(src) => {
+              onChangeAvatar(src);
+              toast.show("Avatar atualizado.", "success");
+            }}
           />
 
           {/* Atalhos pros modais de personalização */}
@@ -197,6 +201,7 @@ function BasicInfoCard({
             onSelect={(id) => {
               updateField("activeNameId", id);
               setNamesOpen(false);
+              toast.show("Estilo de nome salvo.", "success");
             }}
             unlockedIds={unlockedNameIds}
           />
@@ -217,6 +222,7 @@ function BasicInfoCard({
                 next = [...prev, id];
               }
               updateField("activeTitleSlugs", next);
+              toast.show("Títulos atualizados.", "success");
             }}
             unlockedTitleIds={unlockedTitleIds}
             maxActive={2}
@@ -303,11 +309,20 @@ function Field({
   help?: string;
 }) {
   const [value, setValue] = useState(defaultValue);
+  const toast = useToast();
   // Sync local state when the prop changes (eg. when the parent finishes
   // hydrating account data from localStorage after mount).
   useEffect(() => {
     setValue(defaultValue);
   }, [defaultValue]);
+
+  const handleBlur = () => {
+    if (value !== defaultValue) {
+      onCommit?.(value);
+      toast.show("Alterações salvas.", "success");
+    }
+  };
+
   const inputClasses =
     "w-full border-none bg-[#ededed] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20 disabled:cursor-not-allowed disabled:bg-[#f4f1ef] disabled:text-[#8d8d8d]";
   const singleLineClasses = `${inputClasses} rounded-full px-6 py-4`;
@@ -328,7 +343,7 @@ function Field({
         <textarea
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          onBlur={() => onCommit?.(value)}
+          onBlur={handleBlur}
           disabled={disabled}
           rows={3}
           maxLength={maxLength}
@@ -339,7 +354,7 @@ function Field({
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          onBlur={() => onCommit?.(value)}
+          onBlur={handleBlur}
           disabled={disabled}
           maxLength={maxLength}
           className={singleLineClasses}
@@ -376,6 +391,7 @@ function BirthdayField({
   const [year, setYear] = useState(parsed ? String(parsed.getFullYear()) : "");
   const [hiddenLocal, setHiddenLocal] = useState(hidden);
   const [monthOpen, setMonthOpen] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     const p = value ? new Date(value + "T00:00:00") : null;
@@ -392,6 +408,7 @@ function BirthdayField({
     if (!di || !mi || !yi || yi < 1900 || yi > new Date().getFullYear()) return;
     const padded = `${yi}-${String(mi).padStart(2, "0")}-${String(di).padStart(2, "0")}`;
     onCommitDate(padded);
+    toast.show("Aniversário salvo.", "success");
   }
 
   const inputBase =
@@ -453,6 +470,7 @@ function BirthdayField({
             const next = !hiddenLocal;
             setHiddenLocal(next);
             onCommitHidden(next);
+            toast.show("Alterações salvas.", "success");
           }}
           className={`relative h-[20px] w-[36px] shrink-0 cursor-pointer rounded-full transition-colors ${
             hiddenLocal ? "bg-[#ff4100]" : "bg-[#d4d4d4]"
@@ -482,6 +500,7 @@ function SlugField({
   const [local, setLocal] = useState(value);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
   useEffect(() => {
     setLocal(value);
   }, [value]);
@@ -516,6 +535,7 @@ function SlugField({
       setError(apiErr);
     } else {
       setError(null);
+      toast.show("Endereço do perfil salvo.", "success");
     }
   };
 
@@ -576,6 +596,7 @@ function GameNickField({
     const i = value.indexOf("#");
     return i === -1 ? "" : value.slice(i + 1);
   });
+  const toast = useToast();
 
   // Re-sync split fields when the prop changes (post-hydration from localStorage).
   // We use a ref of the last value we emitted so we don't overwrite the user's
@@ -592,6 +613,9 @@ function GameNickField({
   function commit(nextName: string, nextTag: string) {
     const clean = nextTag.trim();
     const joined = clean ? `${nextName}#${clean}` : nextName;
+    if (joined !== lastEmitted.current) {
+      toast.show("Alterações salvas.", "success");
+    }
     lastEmitted.current = joined;
     onCommit(joined);
   }
@@ -637,7 +661,6 @@ function PasswordFields() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
   const mismatch = next.length > 0 && confirm.length > 0 && next !== confirm;
@@ -666,8 +689,7 @@ function PasswordFields() {
     setCurrent("");
     setNext("");
     setConfirm("");
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2500);
+    toast.show("Senha alterada com sucesso!", "success");
   }
 
   return (
@@ -756,7 +778,7 @@ function PasswordFields() {
             disabled={submitting}
             className="flex h-[52px] w-[110px] shrink-0 items-center justify-center rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? "..." : saved ? "Salvo" : "Salvar"}
+            {submitting ? "..." : "Salvar"}
           </button>
         </div>
       </label>
