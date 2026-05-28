@@ -20,6 +20,7 @@ export type SpotifyTrack = {
 export type SpotifyData = {
   connected: boolean;
   topTracks: SpotifyTrack[];
+  topTracksRange: "short" | "medium";
   recentlyPlayed: SpotifyTrack[];
 };
 

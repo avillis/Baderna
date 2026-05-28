@@ -117,7 +117,9 @@ export function SpotifyConnectCard() {
         <div className="mt-[20px] space-y-[16px]">
           {data.topTracks.length > 0 && (
             <div>
-              <SectionHeading>Mais ouvidas (último mês)</SectionHeading>
+              <SectionHeading>
+                {data.topTracksRange === "medium" ? "Mais ouvidas (últimos 6 meses)" : "Mais ouvidas (último mês)"}
+              </SectionHeading>
               {data.topTracks.map((t, i) => <TrackRow key={t.id} track={t} index={i} />)}
             </div>
           )}
@@ -160,7 +162,9 @@ export function SpotifyProfileModule({ slug }: { slug: string }) {
       </div>
       {data.topTracks.length > 0 && (
         <div className="mb-[12px]">
-          <SectionHeading>Mais ouvidas</SectionHeading>
+          <SectionHeading>
+            {data.topTracksRange === "medium" ? "Mais ouvidas (últimos 6 meses)" : "Mais ouvidas (último mês)"}
+          </SectionHeading>
           {data.topTracks.map((t, i) => <TrackRow key={t.id} track={t} index={i} />)}
         </div>
       )}

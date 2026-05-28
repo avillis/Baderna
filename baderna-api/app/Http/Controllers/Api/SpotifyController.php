@@ -122,10 +122,12 @@ class SpotifyController extends Controller
             return response()->json(['connected' => false]);
         }
 
+        [$topTracks, $topTracksRange] = $this->fetchTopTracks($token);
         return response()->json([
-            'connected'      => true,
-            'topTracks'      => $this->fetchTopTracks($token),
-            'recentlyPlayed' => $this->fetchRecentlyPlayed($token),
+            'connected'       => true,
+            'topTracks'       => $topTracks,
+            'topTracksRange'  => $topTracksRange,
+            'recentlyPlayed'  => $this->fetchRecentlyPlayed($token),
         ]);
     }
 
@@ -148,10 +150,12 @@ class SpotifyController extends Controller
             return response()->json(['connected' => false]);
         }
 
+        [$topTracks, $topTracksRange] = $this->fetchTopTracks($token);
         return response()->json([
-            'connected'      => true,
-            'topTracks'      => $this->fetchTopTracks($token),
-            'recentlyPlayed' => $this->fetchRecentlyPlayed($token),
+            'connected'       => true,
+            'topTracks'       => $topTracks,
+            'topTracksRange'  => $topTracksRange,
+            'recentlyPlayed'  => $this->fetchRecentlyPlayed($token),
         ]);
     }
 
@@ -190,11 +194,18 @@ class SpotifyController extends Controller
         return true;
     }
 
+    /**
+     * Retorna [items, range_label].
+     * Tenta short_term (último mês) primeiro; se vazio, cai pra medium_term (6 meses).
+     */
     private function fetchTopTracks(string $token): array
     {
-        // Tenta medium_term (6 meses) primeiro; se vazio, tenta long_term (tudo).
-        // short_term (4 semanas) é vazio pra maioria dos usuários casuais.
-        foreach (['medium_term', 'long_term'] as $range) {
+        $ranges = [
+            'short_term'  => 'short',
+            'medium_term' => 'medium',
+        ];
+
+        foreach ($ranges as $range => $label) {
             $r = Http::withToken($token)
                 ->get('https://api.spotify.com/v1/me/top/tracks', [
                     'limit'      => 5,
@@ -213,10 +224,10 @@ class SpotifyController extends Controller
                 'preview' => $t['preview_url'] ?? null,
             ])->all();
 
-            if (!empty($items)) return $items;
+            if (!empty($items)) return [$items, $label];
         }
 
-        return [];
+        return [[], 'short'];
     }
 
     private function fetchRecentlyPlayed(string $token): array
