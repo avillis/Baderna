@@ -21,7 +21,7 @@ type RankEffect = { gradient: string; glow: string };
 function getRankEffect(rank: number): RankEffect {
   if (rank === 1) return {
     gradient: "linear-gradient(135deg, #f0f8ff 0%, #88b8ff 14%, #c090ff 28%, #f8a8f8 42%, #90e8ff 56%, #d8eeff 70%, #a8c8ff 85%, #f0f8ff 100%)",
-    glow: "0 0 16px 5px rgba(65,150,255,0.82), 0 0 30px 3px rgba(150,90,255,0.38)",
+    glow: "0 0 16px 5px rgba(65,150,255,0.70), 0 0 30px 3px rgba(150,90,255,0.28)",
   };
   if (rank === 2) return {
     gradient: "linear-gradient(135deg, #ffe8e0 0%, #cc2020 14%, #ff4040 28%, #ff5820 42%, #ff1840 56%, #cc0020 70%, #ff8060 84%, #ffe0e0 100%)",
