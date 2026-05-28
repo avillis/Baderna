@@ -123,6 +123,20 @@ class PostCommentsController extends Controller
             }
         }
 
+        // Notifica o autor do comentário pai quando alguém responde (skip self
+        // e skip se o pai é o próprio autor do post — ele já foi notificado acima).
+        if ($parentId && isset($parent) && $parent->user
+            && $parent->user_id !== $author->id
+            && $parent->user_id !== $post->user_id
+        ) {
+            $parent->loadMissing('user:id,name,display_name,summoner_name,avatar_src');
+            $parent->user->notify(new MemberNotification(
+                Mentions::authorDisplayName($author) . ' respondeu seu comentário',
+                $actionUrl,
+                $author->avatar_src,
+            ));
+        }
+
         // Notifica @mencionados no body (skip self).
         if ($body) {
             $contextWord = $parentId ? 'em uma resposta' : 'em um comentário';
@@ -208,6 +222,20 @@ class PostCommentsController extends Controller
         } else {
             CommentLike::create(['comment_id' => $cid, 'user_id' => $userId]);
             $likedByMe = true;
+        }
+
+        // Notifica o autor do comentário quando alguém curte (skip self-like).
+        if ($likedByMe && $comment->user_id !== $userId) {
+            $comment->loadMissing('user:id,name,display_name,summoner_name,avatar_src');
+            if ($comment->user) {
+                $liker    = $request->user();
+                $actionUrl = '/post/' . ($post->short_code ?: $post->id);
+                $comment->user->notify(new MemberNotification(
+                    Mentions::authorDisplayName($liker) . ' curtiu seu comentário',
+                    $actionUrl,
+                    $liker->avatar_src,
+                ));
+            }
         }
 
         $likesCount = CommentLike::where('comment_id', $cid)->count();
