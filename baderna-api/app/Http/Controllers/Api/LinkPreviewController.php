@@ -23,21 +23,12 @@ class LinkPreviewController extends Controller
         }
 
         try {
-            // Instagram: Meta oEmbed API (requires APP_ID|APP_SECRET)
-            if (preg_match('/instagram\.com/i', $host)) {
-                return $this->instagramPreview($url);
-            }
-
-            // TikTok: oEmbed API (free, no auth needed, returns thumbnail_url)
-            if (preg_match('/tiktok\.com/i', $host)) {
-                return $this->tiktokPreview($url);
-            }
-
-            // YouTube: oEmbed API (also free)
+            // YouTube: oEmbed API gratuita (vídeos normais e Shorts)
             if (preg_match('/youtube\.com|youtu\.be/i', $host)) {
                 return $this->youtubePreview($url);
             }
 
+            // Todos os outros (Instagram, TikTok, etc.): Chrome UA scraping
             $response = Http::timeout(8)
                 ->withHeaders(['User-Agent' => self::CHROME_UA])
                 ->get($url);
@@ -65,129 +56,7 @@ class LinkPreviewController extends Controller
         }
     }
 
-    /** Instagram oEmbed via Meta Graph API — retorna thumbnail_url sem precisar de auth do usuário. */
-    private function instagramPreview(string $url): \Illuminate\Http\JsonResponse
-    {
-        $appId     = env('META_APP_ID', '');
-        $appSecret = env('META_APP_SECRET', '');
-
-        if ($appId && $appSecret) {
-            try {
-                $oembed = Http::timeout(5)
-                    ->get('https://graph.facebook.com/v18.0/instagram_oembed', [
-                        'url'          => $url,
-                        'access_token' => "{$appId}|{$appSecret}",
-                        'fields'       => 'thumbnail_url,title,author_name',
-                    ]);
-
-                if ($oembed->successful()) {
-                    $d = $oembed->json();
-                    return response()->json([
-                        'url'         => $url,
-                        'title'       => $d['title'] ?? $d['author_name'] ?? null,
-                        'description' => null,
-                        'image'       => $d['thumbnail_url'] ?? null,
-                        'siteName'    => 'Instagram',
-                    ]);
-                }
-            } catch (\Throwable) {}
-        }
-
-        // Fallback: Chrome UA scraping (sem thumbnail, mas retorna título)
-        try {
-            $response = Http::timeout(8)
-                ->withHeaders(['User-Agent' => self::CHROME_UA])
-                ->get($url);
-
-            if ($response->successful()) {
-                $html = $response->body();
-                $data = [
-                    'url'         => $url,
-                    'title'       => $this->getMeta($html, 'og:title') ?? $this->getTitle($html),
-                    'description' => null,
-                    'image'       => $this->getMeta($html, 'og:image'),
-                    'siteName'    => 'Instagram',
-                ];
-                if ($data['title'] || $data['image']) {
-                    return response()->json($data);
-                }
-            }
-        } catch (\Throwable) {}
-
-        return response()->json(['error' => 'Sem dados de preview.'], 422);
-    }
-
-    /** TikTok: resolve short links → oEmbed (videos) → og:image fallback (photos). */
-    private function tiktokPreview(string $url): \Illuminate\Http\JsonResponse
-    {
-        $resolved = $url;
-
-        // Resolve short links (vt.tiktok.com) or any URL that isn't already a full /video/ or /photo/ path
-        if (!str_contains($url, '/video/') && !str_contains($url, '/photo/')) {
-            try {
-                $ch = curl_init($url);
-                curl_setopt_array($ch, [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_USERAGENT      => self::CHROME_UA,
-                    CURLOPT_NOBODY         => true,   // HEAD only — we just need the final URL
-                    CURLOPT_TIMEOUT        => 5,
-                    CURLOPT_SSL_VERIFYPEER => false,
-                ]);
-                curl_exec($ch);
-                $resolved = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) ?: $url;
-                curl_close($ch);
-            } catch (\Throwable) {}
-        }
-
-        // oEmbed only works for /video/ URLs — skip it for photo posts
-        if (str_contains($resolved, '/video/')) {
-            try {
-                $oembed = Http::timeout(5)
-                    ->withHeaders(['User-Agent' => self::CHROME_UA])
-                    ->get('https://www.tiktok.com/oembed', ['url' => $resolved]);
-
-                if ($oembed->successful()) {
-                    $d = $oembed->json();
-                    if (!empty($d['thumbnail_url'])) {
-                        return response()->json([
-                            'url'         => $url,
-                            'title'       => $d['title'] ?? null,
-                            'description' => null,
-                            'image'       => $d['thumbnail_url'],
-                            'siteName'    => 'TikTok',
-                        ]);
-                    }
-                }
-            } catch (\Throwable) {}
-        }
-
-        // Fallback: scrape og:image from the page (works for /photo/ posts and when oEmbed is blocked)
-        try {
-            $page = Http::timeout(8)
-                ->withHeaders(['User-Agent' => self::CHROME_UA])
-                ->get($resolved);
-
-            if ($page->successful()) {
-                $html  = $page->body();
-                $image = $this->getMeta($html, 'og:image');
-                $title = $this->getMeta($html, 'og:title') ?? $this->getMeta($html, 'og:description');
-                if ($image || $title) {
-                    return response()->json([
-                        'url'         => $url,
-                        'title'       => $title,
-                        'description' => null,
-                        'image'       => $image,
-                        'siteName'    => 'TikTok',
-                    ]);
-                }
-            }
-        } catch (\Throwable) {}
-
-        return response()->json(['error' => 'Sem dados de preview.'], 422);
-    }
-
-    /** YouTube oEmbed — works for regular videos and Shorts. */
+    /** YouTube oEmbed — funciona para vídeos normais e Shorts. */
     private function youtubePreview(string $url): \Illuminate\Http\JsonResponse
     {
         try {
