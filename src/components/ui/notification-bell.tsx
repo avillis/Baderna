@@ -186,7 +186,7 @@ export default function NotificationBell({
         </svg>
 
         {unreadCount > 0 && (
-          <span className="absolute right-0 top-0 h-[8px] w-[8px] -translate-y-[1px] translate-x-[1px] rounded-full border-[1.5px] border-white bg-[#ff4100]" />
+          <span className="absolute right-[1px] top-[1px] h-[9px] w-[9px] rounded-full border-[1.5px] border-white bg-[#ff4100]" />
         )}
       </button>
 
