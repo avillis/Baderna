@@ -20,6 +20,10 @@ type RankedAvatarProps = {
   unranked?: boolean;
   /** Moldura de nível equipada — substitui a moldura de rank quando definida. */
   levelFrameSrc?: string;
+  /** Scale override para moldura de nível (padrão menor que rank frames). */
+  levelFrameScale?: number;
+  /** OffsetY override para moldura de nível. */
+  levelFrameOffsetY?: number;
 };
 
 export function RankedAvatar({
@@ -34,6 +38,8 @@ export function RankedAvatar({
   priority = false,
   unranked = false,
   levelFrameSrc,
+  levelFrameScale = 1.75,
+  levelFrameOffsetY = 0,
 }: RankedAvatarProps) {
   const [errored, setErrored] = useState(false);
   return (
@@ -75,7 +81,9 @@ export function RankedAvatar({
           sizes={`${size}px`}
           unoptimized
           style={{
-            transform: `translateY(${frameOffsetY}px) scale(${frameScale})`,
+            transform: levelFrameSrc
+              ? `translateY(${levelFrameOffsetY}px) scale(${levelFrameScale})`
+              : `translateY(${frameOffsetY}px) scale(${frameScale})`,
           }}
         />
       )}
