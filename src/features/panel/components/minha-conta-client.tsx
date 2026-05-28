@@ -462,7 +462,8 @@ function BirthdayField({
           className={`${inputBase} w-[110px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
         />
       </div>
-      <label className="flex cursor-pointer items-center gap-[8px]">
+      <label className="mt-[10px] flex cursor-pointer items-center gap-[10px]">
+        {/* Toggle estilo Uiverse (RaspberryBee), adaptado: #ededed off · #ff4100 on */}
         <div
           role="checkbox"
           aria-checked={hiddenLocal}
@@ -472,14 +473,15 @@ function BirthdayField({
             onCommitHidden(next);
             toast.show("Alterações salvas.", "success");
           }}
-          className={`relative h-[20px] w-[36px] shrink-0 cursor-pointer rounded-full transition-colors ${
-            hiddenLocal ? "bg-[#ff4100]" : "bg-[#d4d4d4]"
+          className={`relative h-[34px] w-[59px] shrink-0 cursor-pointer rounded-[10px] transition-colors duration-[400ms] ${
+            hiddenLocal ? "bg-[#ff4100]" : "bg-[#ededed]"
           }`}
         >
           <span
-            className={`absolute top-[2px] h-[16px] w-[16px] rounded-full bg-white shadow transition-transform ${
-              hiddenLocal ? "translate-x-[18px]" : "translate-x-[2px]"
-            }`}
+            className="absolute bottom-[5px] left-[5px] h-[24px] w-[24px] rounded-[8px] bg-white shadow transition-all duration-[400ms]"
+            style={{
+              transform: hiddenLocal ? "translateX(25px)" : "rotate(270deg)",
+            }}
           />
         </div>
         <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
