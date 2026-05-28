@@ -45,7 +45,7 @@ class DiscordWebhook
         }
 
         $isReady = $kind === 'ready';
-        $title = $isReady ? '⚔️ Times prontos!' : '🎮 Novo Inhouse criado!';
+        $title = $isReady ? '<:Versus:1509343594476208168> Times prontos!' : '<:Summoners_Rift_icon:1509343682883747980> Novo Inhouse criado!';
         // Mostra membros sempre que 'ready', ou no 'created' quando o time já
         // foi totalmente montado (random mode = completo desde a criação).
         $includeMembers = $isReady || $inhouse->isComplete();
@@ -136,7 +136,7 @@ class DiscordWebhook
             // Na primeira mensagem (sem membros), só nome do time + líder +
             // indicador visível de "draft pendente" embaixo de cada time.
             if (! $includeMembers) {
-                return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n⏳ _Aguardando draft..._";
+                return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n_Aguardando draft..._";
             }
 
             // Versão completa: + lista dos membros (excluindo o líder, que
@@ -151,9 +151,9 @@ class DiscordWebhook
             return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n\n{$memberLine}";
         };
 
-        $blueBlock = $teamBlock('🔵', 'Azul', $blueLeader, $bluePlayers);
-        $redBlock  = $teamBlock('🔴', 'Vermelho', $redLeader, $redPlayers);
-        $description = "{$blueBlock}\n\n⚔️ **vs** ⚔️\n\n{$redBlock}";
+        $blueBlock = $teamBlock('<:blue_side:1509344440735502406>', 'Azul', $blueLeader, $bluePlayers);
+        $redBlock  = $teamBlock('<:red_side:1509344424965046302>', 'Vermelho', $redLeader, $redPlayers);
+        $description = "{$blueBlock}\n\n<:Versus:1509343594476208168> **vs** <:Versus:1509343594476208168>\n\n{$redBlock}";
 
         // Se ainda falta drafting, deixa claro no topo da descrição.
         if (! $includeMembers) {
@@ -172,12 +172,12 @@ class DiscordWebhook
                 'inline' => false,
             ],
             [
-                'name'   => '🔑 Código',
+                'name'   => '<:Mission_icon:1509345989696163991> Código',
                 'value'  => "`{$inhouse->short_code}`",
                 'inline' => true,
             ],
             [
-                'name'   => '⚔️ Modo',
+                'name'   => '<:Versus:1509343594476208168> Modo',
                 'value'  => $modeLabel,
                 'inline' => true,
             ],
@@ -185,8 +185,8 @@ class DiscordWebhook
 
         // Texto curto fora do embed muda conforme o estágio.
         $contentText = $isReady
-            ? "⚔️ **Times prontos no inhouse!**"
-            : "@here — **{$creatorName}** abriu um inhouse! 🎮";
+            ? "<:Versus:1509343594476208168> **Times prontos no inhouse!**"
+            : "@here — **{$creatorName}** abriu um inhouse! <:Summoners_Rift_icon:1509343682883747980>";
 
         $body = [
             'content'          => $contentText,
@@ -302,8 +302,8 @@ class DiscordWebhook
         $isBlueWin = $winnerSide === 'blue';
         $winnerName = $isBlueWin ? $blueName : $redName;
         $loserName  = $isBlueWin ? $redName : $blueName;
-        $winnerEmoji = $isBlueWin ? '🔵' : '🔴';
-        $loserEmoji  = $isBlueWin ? '🔴' : '🔵';
+        $winnerEmoji = $isBlueWin ? '<:blue_side:1509344440735502406>' : '<:red_side:1509344424965046302>';
+        $loserEmoji  = $isBlueWin ? '<:red_side:1509344424965046302>' : '<:blue_side:1509344440735502406>';
 
         $siteBase  = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
         $inhouseUrl = "{$siteBase}/inhouse/{$inhouse->short_code}";
@@ -311,19 +311,19 @@ class DiscordWebhook
         $description =
             "{$winnerEmoji} **{$winnerName}** venceu!\n\n"
             . "{$loserEmoji} _{$loserName}_\n\n"
-            . "💰 +{$winAmount} moedas pro time vencedor\n\n"
-            . "💰 +{$lossAmount} moedas pro time perdedor";
+            . "<:Coin_icon_plus:1509296400666460433> +{$winAmount} moedas pro time vencedor\n\n"
+            . "<:Coin_icon:1509296350997778603> +{$lossAmount} moedas pro time perdedor";
 
         $body = [
-            'content' => "🏆 **Resultado do inhouse!**",
+            'content' => "<:Reward_icon:1509346254096826368> **Resultado do inhouse!**",
             'embeds'  => [[
-                'title'       => '🏆 Vencedor definido!',
+                'title'       => '<:Reward_icon:1509346254096826368> Vencedor definido!',
                 'description' => $description,
                 'url'         => $inhouseUrl,
                 'color'       => self::BRAND_COLOR,
                 'fields' => [
                     [
-                        'name'   => '🔑 Código',
+                        'name'   => '<:Mission_icon:1509345989696163991> Código',
                         'value'  => "`{$inhouse->short_code}`",
                         'inline' => true,
                     ],
