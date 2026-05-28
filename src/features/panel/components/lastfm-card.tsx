@@ -238,26 +238,39 @@ export function LastFmConnectCard() {
 function LastFmSkeleton() {
   return (
     <div className="rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-      {/* Header */}
+      {/* Header — logo e título aparecem direto, sem skeleton */}
       <div className="mb-[16px] flex items-center gap-[8px]">
-        <div className="h-[18px] w-[18px] rounded-full skeleton-shimmer" />
-        <div className="h-[13px] w-[52px] rounded-[5px] skeleton-shimmer" />
+        <LastFmLogo className="h-[18px] w-[18px]" />
+        <h3 className="text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f]">Last.fm</h3>
       </div>
-      {/* Section label */}
-      <div className="mb-[8px] px-[10px]">
-        <div className="h-[11px] w-[160px] rounded-[4px] skeleton-shimmer" />
-      </div>
-      {/* 5 track rows */}
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-[12px] px-[10px] py-[8px]">
-          <div className="h-[12px] w-[18px] shrink-0 rounded-[3px] skeleton-shimmer" />
-          <div className="h-[40px] w-[40px] shrink-0 rounded-[6px] skeleton-shimmer" />
-          <div className="flex-1 space-y-[6px]">
-            <div className="h-[12px] w-3/4 rounded-[4px] skeleton-shimmer" />
-            <div className="h-[10px] w-1/2 rounded-[4px] skeleton-shimmer" />
+      {/* Seção 1: heading real + 5 linhas skeleton */}
+      <div className="mb-[12px]">
+        <SectionHeading>Mais ouvidas (último mês)</SectionHeading>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-[12px] px-[10px] py-[8px]">
+            <div className="h-[12px] w-[18px] shrink-0 rounded-[3px] skeleton-shimmer" />
+            <div className="h-[40px] w-[40px] shrink-0 rounded-[6px] skeleton-shimmer" />
+            <div className="flex-1 space-y-[6px]">
+              <div className="h-[12px] w-3/4 rounded-[4px] skeleton-shimmer" />
+              <div className="h-[10px] w-1/2 rounded-[4px] skeleton-shimmer" />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      {/* Seção 2: heading real + 5 linhas skeleton */}
+      <div>
+        <SectionHeading>Ouvidas recentemente</SectionHeading>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={`r${i}`} className="flex items-center gap-[12px] px-[10px] py-[8px]">
+            <div className="h-[12px] w-[18px] shrink-0 rounded-[3px] skeleton-shimmer" />
+            <div className="h-[40px] w-[40px] shrink-0 rounded-[6px] skeleton-shimmer" />
+            <div className="flex-1 space-y-[6px]">
+              <div className="h-[12px] w-3/4 rounded-[4px] skeleton-shimmer" />
+              <div className="h-[10px] w-1/2 rounded-[4px] skeleton-shimmer" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
