@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\PostReactionsController;
 use App\Http\Controllers\Api\TitlesController;
 use App\Http\Controllers\Api\BirthdaysController;
 use App\Http\Controllers\Api\SpotifyController;
+use App\Http\Controllers\Api\PostBookmarksController;
+use App\Http\Controllers\Api\LinkPreviewController;
 
 // ── Spotify callback (sem auth — recupera user pelo state criptografado) ──
 Route::get('/spotify/callback', [SpotifyController::class, 'callback']);
@@ -96,6 +98,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reações por emoji
     Route::get('/posts/{id}/reactions', [PostReactionsController::class, 'show'])->whereNumber('id');
     Route::post('/posts/{id}/reactions', [PostReactionsController::class, 'toggle'])->whereNumber('id');
+
+    // Bookmarks
+    Route::post('/posts/{id}/bookmark', [PostBookmarksController::class, 'toggle'])->whereNumber('id');
+    Route::get('/bookmarks', [PostBookmarksController::class, 'index']);
+
+    // Link preview
+    Route::get('/link-preview', [LinkPreviewController::class, 'show']);
 
     // Notificações
     Route::get('/notifications', [NotificationsController::class, 'index']);

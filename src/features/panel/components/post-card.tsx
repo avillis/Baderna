@@ -73,6 +73,9 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
 }
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
+import { LinkPreview } from "@/features/panel/components/link-preview";
+
+const URL_RE = /https?:\/\/[^\s]+/g;
 
 export function PostCard({
   post,
@@ -444,6 +447,9 @@ export function PostCard({
         {post.content && (() => {
           const ytId = extractYouTubeId(post.content);
           const displayText = ytId ? stripYouTubeUrl(post.content) : post.content;
+          URL_RE.lastIndex = 0;
+          const allUrls = !ytId ? (post.content.match(URL_RE) ?? []) : [];
+          const firstPlainUrl = allUrls[0] ?? null;
           return (
             <>
               {displayText && (
@@ -452,6 +458,7 @@ export function PostCard({
                 </p>
               )}
               {ytId && <YouTubeEmbed videoId={ytId} />}
+              {!ytId && firstPlainUrl && <LinkPreview url={firstPlainUrl} />}
             </>
           );
         })()}
@@ -499,7 +506,7 @@ export function PostCard({
             href={`/post/${post.shortCode || post.id}`}
           />
           <PostReactions postId={post.id} />
-          <BookmarkButton />
+          <BookmarkButton postId={post.id} initialBookmarked={post.bookmarked ?? false} />
         </div>
         {/* Data em linha própria abaixo das ações — só na view expandida.
             Separada pra não comprimir o espaço das reações no mobile. */}
@@ -1078,15 +1085,52 @@ function PostReactions({ postId }: { postId: number }) {
 /**
  * Bookmark — placeholder visual. Toggle local apenas; sem persistência ainda.
  */
-function BookmarkButton() {
-  const [saved, setSaved] = useState(false);
+function BookmarkButton({
+  postId,
+  initialBookmarked,
+}: {
+  postId: number;
+  initialBookmarked: boolean;
+}) {
+  const [saved, setSaved] = useState(initialBookmarked);
+  const toast = useToast();
+
+  async function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    const token = authToken();
+    if (!token) return;
+    const next = !saved;
+    setSaved(next);
+    try {
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+      const res = await fetch(`${apiBase}/posts/${postId}/bookmark`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { bookmarked: boolean };
+        setSaved(data.bookmarked);
+        if (data.bookmarked) {
+          toast.show("Post salvo!", "success");
+        } else {
+          toast.show("Post removido dos salvos.");
+        }
+      } else {
+        setSaved(!next);
+      }
+    } catch {
+      setSaved(!next);
+    }
+  }
+
   return (
     <button
       type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        setSaved((v) => !v);
-      }}
+      onClick={handleClick}
       aria-label={saved ? "Remover dos salvos" : "Salvar post"}
       aria-pressed={saved}
       className="group flex items-center text-[#8d8d8d] transition-colors hover:text-[#ff4100]"
