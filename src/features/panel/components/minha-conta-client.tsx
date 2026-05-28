@@ -473,14 +473,14 @@ function BirthdayField({
             onCommitHidden(next);
             toast.show("Alterações salvas.", "success");
           }}
-          className={`relative h-[34px] w-[59px] shrink-0 cursor-pointer rounded-[10px] transition-colors duration-[400ms] ${
+          className={`relative h-[20px] w-[36px] shrink-0 cursor-pointer rounded-[6px] transition-colors duration-[400ms] ${
             hiddenLocal ? "bg-[#ff4100]" : "bg-[#ededed]"
           }`}
         >
           <span
-            className="absolute bottom-[5px] left-[5px] h-[24px] w-[24px] rounded-[8px] bg-white shadow transition-all duration-[400ms]"
+            className="absolute bottom-[2px] left-[2px] h-[16px] w-[16px] rounded-[4px] bg-white shadow transition-all duration-[400ms]"
             style={{
-              transform: hiddenLocal ? "translateX(25px)" : "rotate(270deg)",
+              transform: hiddenLocal ? "translateX(16px)" : "rotate(270deg)",
             }}
           />
         </div>
