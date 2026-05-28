@@ -21,7 +21,20 @@ function stripYouTubeUrl(text: string): string {
 
 const URL_RE = /https?:\/\/[^\s]+/g;
 
-/** Thumbnail estática com play overlay — clicar no card vai pro permalink. */
+/** Play overlay idêntico ao do feed (YouTubeEmbed no post-card). */
+function PlayOverlay() {
+  return (
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white/95 text-[#0f0f0f] shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-[24px] w-[24px] translate-x-[1px]">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
+/** Thumbnail estática do YouTube com play overlay. */
 function YouTubeThumbnail({ videoId }: { videoId: string }) {
   const thumb = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
   const fallback = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
@@ -32,22 +45,27 @@ function YouTubeThumbnail({ videoId }: { videoId: string }) {
         src={thumb}
         alt="Thumbnail do vídeo"
         className="h-full w-full object-cover"
-        onError={(e) => {
-          (e.currentTarget as HTMLImageElement).src = fallback;
-        }}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
         loading="lazy"
       />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-white/90 text-[#0f0f0f] shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
-          <svg
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="h-[20px] w-[20px] translate-x-[1px]"
-          >
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </span>
-      </div>
+      <PlayOverlay />
+    </div>
+  );
+}
+
+/** Preview do primeiro frame de vídeo uploadado. */
+function VideoThumbnail({ src }: { src: string }) {
+  return (
+    <div className="relative mb-[14px] aspect-video w-full overflow-hidden rounded-[12px] bg-black">
+      {/* #t=0.1 faz o browser pré-carregar o primeiro frame como poster */}
+      <video
+        src={`${src}#t=0.1`}
+        preload="metadata"
+        className="h-full w-full object-cover"
+        muted
+        playsInline
+      />
+      <PlayOverlay />
     </div>
   );
 }
@@ -101,6 +119,11 @@ export function PinnedPostCard({
 
       {/* YouTube thumbnail estática com play */}
       {ytId && <YouTubeThumbnail videoId={ytId} />}
+
+      {/* Vídeo uploadado — primeiro frame + play overlay */}
+      {!ytId && !media && post.videoUrl && (
+        <VideoThumbnail src={post.videoUrl} />
+      )}
 
       {/* Imagem/GIF do post */}
       {!ytId && media && (
