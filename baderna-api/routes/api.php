@@ -29,8 +29,8 @@ use App\Http\Controllers\Api\SpotifyController;
 
 // ── Spotify callback (sem auth — recupera user pelo state criptografado) ──
 Route::get('/spotify/callback', [SpotifyController::class, 'callback']);
-// Perfil Spotify público (qualquer logado pode ver o de qualquer membro)
-Route::middleware('auth:sanctum')->get('/spotify/user/{slug}', [SpotifyController::class, 'forUser']);
+// Perfil Spotify público — sem auth, qualquer visitante pode ver
+Route::get('/spotify/user/{slug}', [SpotifyController::class, 'forUser']);
 
 // ── Públicas (auth) ────────────────────────────────────────────────────
 // Únicas rotas SEM auth: register e login (não tem como ter token antes).

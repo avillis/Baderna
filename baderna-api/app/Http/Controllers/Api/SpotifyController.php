@@ -192,23 +192,31 @@ class SpotifyController extends Controller
 
     private function fetchTopTracks(string $token): array
     {
-        $r = Http::withToken($token)
-            ->get('https://api.spotify.com/v1/me/top/tracks', [
-                'limit'      => 5,
-                'time_range' => 'short_term',
-            ]);
+        // Tenta medium_term (6 meses) primeiro; se vazio, tenta long_term (tudo).
+        // short_term (4 semanas) é vazio pra maioria dos usuários casuais.
+        foreach (['medium_term', 'long_term'] as $range) {
+            $r = Http::withToken($token)
+                ->get('https://api.spotify.com/v1/me/top/tracks', [
+                    'limit'      => 5,
+                    'time_range' => $range,
+                ]);
 
-        if (!$r->successful()) return [];
+            if (!$r->successful()) continue;
 
-        return collect($r->json('items', []))->map(fn($t) => [
-            'id'      => $t['id'],
-            'name'    => $t['name'],
-            'artist'  => collect($t['artists'])->pluck('name')->implode(', '),
-            'album'   => $t['album']['name'] ?? null,
-            'image'   => $t['album']['images'][0]['url'] ?? null,
-            'url'     => $t['external_urls']['spotify'] ?? null,
-            'preview' => $t['preview_url'] ?? null,
-        ])->all();
+            $items = collect($r->json('items', []))->map(fn($t) => [
+                'id'      => $t['id'],
+                'name'    => $t['name'],
+                'artist'  => collect($t['artists'])->pluck('name')->implode(', '),
+                'album'   => $t['album']['name'] ?? null,
+                'image'   => $t['album']['images'][0]['url'] ?? null,
+                'url'     => $t['external_urls']['spotify'] ?? null,
+                'preview' => $t['preview_url'] ?? null,
+            ])->all();
+
+            if (!empty($items)) return $items;
+        }
+
+        return [];
     }
 
     private function fetchRecentlyPlayed(string $token): array

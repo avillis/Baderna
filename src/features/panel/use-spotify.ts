@@ -76,9 +76,9 @@ export function useMemberSpotify(slug: string | null) {
 
   useEffect(() => {
     if (!slug) { setLoading(false); return; }
-    const token = authToken();
-    if (!token) { setLoading(false); return; }
-    fetch(`${API_BASE}/spotify/user/${slug}`, { headers: authHeaders() })
+    fetch(`${API_BASE}/spotify/user/${slug}`, {
+      headers: { Accept: "application/json" },
+    })
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setData(d); })
       .finally(() => setLoading(false));

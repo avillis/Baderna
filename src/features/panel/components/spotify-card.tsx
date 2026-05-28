@@ -149,7 +149,6 @@ export function SpotifyProfileModule({ slug }: { slug: string }) {
   const { data, loading } = useMemberSpotify(slug);
 
   if (loading || !data?.connected) return null;
-  if (data.topTracks.length === 0 && data.recentlyPlayed.length === 0) return null;
 
   return (
     <div className="rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
@@ -161,7 +160,7 @@ export function SpotifyProfileModule({ slug }: { slug: string }) {
       </div>
       {data.topTracks.length > 0 && (
         <div className="mb-[12px]">
-          <SectionHeading>Mais ouvidas (último mês)</SectionHeading>
+          <SectionHeading>Mais ouvidas</SectionHeading>
           {data.topTracks.map((t, i) => <TrackRow key={t.id} track={t} index={i} />)}
         </div>
       )}
@@ -170,6 +169,11 @@ export function SpotifyProfileModule({ slug }: { slug: string }) {
           <SectionHeading>Ouvidas recentemente</SectionHeading>
           {data.recentlyPlayed.map((t, i) => <TrackRow key={`${t.id}-${i}`} track={t} index={i} />)}
         </div>
+      )}
+      {data.topTracks.length === 0 && data.recentlyPlayed.length === 0 && (
+        <p className="px-[10px] text-[13px] font-medium text-[#9d9d9d]">
+          Nenhuma música encontrada ainda. 🎧
+        </p>
       )}
     </div>
   );
