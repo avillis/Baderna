@@ -63,6 +63,16 @@ export const CHAMPION_FRAMES: ChampionFrame[] = [
   { champion: "Vex",      slug: "champion-frame-vex",      imageSrc: "/images/level-frames/Level_Vex.png",      price: 700 },
 ];
 
+/** Resolve qualquer slug de moldura (nível ou campeão) para o imageSrc.
+ *  Retorna undefined se o slug não for reconhecido ou for nulo. */
+export function resolveFrameSrc(slug: string | null | undefined): string | undefined {
+  if (!slug || slug === "none") return undefined;
+  return (
+    LEVEL_FRAMES.find((f) => f.slug === slug)?.imageSrc ??
+    CHAMPION_FRAMES.find((f) => f.slug === slug)?.imageSrc
+  );
+}
+
 export const TIER_INFO: Record<1 | 2 | 3 | 4, { label: string; levels: string; color: string }> = {
   1: { label: "Iniciante",  levels: "Nível 1–100",   color: "#b0a8a4" },
   2: { label: "Veterano",   levels: "Nível 125–250",  color: "#e3b34a" },

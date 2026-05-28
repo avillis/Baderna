@@ -12,7 +12,7 @@ import { StyledName } from "@/features/panel/components/styled-name";
 import { TitleModal } from "@/features/panel/components/title-modal";
 import type { RankType } from "@/features/panel/rank-utils";
 import { RARITY_META } from "@/features/panel/titles-data";
-import { LEVEL_FRAMES } from "@/features/panel/molduras-data";
+import { resolveFrameSrc } from "@/features/panel/molduras-data";
 import { useAccount } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
 import { useMemberActiveName } from "@/features/panel/use-member-active-name";
@@ -126,9 +126,7 @@ export function PanelProfileSummary({
   const ownFrameId = isOwnProfile ? account.activeFrameId : undefined;
   // "none" = sem moldura alguma; null/undefined = usa moldura do rank
   const noFrame = ownFrameId === "none";
-  const ownFrameSrc = ownFrameId && ownFrameId !== "none"
-    ? (LEVEL_FRAMES.find((f) => f.slug === ownFrameId)?.imageSrc ?? undefined)
-    : undefined;
+  const ownFrameSrc = resolveFrameSrc(ownFrameId);
   const levelFrameSrc = ownFrameSrc ?? levelFrameSrcProp;
 
   const { unlocked: persistedUnlocked } = useMemberUnlockedTitles(
