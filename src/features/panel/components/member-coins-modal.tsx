@@ -119,7 +119,7 @@ export function MemberCoinsModal() {
                 </p>
               </div>
 
-              <ul className="flex-1 overflow-y-auto px-[20px] py-[16px]">
+              <ul className="flex-1 overflow-y-auto no-scrollbar px-[20px] py-[16px]">
                 {rows.length === 0 ? (
                   <li className="py-[40px] text-center text-[13px] text-[#8d8d8d]">
                     Nenhum membro cadastrado ainda.

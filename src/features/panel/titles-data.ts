@@ -33,13 +33,13 @@ export const RARITY_META: Record<
   },
   lendaria: {
     label: "Lendário",
-    pillGradient: "#E8B53C",
+    pillGradient: "linear-gradient(135deg, #7d5a0b 0%, #ffd700 60%, #fffacd 100%)",
     pillText: "#ffffff",
     headerColor: "#0f0f0f",
   },
   exclusivo: {
     label: "Exclusivo",
-    pillGradient: "#EE89B3",
+    pillGradient: "linear-gradient(135deg, #1a0000 0%, #8b0000 60%, #c0392b 100%)",
     pillText: "#ffffff",
     headerColor: "#0f0f0f",
   },
@@ -51,7 +51,7 @@ export const RARITY_META: Record<
   },
   raro: {
     label: "Raro",
-    pillGradient: "#0c8c8c",
+    pillGradient: "#EE89B3",
     pillText: "#ffffff",
     headerColor: "#0f0f0f",
   },

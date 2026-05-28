@@ -21,8 +21,102 @@ function TrashIcon({ className }: { className?: string }) {
   );
 }
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { useErrorLogs, type ErrorLog } from "@/features/panel/use-error-logs";
+
+function ConfirmClearLogsModal({
+  open,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  function handleClose() {
+    setClosing(true);
+  }
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!open) {
+      setClosing(false);
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
+
+  return createPortal(
+    <div
+      className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[9999] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}
+      onClick={handleClose}
+    >
+      <div
+        className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative w-full max-w-[440px] overflow-hidden rounded-[24px] bg-white shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
+        onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={() => { if (closing) onClose(); }}
+      >
+        <button
+          type="button"
+          onClick={handleClose}
+          aria-label="Fechar"
+          className="absolute right-[20px] top-[20px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#ff4100] text-white transition-opacity hover:opacity-85"
+        >
+          <svg
+            viewBox="0 0 10 10"
+            fill="none"
+            className="h-[12px] w-[12px]"
+            stroke="currentColor"
+            strokeWidth={1.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+          </svg>
+        </button>
+
+        <div className="px-[28px] pt-[28px] pb-[20px]">
+          <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+            Limpar logs
+          </h2>
+          <p className="mt-[10px] text-[13px] leading-[1.6] tracking-[-0.01em] text-[#5f5f5f]">
+            Tem certeza que deseja apagar <strong className="text-[#0f0f0f]">todos os logs</strong>? Essa ação não pode ser desfeita.
+          </p>
+        </div>
+
+        <div className="flex justify-end border-t border-[#f3ebe8] px-[28px] py-[16px]">
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm();
+              handleClose();
+            }}
+            className="rounded-full px-5 py-2.5 text-[13px] font-bold tracking-[-0.02em] text-[#c53030] transition-colors hover:bg-[#fff0f0]"
+          >
+            Limpar tudo
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
 
 function levelStyle(level: ErrorLog["level"]): string {
   switch (level) {
@@ -185,6 +279,7 @@ export function AdminErrorLogsCard() {
     clearAll,
   } = useErrorLogs();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -200,7 +295,6 @@ export function AdminErrorLogsCard() {
   }, [hasMore, loading, loadMore]);
 
   async function handleClearAll() {
-    if (!window.confirm("Apagar TODOS os logs? Não dá pra desfazer.")) return;
     await clearAll();
   }
 
@@ -216,6 +310,15 @@ export function AdminErrorLogsCard() {
           </p>
         </div>
         <div className="flex items-center gap-[8px]">
+          <button
+            type="button"
+            onClick={() => setConfirmClear(true)}
+            disabled={loading || logs.length === 0}
+            className="flex h-[36px] items-center gap-[6px] rounded-[12px] bg-[#ededed] px-[14px] text-[12px] font-bold tracking-[-0.02em] text-[#c53030] transition-colors hover:bg-[#fff0f0] disabled:opacity-40"
+          >
+            <TrashIcon className="h-[14px] w-[14px]" />
+            Limpar
+          </button>
           <button
             type="button"
             onClick={refresh}
@@ -265,6 +368,12 @@ export function AdminErrorLogsCard() {
           </svg>
         </div>
       )}
+
+      <ConfirmClearLogsModal
+        open={confirmClear}
+        onClose={() => setConfirmClear(false)}
+        onConfirm={() => void handleClearAll()}
+      />
     </section>
   );
 }

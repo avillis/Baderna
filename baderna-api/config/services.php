@@ -35,19 +35,31 @@ return [
         ],
     ],
 
+    'spotify' => [
+        'client_id'     => env('SPOTIFY_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+        'redirect_uri'  => env('SPOTIFY_REDIRECT_URI', 'https://api.bdrn.com.br/api/spotify/callback'),
+    ],
+
     'discord' => [
         // Webhook do canal #-inhouse- pro bot "Baderna Inhouse" anunciar
         // quando alguém cria um lobby novo. No-op se vazio.
-        'inhouse_webhook' => env('DISCORD_INHOUSE_WEBHOOK_URL'),
+        'inhouse_webhook'    => env('DISCORD_INHOUSE_WEBHOOK_URL'),
+        'inhouse_channel_id' => env('DISCORD_INHOUSE_CHANNEL_ID'),
         // Webhook do canal de ranking pro bot "Baderna Ranking" atualizar
         // o top 10 a cada hora (POST+PATCH in-place). No-op se vazio.
-        'ranking_webhook' => env('DISCORD_RANKING_WEBHOOK_URL'),
+        'ranking_webhook'    => env('DISCORD_RANKING_WEBHOOK_URL'),
+        'ranking_channel_id' => env('DISCORD_RANKING_CHANNEL_ID'),
         // Bot token (com permissão MANAGE_CHANNELS) pra renomear os canais
         // de voz Azul/Vermelho com o nome dos times do inhouse. Webhook
         // não dá pra editar canal — só bot real. No-op se vazio.
-        'bot_token'       => env('DISCORD_BOT_TOKEN'),
-        'blue_channel_id' => env('DISCORD_BLUE_CHANNEL_ID'),
-        'red_channel_id'  => env('DISCORD_RED_CHANNEL_ID'),
+        'bot_token'        => env('DISCORD_BOT_TOKEN'),
+        'blue_channel_id'  => env('DISCORD_BLUE_CHANNEL_ID'),
+        'red_channel_id'   => env('DISCORD_RED_CHANNEL_ID'),
+        'rules_channel_id'   => env('DISCORD_RULES_CHANNEL_ID'),
+        'rules_webhook'      => env('DISCORD_RULES_WEBHOOK_URL'),
+        'birthdays_webhook'  => env('DISCORD_BIRTHDAYS_WEBHOOK_URL'),
+        'history_webhook'    => env('DISCORD_HISTORY_WEBHOOK_URL'),
     ],
 
 ];

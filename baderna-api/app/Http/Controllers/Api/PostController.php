@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\PostBookmark;
 use App\Models\PostLike;
 use App\Models\User;
 use App\Notifications\MemberNotification;
@@ -34,8 +35,14 @@ class PostController extends Controller
             ->pluck('post_id')
             ->toArray();
 
+        // IDs dos posts que o user salvou
+        $bookmarkedIds = PostBookmark::where('user_id', $userId)
+            ->whereIn('post_id', $posts->pluck('id'))
+            ->pluck('post_id')
+            ->toArray();
+
         return response()->json([
-            'posts' => $posts->map(fn ($p) => $this->serialize($p, $likedIds)),
+            'posts' => $posts->map(fn ($p) => $this->serialize($p, $likedIds, $bookmarkedIds)),
         ]);
     }
 
@@ -54,8 +61,9 @@ class PostController extends Controller
             return response()->json(['error' => 'Post não encontrado.'], 404);
         }
         $liked = PostLike::where('user_id', $userId)->where('post_id', $post->id)->exists();
+        $bookmarked = PostBookmark::where('user_id', $userId)->where('post_id', $post->id)->exists();
         return response()->json([
-            'post' => $this->serialize($post, $liked ? [$post->id] : []),
+            'post' => $this->serialize($post, $liked ? [$post->id] : [], $bookmarked ? [$post->id] : []),
         ]);
     }
 
@@ -102,7 +110,7 @@ class PostController extends Controller
             );
         }
 
-        return response()->json(['post' => $this->serialize($post, [])], 201);
+        return response()->json(['post' => $this->serialize($post, [], [])], 201);
     }
 
     public function destroy(Request $request, int $id)
@@ -140,6 +148,20 @@ class PostController extends Controller
         } else {
             PostLike::create(['user_id' => $userId, 'post_id' => $id]);
             $liked = true;
+
+            // Notifica o autor do post (nunca self-like).
+            if ($post->user_id !== $userId) {
+                $post->loadMissing('user:id,name,display_name,summoner_name,avatar_src');
+                if ($post->user) {
+                    $liker     = $request->user();
+                    $actionUrl = '/post/' . ($post->short_code ?: $post->id);
+                    $post->user->notify(new MemberNotification(
+                        Mentions::authorDisplayName($liker) . ' curtiu seu post',
+                        $actionUrl,
+                        $liker->avatar_src,
+                    ));
+                }
+            }
         }
         $count = PostLike::where('post_id', $id)->count();
         return response()->json(['liked' => $liked, 'likesCount' => $count]);
@@ -237,7 +259,7 @@ class PostController extends Controller
         ]);
     }
 
-    private function serialize(Post $post, array $likedIds): array
+    private function serialize(Post $post, array $likedIds, array $bookmarkedIds = []): array
     {
         $u = $post->user;
         $summoner = $u?->summoner_name ?? '';
@@ -254,6 +276,7 @@ class PostController extends Controller
             'likesCount' => $post->likes_count ?? 0,
             'commentsCount' => $post->comments_count ?? 0,
             'liked'      => in_array($post->id, $likedIds, true),
+            'bookmarked' => in_array($post->id, $bookmarkedIds, true),
             'author'     => [
                 'id'        => $u?->id,
                 'name'      => $u?->display_name ?: $u?->name,

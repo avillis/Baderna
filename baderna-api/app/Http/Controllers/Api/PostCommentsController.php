@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\Post;
+use App\Notifications\MemberNotification;
 use App\Support\Mentions;
 use Illuminate\Http\Request;
 
@@ -106,10 +107,24 @@ class PostCommentsController extends Controller
         $row = $this->serializeComment($comment, $request->user()->id, $parentKey);
         $row['replies'] = [];
 
+        $author    = $request->user();
+        $actionUrl = '/post/' . ($post->short_code ?: $post->id);
+
+        // Notifica o autor do post quando alguém comenta (skip self-comment).
+        if ($post->user_id !== $author->id) {
+            $post->loadMissing('user:id,name,display_name,summoner_name,avatar_src');
+            if ($post->user) {
+                $contextWord = $parentId ? 'respondeu um comentário no seu post' : 'comentou no seu post';
+                $post->user->notify(new MemberNotification(
+                    Mentions::authorDisplayName($author) . ' ' . $contextWord,
+                    $actionUrl,
+                    $author->avatar_src,
+                ));
+            }
+        }
+
         // Notifica @mencionados no body (skip self).
         if ($body) {
-            $author    = $request->user();
-            $actionUrl = '/post/' . ($post->short_code ?: $post->id);
             $contextWord = $parentId ? 'em uma resposta' : 'em um comentário';
             Mentions::notifyMentioned(
                 $body,

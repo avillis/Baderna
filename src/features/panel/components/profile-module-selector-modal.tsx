@@ -60,6 +60,11 @@ export const MODULE_META: ModuleMeta[] = [
     description: "Seu jogo atual com capa.",
   },
   {
+    id: "favorite-song",
+    label: "Música favorita",
+    description: "Sua música do momento no Spotify.",
+  },
+  {
     id: "member-since",
     label: "Tempo de casa",
     description: "Há quantos meses você está na Baderna.",

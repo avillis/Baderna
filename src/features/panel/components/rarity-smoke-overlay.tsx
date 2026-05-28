@@ -10,8 +10,12 @@ const SMOKE_CONFIG: Partial<
   Record<TitleRarity, { gradient: string; smoke: string }>
 > = {
   lendaria: {
-    gradient: "linear-gradient(135deg, rgba(255,215,0,0.33) 0%, #ffcc00 100%)",
-    smoke: "rgba(255, 215, 0, 0.85)",
+    gradient: "linear-gradient(135deg, rgba(255,215,0,0.33) 0%, rgba(255,215,0,1) 100%)",
+    smoke: "rgba(255, 215, 0, 0.9)",
+  },
+  exclusivo: {
+    gradient: "linear-gradient(135deg, rgba(139,0,0,0.4) 0%, rgba(139,0,0,1) 100%)",
+    smoke: "rgba(139, 0, 0, 0.85)",
   },
   limitado: {
     gradient:

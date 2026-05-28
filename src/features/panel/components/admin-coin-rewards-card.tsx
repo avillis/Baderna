@@ -1,10 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 import { MemberCoinsModal } from "@/features/panel/components/member-coins-modal";
+import { authToken } from "@/features/panel/use-auth";
 import { useCoinRewards } from "@/features/panel/use-coin-rewards";
+import { useToast } from "@/components/toast";
 import type { CoinRewards } from "@/features/panel/coin-rewards";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
 type Mode = keyof CoinRewards;
 type Outcome = "win" | "loss";
@@ -63,6 +69,46 @@ function RewardField({
 export function AdminCoinRewardsCard() {
   const { rewards, update } = useCoinRewards();
   const modes: Mode[] = ["flex", "inhouse"];
+  const toast = useToast();
+  const [creditingFlex, setCreditingFlex] = useState(false);
+
+  async function handleCreditFlex() {
+    if (creditingFlex) return;
+    setCreditingFlex(true);
+    try {
+      const token = authToken();
+      if (!token) {
+        toast.show("Sem autenticação.");
+        return;
+      }
+      const res = await fetch(`${API_BASE}/admin/flex-credit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ lookback: 5 }),
+      });
+      if (!res.ok) {
+        toast.show("Não foi possível creditar.");
+        return;
+      }
+      const data = (await res.json()) as {
+        totalUsers: number;
+        totalMatches: number;
+        totalCredited: number;
+      };
+      toast.show(
+        `${data.totalMatches} partidas creditadas (+${data.totalCredited} moedas no total, ${data.totalUsers} membros).`,
+        "success",
+      );
+    } catch {
+      toast.show("Erro ao processar Flex.");
+    } finally {
+      setCreditingFlex(false);
+    }
+  }
 
   return (
     <aside className="rounded-[var(--panel-radius-card)] bg-white p-6 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
@@ -96,13 +142,31 @@ export function AdminCoinRewardsCard() {
         ))}
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 space-y-2">
+        <button
+          type="button"
+          onClick={() => void handleCreditFlex()}
+          disabled={creditingFlex}
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#0f0f0f] text-[13px] font-bold tracking-[-0.02em] text-white transition-colors hover:bg-[#1f1f1f] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {creditingFlex ? (
+            <>
+              <svg className="capas-spinner h-[16px] w-[16px] [&_circle]:stroke-white" viewBox="25 25 50 50">
+                <circle r="20" cy="50" cx="50" />
+              </svg>
+              Creditando...
+            </>
+          ) : (
+            "Creditar Flex (últimas 5)"
+          )}
+        </button>
         <MemberCoinsModal />
       </div>
 
       <p className="mt-4 text-[11px] leading-[1.5] text-[#9a9a9a]">
-        Moedas creditadas por partida. Os saldos derivados desse cálculo são
-        atualizados quando os winrates mudam.
+        Inhouse credita automaticamente quando o admin define o vencedor. Flex
+        precisa do botão acima — varre as últimas 5 partidas de cada membro
+        com Riot ID e credita as novas (idempotente, nunca credita 2x).
       </p>
     </aside>
   );

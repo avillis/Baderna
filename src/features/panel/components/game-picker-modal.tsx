@@ -167,7 +167,7 @@ export function GamePickerModal({ currentTitle, onSelect, onClose }: Props) {
         </div>
 
         {/* Results */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[16px]">
+        <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar px-[16px] pb-[16px]">
           {/* Loading */}
           {loading && (
             <div className="flex items-center justify-center py-[32px]">

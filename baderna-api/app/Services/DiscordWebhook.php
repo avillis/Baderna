@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AppSetting;
 use App\Models\Inhouse;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -37,13 +38,14 @@ class DiscordWebhook
      */
     public static function notifyInhouseCreated(Inhouse $inhouse, ?User $creator, string $kind = 'created'): void
     {
-        $url = config('services.discord.inhouse_webhook');
-        if (! $url) {
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.inhouse_channel_id');
+        if (! $token || ! $channelId) {
             return;
         }
 
         $isReady = $kind === 'ready';
-        $title = $isReady ? '⚔️ Times prontos!' : '🎮 Novo Inhouse criado!';
+        $title = $isReady ? '<:Versus:1509343594476208168> Times prontos!' : '<:Summoners_Rift_icon:1509343682883747980> Novo Inhouse criado!';
         // Mostra membros sempre que 'ready', ou no 'created' quando o time já
         // foi totalmente montado (random mode = completo desde a criação).
         $includeMembers = $isReady || $inhouse->isComplete();
@@ -134,7 +136,7 @@ class DiscordWebhook
             // Na primeira mensagem (sem membros), só nome do time + líder +
             // indicador visível de "draft pendente" embaixo de cada time.
             if (! $includeMembers) {
-                return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n⏳ _Aguardando draft..._";
+                return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n_Aguardando draft..._";
             }
 
             // Versão completa: + lista dos membros (excluindo o líder, que
@@ -149,9 +151,9 @@ class DiscordWebhook
             return "{$colorEmoji} **{$name}**\n\n{$leaderLine}\n\n{$memberLine}";
         };
 
-        $blueBlock = $teamBlock('🔵', 'Azul', $blueLeader, $bluePlayers);
-        $redBlock  = $teamBlock('🔴', 'Vermelho', $redLeader, $redPlayers);
-        $description = "{$blueBlock}\n\n⚔️ **vs** ⚔️\n\n{$redBlock}";
+        $blueBlock = $teamBlock('<:blue_side:1509344440735502406>', 'Azul', $blueLeader, $bluePlayers);
+        $redBlock  = $teamBlock('<:red_side:1509344424965046302>', 'Vermelho', $redLeader, $redPlayers);
+        $description = "{$blueBlock}\n\n<:Versus:1509343594476208168> **vs** <:Versus:1509343594476208168>\n\n{$redBlock}";
 
         // Se ainda falta drafting, deixa claro no topo da descrição.
         if (! $includeMembers) {
@@ -170,12 +172,12 @@ class DiscordWebhook
                 'inline' => false,
             ],
             [
-                'name'   => '🔑 Código',
+                'name'   => '<:Mission_icon:1509345989696163991> Código',
                 'value'  => "`{$inhouse->short_code}`",
                 'inline' => true,
             ],
             [
-                'name'   => '⚔️ Modo',
+                'name'   => '<:Versus:1509343594476208168> Modo',
                 'value'  => $modeLabel,
                 'inline' => true,
             ],
@@ -183,14 +185,11 @@ class DiscordWebhook
 
         // Texto curto fora do embed muda conforme o estágio.
         $contentText = $isReady
-            ? "⚔️ **Times prontos no inhouse!**"
-            : "@here — **{$creatorName}** abriu um inhouse! 🎮";
+            ? "<:Versus:1509343594476208168> **Times prontos no inhouse!**"
+            : "@here — **{$creatorName}** abriu um inhouse! <:Summoners_Rift_icon:1509343682883747980>";
 
         $body = [
-            'username'   => 'Baderna Inhouse',
-            // Logo da Baderna como avatar do webhook (sobrescreve a config no Discord).
-            'avatar_url' => "{$siteBase}/logo.svg",
-            'content'    => $contentText,
+            'content'          => $contentText,
             'allowed_mentions' => ['parse' => ['everyone']],
             'embeds'     => [[
                 'title'       => $title,
@@ -210,11 +209,10 @@ class DiscordWebhook
         ];
 
         try {
-            Http::timeout(self::TIMEOUT_SECONDS)->post($url, $body);
+            Http::timeout(self::TIMEOUT_SECONDS)
+                ->withHeaders(['Authorization' => "Bot {$token}"])
+                ->post("https://discord.com/api/v10/channels/{$channelId}/messages", $body);
         } catch (Throwable $e) {
-            // Não rebaixa o erro — só registra. Inhouse já foi criado e
-            // não deve falhar a request HTTP do user só porque o Discord
-            // está fora ou o webhook foi removido.
             Log::warning('DiscordWebhook::notifyInhouseCreated failed', [
                 'error' => $e->getMessage(),
                 'inhouse_id' => $inhouse->id,
@@ -247,8 +245,9 @@ class DiscordWebhook
         int $winAmount,
         int $lossAmount,
     ): void {
-        $url = config('services.discord.inhouse_webhook');
-        if (! $url) {
+        $token     = config('services.discord.bot_token');
+        $channelId = config('services.discord.inhouse_channel_id');
+        if (! $token || ! $channelId) {
             return;
         }
 
@@ -303,8 +302,8 @@ class DiscordWebhook
         $isBlueWin = $winnerSide === 'blue';
         $winnerName = $isBlueWin ? $blueName : $redName;
         $loserName  = $isBlueWin ? $redName : $blueName;
-        $winnerEmoji = $isBlueWin ? '🔵' : '🔴';
-        $loserEmoji  = $isBlueWin ? '🔴' : '🔵';
+        $winnerEmoji = $isBlueWin ? '<:blue_side:1509344440735502406>' : '<:red_side:1509344424965046302>';
+        $loserEmoji  = $isBlueWin ? '<:red_side:1509344424965046302>' : '<:blue_side:1509344440735502406>';
 
         $siteBase  = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
         $inhouseUrl = "{$siteBase}/inhouse/{$inhouse->short_code}";
@@ -312,21 +311,24 @@ class DiscordWebhook
         $description =
             "{$winnerEmoji} **{$winnerName}** venceu!\n\n"
             . "{$loserEmoji} _{$loserName}_\n\n"
-            . "💰 +{$winAmount} moedas pro time vencedor\n\n"
-            . "💰 +{$lossAmount} moedas pro time perdedor";
+            . "<:Coin_icon_plus:1509296400666460433> +{$winAmount} moedas pro time vencedor\n\n"
+            . "<:Coin_default:1509348466432937984> +{$lossAmount} moedas pro time perdedor";
 
         $body = [
-            'username'   => 'Baderna Inhouse',
-            'avatar_url' => "{$siteBase}/logo.svg",
-            'content'    => "🏆 **Resultado do inhouse!**",
-            'embeds'     => [[
-                'title'       => '🏆 Vencedor definido!',
+            'content' => "<:Reward_icon:1509346254096826368> **Resultado do inhouse!**",
+            'embeds'  => [[
+                'title'       => '<:Reward_icon:1509346254096826368> Vencedor definido!',
                 'description' => $description,
                 'url'         => $inhouseUrl,
                 'color'       => self::BRAND_COLOR,
                 'fields' => [
                     [
-                        'name'   => '🔑 Código',
+                        'name'   => "\u{200B}",
+                        'value'  => "\u{200B}",
+                        'inline' => false,
+                    ],
+                    [
+                        'name'   => '<:Mission_icon:1509345989696163991> Código',
                         'value'  => "`{$inhouse->short_code}`",
                         'inline' => true,
                     ],
@@ -339,7 +341,9 @@ class DiscordWebhook
         ];
 
         try {
-            Http::timeout(self::TIMEOUT_SECONDS)->post($url, $body);
+            Http::timeout(self::TIMEOUT_SECONDS)
+                ->withHeaders(['Authorization' => "Bot {$token}"])
+                ->post("https://discord.com/api/v10/channels/{$channelId}/messages", $body);
         } catch (Throwable $e) {
             Log::warning('DiscordWebhook::notifyInhouseWinner failed', [
                 'error' => $e->getMessage(),
@@ -347,8 +351,6 @@ class DiscordWebhook
             ]);
         }
 
-        // Reseta os canais de voz pros nomes default agora que a
-        // partida acabou — próximo inhouse vai sobrescrever de novo.
         self::renameInhouseChannels('Azul', 'Vermelho');
     }
 
@@ -368,6 +370,112 @@ class DiscordWebhook
 
         self::patchChannelName((string) $token, (string) $blueId, "🔵 - {$blueTeamName} - 🔵");
         self::patchChannelName((string) $token, (string) $redId,  "🔴 - {$redTeamName} - 🔴");
+    }
+
+    /**
+     * Posta (ou edita in-place) as regras da Baderna no canal #regras do
+     * Discord via bot token. Guarda o message_id em app_settings pra não
+     * criar uma nova mensagem a cada sync — se a mensagem for apagada
+     * manualmente no Discord, na próxima chamada cria uma nova.
+     */
+    /**
+     * Posta (ou edita in-place) as regras da Baderna no canal #regras via
+     * webhook. Mesma estratégia do RankingWebhook: ?wait=true no POST pra
+     * capturar o message_id, PATCH para edições seguintes, fallback pra POST
+     * novo se a mensagem tiver sido apagada manualmente.
+     */
+    public static function syncRulesToChannel(): bool
+    {
+        $url = config('services.discord.rules_webhook');
+        if (! $url) return false;
+
+        $body       = self::buildRulesBody();
+        $settingKey = 'discord_rules_message_id';
+        $existingId = AppSetting::get($settingKey);
+
+        if ($existingId) {
+            try {
+                $res = Http::timeout(self::TIMEOUT_SECONDS)
+                    ->patch("{$url}/messages/{$existingId}", $body);
+                if ($res->successful()) return true;
+                if ($res->status() === 404) {
+                    AppSetting::where('key', $settingKey)->delete();
+                } else {
+                    Log::warning('DiscordWebhook::syncRules PATCH failed', [
+                        'status' => $res->status(), 'body' => $res->body(),
+                    ]);
+                    return false;
+                }
+            } catch (Throwable $e) {
+                Log::warning('DiscordWebhook::syncRules PATCH exception', ['err' => $e->getMessage()]);
+                return false;
+            }
+        }
+
+        try {
+            $res = Http::timeout(self::TIMEOUT_SECONDS)
+                ->post("{$url}?wait=true", $body);
+            if (! $res->successful()) {
+                Log::warning('DiscordWebhook::syncRules POST failed', [
+                    'status' => $res->status(), 'body' => $res->body(),
+                ]);
+                return false;
+            }
+            $data = $res->json();
+            if (! empty($data['id'])) {
+                AppSetting::put($settingKey, $data['id']);
+            }
+            return true;
+        } catch (Throwable $e) {
+            Log::warning('DiscordWebhook::syncRules POST exception', ['err' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    /** Monta o payload do embed de regras, idêntico ao estilo do ranking. */
+    private static function buildRulesBody(): array
+    {
+        $rules = [
+            ['n' => '01', 's' => 'A Bíblia',       'f' => 'Não faça nada que não esteja na Bíblia.'],
+            ['n' => '02', 's' => 'Borboyote',       'f' => 'Seja um inimigo declarado da Borboyote.'],
+            ['n' => '03', 's' => 'O Sales',         'f' => 'Trate o Sales como se ele fosse uma pessoa normal.'],
+            ['n' => '04', 's' => 'Flex alheia',     'f' => 'É terminantemente proibido intar a flex alheia.'],
+            ['n' => '05', 's' => 'Respeito',        'f' => 'Respeite as mulheres e as crianças.'],
+            ['n' => '06', 's' => 'Laicidade',       'f' => 'O grupo é laico.'],
+            ['n' => '07', 's' => 'João',            'f' => 'Fvck João.'],
+            ['n' => '08', 's' => 'Wilson & álcool', 'f' => 'Mantenha bebidas alcoólicas longe do Wilson.'],
+            ['n' => '09', 's' => 'Muros',           'f' => 'É proibido pular muros.'],
+            ['n' => '10', 's' => 'ADMs',            'f' => 'Respeite os ADMs.'],
+            ['n' => '11', 's' => 'Wilson',          'f' => 'Jamais ajude o Wilson.'],
+            ['n' => '12', 's' => 'Fotos',           'f' => 'Proibido mandar foto de MERDA (sujeito a banimento instantâneo).'],
+            ['n' => '13', 's' => 'Lema',            'f' => 'O nosso lema é: ousadia e alegria.'],
+            ['n' => '15', 's' => 'Amigas da Alice', 'f' => 'Mantenha as amigas da Alice longe do João.'],
+            ['n' => '16', 's' => 'Decência',        'f' => 'Seja uma pessoa decente, por favor.'],
+            ['n' => '17', 's' => 'Alex G. & Rml',  'f' => 'Fvck Alex G. Fvck Rml.'],
+            ['n' => '18', 's' => 'Para né',         'f' => 'Aaah meu, para, né?!'],
+            ['n' => '19', 's' => 'Ditadura',        'f' => 'Grupo controlado pela Ditadura Socialista do STF e do PT.'],
+            ['n' => '20', 's' => 'Picantes',        'f' => 'Perguntinhas picantes permitidas somente após as 21h.'],
+            ['n' => '21', 's' => 'Call',            'f' => 'Não bater punheta em call ou adjacências.'],
+        ];
+
+        $lines = array_map(
+            fn($r) => "**{$r['n']}.** {$r['f']}",
+            $rules
+        );
+        $description = implode("\n", $lines);
+
+        $siteBase = rtrim((string) config('app.frontend_url', 'https://bdrn.com.br'), '/');
+
+        return [
+            'embeds' => [[
+                'title'       => '📋 Regras da Baderna',
+                'description' => $description,
+                'color'       => self::BRAND_COLOR,
+                'url'         => "{$siteBase}/regras",
+                'footer'      => ['text' => 'bdrn.com.br/regras · última sync'],
+                'timestamp'   => now()->toIso8601String(),
+            ]],
+        ];
     }
 
     private static function patchChannelName(string $token, string $channelId, string $name): void

@@ -47,6 +47,16 @@ class User extends Authenticatable
         'favorite_game_title',
         'favorite_game_cover_url',
         'duo_user_id',
+        'birthday',
+        'birthday_hidden',
+        'spotify_access_token',
+        'spotify_refresh_token',
+        'spotify_token_expires_at',
+        'favorite_song_spotify_id',
+        'favorite_song_name',
+        'favorite_song_artist',
+        'favorite_song_image',
+        'favorite_song_url',
     ];
 
     // Campos NUNCA expostos em respostas JSON automáticas (`return $user`).
@@ -64,6 +74,9 @@ class User extends Authenticatable
         'approval_status',
         'created_at',
         'updated_at',
+        'spotify_access_token',
+        'spotify_refresh_token',
+        'spotify_token_expires_at',
     ];
 
     /**
@@ -83,6 +96,9 @@ class User extends Authenticatable
             'profile_module_order' => 'array',
             'favorite_champion_slugs' => 'array',
             'duo_user_id' => 'integer',
+            'birthday' => 'date',
+            'birthday_hidden' => 'boolean',
+            'spotify_token_expires_at' => 'datetime',
             'cached_rank_at' => 'datetime',
             'cached_rank_lp' => 'integer',
             'banner_focus_y' => 'integer',

@@ -18,6 +18,7 @@ export type FeedPost = {
   likesCount: number;
   commentsCount: number;
   liked: boolean;
+  bookmarked: boolean;
   author: {
     id: number | null;
     name: string | null;
@@ -164,6 +165,7 @@ const MOCK_POST: FeedPost = {
   likesCount: 7,
   commentsCount: 2,
   liked: false,
+  bookmarked: false,
   author: {
     id: -1,
     name: "Mock Tester",

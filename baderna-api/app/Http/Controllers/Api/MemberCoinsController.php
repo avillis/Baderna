@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\MemberCoin;
 use App\Models\User;
+use App\Services\FlexCreditService;
+use App\Services\RiotAPIServices;
+use App\Models\MemberCoin;
 use Illuminate\Http\Request;
 
 class MemberCoinsController extends Controller
@@ -65,6 +67,55 @@ class MemberCoinsController extends Controller
         );
 
         return response()->json(['user_id' => $user->id, 'balance' => $data['balance']]);
+    }
+
+    /**
+     * Admin batch: pra cada member com Riot ID, busca as ultimas N partidas
+     * Flex (default 5) e credita as que ainda nao foram. Idempotente —
+     * uma mesma partida nunca credita duas vezes (unique em
+     * flex_match_credits.user_id+match_id).
+     */
+    public function flexCreditBatch(Request $request, RiotAPIServices $riot, FlexCreditService $credits)
+    {
+        $lookback = (int)$request->input('lookback', 5);
+        if ($lookback < 1 || $lookback > 50) $lookback = 5;
+
+        $members = User::where('is_deleted', false)
+            ->whereNotNull('riot_puuid')
+            ->get(['id', 'name', 'display_name', 'riot_puuid']);
+
+        $rows = [];
+        $totalCredited = 0;
+        $totalMatches = 0;
+
+        foreach ($members as $u) {
+            try {
+                $r = $credits->creditUser($u, $riot, $lookback);
+                $totalCredited += $r['totalDelta'];
+                $totalMatches  += $r['matchesCredited'];
+                $rows[] = [
+                    'userId'          => $u->id,
+                    'name'            => $u->display_name ?: $u->name,
+                    'matchesCredited' => $r['matchesCredited'],
+                    'matchesSkipped'  => $r['matchesSkipped'],
+                    'totalDelta'      => $r['totalDelta'],
+                ];
+            } catch (\Exception $e) {
+                $rows[] = [
+                    'userId' => $u->id,
+                    'name'   => $u->display_name ?: $u->name,
+                    'error'  => substr($e->getMessage(), 0, 200),
+                ];
+            }
+        }
+
+        return response()->json([
+            'lookback'      => $lookback,
+            'totalUsers'    => $members->count(),
+            'totalMatches'  => $totalMatches,
+            'totalCredited' => $totalCredited,
+            'rows'          => $rows,
+        ]);
     }
 
     /**

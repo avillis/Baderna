@@ -27,7 +27,6 @@ function RedefinirSenhaInner() {
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
 
   const mismatch = password.length > 0 && confirm.length > 0 && password !== confirm;
 
@@ -49,8 +48,8 @@ function RedefinirSenhaInner() {
       toast.show(err);
       return;
     }
-    setDone(true);
-    window.setTimeout(() => router.push("/entrar"), 1800);
+    toast.show("Senha redefinida com sucesso!", "success");
+    router.push("/entrar");
   }
 
   // Sem token na URL → manda pra recuperar.
@@ -101,17 +100,7 @@ function RedefinirSenhaInner() {
               </p>
             </div>
 
-            {done ? (
-              <div className="w-full rounded-[16px] bg-white p-[20px] text-center shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-                <p className="text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f]">
-                  Senha redefinida ✓
-                </p>
-                <p className="mt-[8px] text-[12px] leading-[1.5] text-[#7c7c7c]">
-                  Redirecionando pra tela de login…
-                </p>
-              </div>
-            ) : (
-              <form className="w-full space-y-4" onSubmit={handleSubmit}>
+            <form className="w-full space-y-4" onSubmit={handleSubmit}>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -165,7 +154,6 @@ function RedefinirSenhaInner() {
                   )}
                 </button>
               </form>
-            )}
           </div>
         </div>
       </div>

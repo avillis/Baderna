@@ -24,6 +24,15 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\PostReactionsController;
 use App\Http\Controllers\Api\TitlesController;
+use App\Http\Controllers\Api\BirthdaysController;
+use App\Http\Controllers\Api\SpotifyController;
+use App\Http\Controllers\Api\PostBookmarksController;
+use App\Http\Controllers\Api\LinkPreviewController;
+
+// ── Spotify callback (sem auth — recupera user pelo state criptografado) ──
+Route::get('/spotify/callback', [SpotifyController::class, 'callback']);
+// Perfil Spotify público — sem auth, qualquer visitante pode ver
+Route::get('/spotify/user/{slug}', [SpotifyController::class, 'forUser']);
 
 // ── Públicas (auth) ────────────────────────────────────────────────────
 // Únicas rotas SEM auth: register e login (não tem como ter token antes).
@@ -53,7 +62,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/coin-rewards', [AppSettingsController::class, 'showCoinRewards']);
     Route::get('/inhouse-points', [AppSettingsController::class, 'showInhousePoints']);
     Route::get('/profile-loading-overlay', [AppSettingsController::class, 'showProfileLoadingOverlay']);
+    Route::get('/store-prices', [AppSettingsController::class, 'showStorePrices']);
     Route::get('/titles', [TitlesController::class, 'index']);
+    Route::get('/birthdays', [BirthdaysController::class, 'index']);
+
+    // Spotify OAuth + dados
+    Route::get('/spotify/redirect', [SpotifyController::class, 'redirect']);
+    Route::delete('/spotify/disconnect', [SpotifyController::class, 'disconnect']);
+    Route::get('/spotify/me', [SpotifyController::class, 'me']);
 
     // Listagens da comunidade
     Route::get('/members', [MembersController::class, 'index']);
@@ -82,6 +98,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reações por emoji
     Route::get('/posts/{id}/reactions', [PostReactionsController::class, 'show'])->whereNumber('id');
     Route::post('/posts/{id}/reactions', [PostReactionsController::class, 'toggle'])->whereNumber('id');
+
+    // Bookmarks
+    Route::post('/posts/{id}/bookmark', [PostBookmarksController::class, 'toggle'])->whereNumber('id');
+    Route::get('/bookmarks', [PostBookmarksController::class, 'index']);
+
+    // Link preview
+    Route::get('/link-preview', [LinkPreviewController::class, 'show']);
 
     // Notificações
     Route::get('/notifications', [NotificationsController::class, 'index']);
@@ -139,10 +162,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/coin-rewards', [AppSettingsController::class, 'updateCoinRewards']);
         Route::put('/inhouse-points', [AppSettingsController::class, 'updateInhousePoints']);
         Route::put('/profile-loading-overlay', [AppSettingsController::class, 'updateProfileLoadingOverlay']);
+        Route::put('/store-prices', [AppSettingsController::class, 'updateStorePrices']);
+        Route::post('/sync-rules-discord', [AppSettingsController::class, 'syncRulesDiscord']);
+        Route::post('/sync-ranking-discord', [AppSettingsController::class, 'syncRankingDiscord']);
+        Route::post('/sync-birthdays-discord', [AppSettingsController::class, 'syncBirthdaysDiscord']);
         Route::post('/titles', [TitlesController::class, 'store']);
         Route::delete('/titles/{slug}', [TitlesController::class, 'destroy']);
         Route::get('/member-coins', [MemberCoinsController::class, 'index']);
         Route::put('/member-coins/{user}', [MemberCoinsController::class, 'update']);
+        Route::post('/flex-credit', [MemberCoinsController::class, 'flexCreditBatch']);
         Route::get('/member-unlocks/{user}', [MemberUnlocksController::class, 'adminIndex']);
         Route::post('/member-unlocks/{user}', [MemberUnlocksController::class, 'adminGrant']);
         Route::delete('/member-unlocks/{user}/{kind}/{slug}', [MemberUnlocksController::class, 'adminRevoke']);

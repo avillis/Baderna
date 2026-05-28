@@ -3,21 +3,27 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { forgotPassword } from "@/features/panel/use-auth";
 
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
+  const toast = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || submitting) return;
     setSubmitting(true);
-    await forgotPassword(email.trim());
+    const result = await forgotPassword(email.trim());
     setSubmitting(false);
     // Resposta sempre "ok" — back não revela se o email existe (anti enumeration).
-    setSent(true);
+    if (result !== null) {
+      toast.show("Email de recuperação enviado. Verifique sua caixa de entrada.", "success");
+      setEmail("");
+    } else {
+      toast.show("Erro ao enviar o email. Tente novamente.", "error");
+    }
   }
 
   return (
@@ -46,24 +52,7 @@ export default function RecuperarSenhaPage() {
               </p>
             </div>
 
-            {sent ? (
-              <div className="w-full rounded-[16px] bg-white p-[20px] text-center shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-                <p className="text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f]">
-                  Email enviado ✓
-                </p>
-                <p className="mt-[8px] text-[12px] leading-[1.5] text-[#7c7c7c]">
-                  Se esse email existe na nossa base, você vai receber um link
-                  em alguns minutos. Confere também o spam.
-                </p>
-                <a
-                  href="/entrar"
-                  className="mt-[16px] inline-block text-[13px] font-bold text-[#ff4100] hover:underline"
-                >
-                  Voltar pro login
-                </a>
-              </div>
-            ) : (
-              <form className="w-full space-y-4" onSubmit={handleSubmit}>
+            <form className="w-full space-y-4" onSubmit={handleSubmit}>
                 <input
                   type="email"
                   placeholder="Seu email"
@@ -98,7 +87,6 @@ export default function RecuperarSenhaPage() {
                   </a>
                 </div>
               </form>
-            )}
           </div>
         </div>
       </div>

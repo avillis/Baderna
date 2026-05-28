@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\MemberCoin;
 use App\Models\MemberUnlock;
 use Illuminate\Http\Request;
@@ -49,31 +50,36 @@ class MemberUnlocksController extends Controller
         $data = $request->validate([
             'kind' => 'required|string|in:' . implode(',', self::KINDS),
             'slug' => 'required|string|max:120',
+            'free' => 'sometimes|boolean',
         ]);
 
         $user = $request->user();
-        $cost = self::SPIN_COST[$data['kind']] ?? 0;
+        // Free só é válido pra capas (único tipo com free spin na UI)
+        $isFree = !empty($data['free']) && $data['kind'] === 'capa';
+        // Custo dinâmico via AppSetting (admin pode ajustar); fallback pro valor fixo
+        $costs = AppSetting::get('store_prices', self::SPIN_COST);
+        $cost = $isFree ? 0 : ($costs[$data['kind']] ?? self::SPIN_COST[$data['kind']] ?? 0);
 
         $result = DB::transaction(function () use ($user, $data, $cost) {
-            // Lock pessimista no MemberCoin pra evitar race de double-spend.
             $coin = MemberCoin::lockForUpdate()->firstOrCreate(
                 ['user_id' => $user->id],
                 ['balance' => 0],
             );
 
-            if ($coin->balance < $cost) {
+            if ($cost > 0 && $coin->balance < $cost) {
                 return ['error' => 'Saldo insuficiente.', 'status' => 422];
             }
 
-            // Já tem? "Refund de duplicada" → não cobra nada.
             $exists = MemberUnlock::where('user_id', $user->id)
                 ->where('kind', $data['kind'])
                 ->where('slug', $data['slug'])
                 ->exists();
 
             if (!$exists) {
-                $coin->balance -= $cost;
-                $coin->save();
+                if ($cost > 0) {
+                    $coin->balance -= $cost;
+                    $coin->save();
+                }
                 MemberUnlock::create([
                     'user_id' => $user->id,
                     'kind'    => $data['kind'],
@@ -82,11 +88,11 @@ class MemberUnlocksController extends Controller
             }
 
             return [
-                'kind' => $data['kind'],
-                'slug' => $data['slug'],
-                'balance' => $coin->balance,
+                'kind'      => $data['kind'],
+                'slug'      => $data['slug'],
+                'balance'   => $coin->balance,
                 'duplicate' => $exists,
-                'status' => 201,
+                'status'    => 201,
             ];
         });
 

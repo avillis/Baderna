@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Flag, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flag, MoreHorizontal, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,8 +13,69 @@ import { renderWithMentions } from "@/features/panel/components/mention-text";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { VideoPlayer } from "@/features/panel/components/video-player";
 import { authToken, useAuth } from "@/features/panel/use-auth";
+
+// ── YouTube embed helpers ────────────────────────────────────────────────────
+const YT_RE =
+  /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[^\s]*)?/g;
+
+function extractYouTubeId(text: string): string | null {
+  YT_RE.lastIndex = 0;
+  const m = YT_RE.exec(text);
+  return m ? m[1] : null;
+}
+
+function stripYouTubeUrl(text: string): string {
+  YT_RE.lastIndex = 0;
+  return text.replace(YT_RE, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function YouTubeEmbed({ videoId }: { videoId: string }) {
+  const [playing, setPlaying] = useState(false);
+  const thumb = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  const fallback = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+  if (playing) {
+    return (
+      <div className="relative mt-[12px] aspect-video w-full overflow-hidden rounded-[16px] bg-black">
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+          className="absolute inset-0 h-full w-full"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+          title="YouTube video"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setPlaying(true)}
+      aria-label="Reproduzir vídeo"
+      className="group relative mt-[12px] block w-full overflow-hidden rounded-[16px] bg-black"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={thumb}
+        alt="Thumbnail do vídeo"
+        className="w-full object-cover transition-opacity duration-200 group-hover:opacity-80"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
+        loading="lazy"
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white/95 text-[#0f0f0f] shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-transform group-hover:scale-105">
+          <Play className="h-[24px] w-[24px]" fill="currentColor" />
+        </span>
+      </div>
+    </button>
+  );
+}
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
+import { LinkPreview } from "@/features/panel/components/link-preview";
+
+const URL_RE = /https?:\/\/[^\s]+/g;
 
 export function PostCard({
   post,
@@ -383,11 +444,24 @@ export function PostCard({
       {/* Body: full-width no mobile (sem ml). Em sm:+ fica indentado sob o avatar
           (avatar 48 + gap 14 = 62) pra manter o visual estilo Twitter. */}
       <div className="mt-[16px] sm:ml-[62px]">
-        {post.content && (
-          <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.45] text-[#0f0f0f] sm:text-[15px]">
-            {renderWithMentions(post.content, membersBySlug)}
-          </p>
-        )}
+        {post.content && (() => {
+          const ytId = extractYouTubeId(post.content);
+          const displayText = ytId ? stripYouTubeUrl(post.content) : post.content;
+          URL_RE.lastIndex = 0;
+          const allUrls = !ytId ? (post.content.match(URL_RE) ?? []) : [];
+          const firstPlainUrl = allUrls[0] ?? null;
+          return (
+            <>
+              {displayText && (
+                <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.45] text-[#0f0f0f] sm:text-[15px]">
+                  {renderWithMentions(displayText, membersBySlug)}
+                </p>
+              )}
+              {ytId && <YouTubeEmbed videoId={ytId} />}
+              {!ytId && firstPlainUrl && <LinkPreview url={firstPlainUrl} />}
+            </>
+          );
+        })()}
 
         {media && (
           <button
@@ -420,9 +494,7 @@ export function PostCard({
           </div>
         )}
 
-        {/* Linha única de ações: like + comentários + reações (rolam horizontal
-            com setinhas quando estoura) + bookmark. min-w-0 no PostReactions
-            permite que ele encolha em vez de quebrar a linha. */}
+        {/* Linha de ações: like + comentários + reações + bookmark. */}
         <div className="relative mt-[18px] flex items-center gap-x-[14px]">
           <LikeButton
             liked={post.liked}
@@ -434,13 +506,15 @@ export function PostCard({
             href={`/post/${post.shortCode || post.id}`}
           />
           <PostReactions postId={post.id} />
-          <BookmarkButton />
-          {expanded && (
-            <span className="text-[12px] text-[#8d8d8d]">
-              {formatPostDateLong(post.createdAt)}
-            </span>
-          )}
+          <BookmarkButton postId={post.id} initialBookmarked={post.bookmarked ?? false} />
         </div>
+        {/* Data em linha própria abaixo das ações — só na view expandida.
+            Separada pra não comprimir o espaço das reações no mobile. */}
+        {expanded && (
+          <p className="mt-[10px] text-[12px] text-[#8d8d8d]">
+            {formatPostDateLong(post.createdAt)}
+          </p>
+        )}
       </div>
 
       {confirmOpen && (
@@ -907,6 +981,7 @@ function PostReactions({ postId }: { postId: number }) {
     <div className="flex min-w-0 flex-1 items-center gap-[4px]">
       {/* Setinha esquerda — SEMPRE renderizada, opacity controla visibilidade
           pra não causar layout shift quando aparece/some. */}
+      {/* Setinha esquerda — só no desktop (sm:); no mobile as pills fazem wrap */}
       <button
         type="button"
         onClick={(e) => {
@@ -916,18 +991,17 @@ function PostReactions({ postId }: { postId: number }) {
         aria-label="Rolar reações para a esquerda"
         aria-hidden={!canScrollLeft}
         tabIndex={canScrollLeft ? 0 : -1}
-        className={`flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
+        className={`hidden sm:flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
           canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
         <ChevronLeft className="h-[16px] w-[16px]" strokeWidth={2.5} />
       </button>
 
-      {/* Lista scroll horizontal das pills — scroll-snap garante que nunca
-          fica um emoji cortado pela metade na borda. */}
+      {/* Pills: scroll horizontal em qualquer tela — toque nativo no mobile */}
       <div
         ref={scrollRef}
-        className="flex min-w-0 flex-1 snap-x snap-mandatory items-center gap-[5px] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        className="flex min-w-0 flex-1 items-center gap-[5px] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
         {active.map((emoji) => (
           <button
@@ -937,7 +1011,7 @@ function PostReactions({ postId }: { postId: number }) {
               e.stopPropagation();
               react(emoji);
             }}
-            className={`flex h-[24px] flex-shrink-0 snap-start items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
+            className={`flex h-[24px] flex-shrink-0 items-center gap-[4px] rounded-full px-[8px] text-[12px] font-semibold transition-colors ${
               mine.includes(emoji)
                 ? "bg-[#fff1ea] text-[#ff4100] ring-1 ring-inset ring-[#ff4100]/30"
                 : "bg-[#f2f2f2] text-[#6f6f6f] hover:bg-[#ebebeb]"
@@ -949,7 +1023,7 @@ function PostReactions({ postId }: { postId: number }) {
         ))}
       </div>
 
-      {/* Setinha direita — mesma lógica da esquerda */}
+      {/* Setinha direita — só no desktop (sm:) */}
       <button
         type="button"
         onClick={(e) => {
@@ -959,7 +1033,7 @@ function PostReactions({ postId }: { postId: number }) {
         aria-label="Rolar reações para a direita"
         aria-hidden={!canScrollRight}
         tabIndex={canScrollRight ? 0 : -1}
-        className={`flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
+        className={`hidden sm:flex h-[22px] w-[18px] flex-shrink-0 items-center justify-center rounded-full text-[#8d8d8d] transition-opacity duration-150 hover:bg-[#f4f4f4] hover:text-[#ff4100] ${
           canScrollRight ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -1011,15 +1085,52 @@ function PostReactions({ postId }: { postId: number }) {
 /**
  * Bookmark — placeholder visual. Toggle local apenas; sem persistência ainda.
  */
-function BookmarkButton() {
-  const [saved, setSaved] = useState(false);
+function BookmarkButton({
+  postId,
+  initialBookmarked,
+}: {
+  postId: number;
+  initialBookmarked: boolean;
+}) {
+  const [saved, setSaved] = useState(initialBookmarked);
+  const toast = useToast();
+
+  async function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    const token = authToken();
+    if (!token) return;
+    const next = !saved;
+    setSaved(next);
+    try {
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+      const res = await fetch(`${apiBase}/posts/${postId}/bookmark`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { bookmarked: boolean };
+        setSaved(data.bookmarked);
+        if (data.bookmarked) {
+          toast.show("Post salvo!", "success");
+        } else {
+          toast.show("Post removido dos salvos.");
+        }
+      } else {
+        setSaved(!next);
+      }
+    } catch {
+      setSaved(!next);
+    }
+  }
+
   return (
     <button
       type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        setSaved((v) => !v);
-      }}
+      onClick={handleClick}
       aria-label={saved ? "Remover dos salvos" : "Salvar post"}
       aria-pressed={saved}
       className="group flex items-center text-[#8d8d8d] transition-colors hover:text-[#ff4100]"

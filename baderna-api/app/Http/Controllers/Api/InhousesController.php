@@ -8,6 +8,7 @@ use App\Models\Inhouse;
 use App\Models\MemberCoin;
 use App\Models\User;
 use App\Services\DiscordWebhook;
+use App\Services\MatchHistoryWebhook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -180,9 +181,15 @@ class InhousesController extends Controller
             return response()->json(['error' => $result['error']], $result['status']);
         }
 
-        // Webhook do Discord — fora da transaction pra não rollback se o
-        // Discord falhar. Service já é defensivo (log-only em erro).
+        // Webhooks do Discord — fora da transaction pra não rollback se o
+        // Discord falhar. Services são defensivos (log-only em erro).
         DiscordWebhook::notifyInhouseWinner(
+            $result['inhouse'],
+            $winner,
+            $result['winAmount'],
+            $result['lossAmount'],
+        );
+        MatchHistoryWebhook::post(
             $result['inhouse'],
             $winner,
             $result['winAmount'],

@@ -35,6 +35,13 @@ export type Account = {
   favoriteGameCoverUrl?: string | null;
   duoUserId?: number | null;
   memberSince?: string | null;
+  birthday?: string | null;
+  birthdayHidden?: boolean;
+  favoriteSongId?: string | null;
+  favoriteSongName?: string | null;
+  favoriteSongArtist?: string | null;
+  favoriteSongImage?: string | null;
+  favoriteSongUrl?: string | null;
 };
 
 function buildDefaults(user: AuthUser | null): Account {
@@ -169,6 +176,13 @@ const FIELD_TO_API: Partial<Record<keyof Account, string>> = {
   favoriteGameTitle: "favorite_game_title",
   favoriteGameCoverUrl: "favorite_game_cover_url",
   duoUserId: "duo_user_id",
+  birthday: "birthday",
+  birthdayHidden: "birthday_hidden",
+  favoriteSongId: "favorite_song_spotify_id",
+  favoriteSongName: "favorite_song_name",
+  favoriteSongArtist: "favorite_song_artist",
+  favoriteSongImage: "favorite_song_image",
+  favoriteSongUrl: "favorite_song_url",
 };
 
 export function useCurrentUserId(): string | null {
@@ -288,7 +302,38 @@ export function useAccount() {
     [userId],
   );
 
-  return { account, updateField, updateSlug };
+  /** Salva a música favorita (ou apaga passando null) num único PUT. */
+  const updateFavoriteSong = useCallback(
+    async (track: { id: string; name: string; artist: string; image: string | null; url: string | null } | null) => {
+      const next: Account = {
+        ...account,
+        favoriteSongId: track?.id ?? null,
+        favoriteSongName: track?.name ?? null,
+        favoriteSongArtist: track?.artist ?? null,
+        favoriteSongImage: track?.image ?? null,
+        favoriteSongUrl: track?.url ?? null,
+      };
+      setAccount(next);
+      writeCache(userId, next);
+      const body = {
+        favorite_song_spotify_id: track?.id ?? null,
+        favorite_song_name: track?.name ?? null,
+        favorite_song_artist: track?.artist ?? null,
+        favorite_song_image: track?.image ?? null,
+        favorite_song_url: track?.url ?? null,
+      };
+      const fresh = await putToApi(body);
+      if (!fresh) return false;
+      const merged = { ...defaults, ...fresh };
+      setAccount(merged);
+      writeCache(userId, merged);
+      return true;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [account, userId],
+  );
+
+  return { account, updateField, updateSlug, updateFavoriteSong };
 }
 
 // Read-only helper (inhouse views).

@@ -22,12 +22,14 @@ import { LiveHistoryCard } from "@/features/panel/components/live-history-card";
 import { PanelCommentsCard } from "@/features/panel/components/panel-comments-card";
 import { PanelGameModeToggle } from "@/features/panel/components/panel-game-mode-toggle";
 import { PanelMemberWinratesCard } from "@/features/panel/components/panel-member-winrates-card";
+import { SpotifyProfileModule } from "@/features/panel/components/spotify-card";
 import { PanelProfileSummary } from "@/features/panel/components/panel-profile-summary";
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { ProfileLoadingOverlay } from "@/features/panel/components/profile-loading-overlay";
 import { ChampionPickerModal } from "@/features/panel/components/champion-picker-modal";
 import { DuoPickerModal, type DuoCandidate } from "@/features/panel/components/duo-picker-modal";
 import { GamePickerModal } from "@/features/panel/components/game-picker-modal";
+import { SpotifyTrackPickerModal } from "@/features/panel/components/spotify-track-picker-modal";
 import { ProfileModuleSelectorModal } from "@/features/panel/components/profile-module-selector-modal";
 import {
   ProfileModuleCard,
@@ -65,6 +67,11 @@ type ApiMember = {
   favoriteChampionSlugs: string[] | null;
   favoriteGameTitle: string | null;
   favoriteGameCoverUrl: string | null;
+  favoriteSongId: string | null;
+  favoriteSongName: string | null;
+  favoriteSongArtist: string | null;
+  favoriteSongImage: string | null;
+  favoriteSongUrl: string | null;
   duoUserId: number | null;
   memberSince: string | null;
   postsCount: number;
@@ -134,12 +141,13 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const allMembers = useBadernaMembers();
   const ranks = useMemberRanks();
   const { user } = useAuth();
-  const { account, updateField } = useAccount();
+  const { account, updateField, updateFavoriteSong } = useAccount();
   const [showCompare, setShowCompare] = useState(false);
   const [showModuleEditor, setShowModuleEditor] = useState(false);
   const [showGamePicker, setShowGamePicker] = useState(false);
   const [showChampionPicker, setShowChampionPicker] = useState(false);
   const [showDuoPicker, setShowDuoPicker] = useState(false);
+  const [showSongPicker, setShowSongPicker] = useState(false);
   const { titles: allTitles } = useTitles();
 
   useEffect(() => {
@@ -284,6 +292,22 @@ export function MembroPageClient({ slug }: { slug: string }) {
     onEditFavoriteGame: isOwnProfile ? () => setShowGamePicker(true) : undefined,
     onEditTopChampions: isOwnProfile ? () => setShowChampionPicker(true) : undefined,
     onEditDuo: isOwnProfile ? () => setShowDuoPicker(true) : undefined,
+    onEditFavoriteSong: isOwnProfile ? () => setShowSongPicker(true) : undefined,
+    favoriteSongId: isOwnProfile
+      ? (account.favoriteSongId ?? apiMember?.favoriteSongId ?? null)
+      : (apiMember?.favoriteSongId ?? null),
+    favoriteSongName: isOwnProfile
+      ? (account.favoriteSongName ?? apiMember?.favoriteSongName ?? null)
+      : (apiMember?.favoriteSongName ?? null),
+    favoriteSongArtist: isOwnProfile
+      ? (account.favoriteSongArtist ?? apiMember?.favoriteSongArtist ?? null)
+      : (apiMember?.favoriteSongArtist ?? null),
+    favoriteSongImage: isOwnProfile
+      ? (account.favoriteSongImage ?? apiMember?.favoriteSongImage ?? null)
+      : (apiMember?.favoriteSongImage ?? null),
+    favoriteSongUrl: isOwnProfile
+      ? (account.favoriteSongUrl ?? apiMember?.favoriteSongUrl ?? null)
+      : (apiMember?.favoriteSongUrl ?? null),
     memberSince: apiMember?.memberSince ?? null,
     unlockedBanners: apiMember?.unlockedBannersCount ?? 0,
     unlockedTitles: apiMember?.unlockedTitlesCount ?? 0,
@@ -443,6 +467,15 @@ export function MembroPageClient({ slug }: { slug: string }) {
           onClose={() => setShowDuoPicker(false)}
         />
       )}
+      {showSongPicker && isOwnProfile && (
+        <SpotifyTrackPickerModal
+          currentSongId={account.favoriteSongId ?? apiMember?.favoriteSongId ?? null}
+          onSave={async (track) => {
+            await updateFavoriteSong(track);
+          }}
+          onClose={() => setShowSongPicker(false)}
+        />
+      )}
       <GameModeProvider>
         <div className="2xl:hidden">
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-[277px_minmax(0,1fr)] xl:items-start">
@@ -492,7 +525,8 @@ export function MembroPageClient({ slug }: { slug: string }) {
               <div className="min-w-0 max-w-full">
                 {hasRiotId ? <LiveHistoryCard riotId={riotId} /> : <NoLolCard />}
               </div>
-              <div className="min-w-0 max-w-full">
+              <div className="flex min-w-0 max-w-full flex-col gap-8">
+                <SpotifyProfileModule slug={slug} />
                 {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
               </div>
               <div className="flex min-w-0 max-w-full flex-col gap-8 pb-[32px] xl:pb-0">
@@ -541,7 +575,8 @@ export function MembroPageClient({ slug }: { slug: string }) {
               </div>
             </div>
             <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
-              <div className="col-start-1 col-span-1">
+              <div className="col-start-1 col-span-1 flex flex-col gap-8">
+                <SpotifyProfileModule slug={slug} />
                 {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
               </div>
               <div className="col-start-2 col-span-2">

@@ -86,5 +86,21 @@ export function usePendingMembers() {
   const approve = useCallback((userId: number) => act(userId, "approve"), [act]);
   const reject = useCallback((userId: number) => act(userId, "reject"), [act]);
 
-  return { members, loading, refresh, approve, reject };
+  const remove = useCallback(
+    async (userId: number) => {
+      const token = authToken();
+      if (!token) return false;
+      const res = await fetch(`${API_BASE}/admin/members/${userId}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setMembers((prev) => prev.filter((m) => m.userId !== userId));
+      }
+      return res.ok;
+    },
+    [],
+  );
+
+  return { members, loading, refresh, approve, reject, remove };
 }

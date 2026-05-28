@@ -68,6 +68,7 @@ type UnlockResponse = {
 async function postUnlockToApi(
   kind: UnlockKind,
   slug: string,
+  free?: boolean,
 ): Promise<UnlockResponse | null> {
   const token = authToken();
   if (!token) return null;
@@ -78,7 +79,7 @@ async function postUnlockToApi(
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ kind, slug }),
+    body: JSON.stringify({ kind, slug, ...(free ? { free: true } : {}) }),
   });
   if (!res.ok) return null;
   return (await res.json()) as UnlockResponse;
@@ -117,7 +118,7 @@ export function useMemberUnlocks() {
   }, []);
 
   const unlock = useCallback(
-    async (kind: UnlockKind, slug: string) => {
+    async (kind: UnlockKind, slug: string, free?: boolean): Promise<UnlockResponse | null> => {
       const list = unlocks[kind];
       const wasAlreadyOwned = list.includes(slug);
       if (!wasAlreadyOwned) {
@@ -128,7 +129,7 @@ export function useMemberUnlocks() {
         setUnlocks(next);
         writeCache(next);
       }
-      const result = await postUnlockToApi(kind, slug);
+      const result = await postUnlockToApi(kind, slug, free);
       if (!result) {
         // rollback otimista
         setUnlocks(unlocks);

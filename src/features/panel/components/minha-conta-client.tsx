@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Eye, EyeOff, X } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, X } from "lucide-react";
 
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
@@ -23,6 +23,7 @@ import { useMemberUnlockedNames } from "@/features/panel/use-member-unlocked-nam
 import { useTitles } from "@/features/panel/use-titles";
 import { useUnlockedBanners } from "@/features/panel/use-unlocked-banners";
 import { RARITY_META, type Title } from "@/features/panel/titles-data";
+import { SpotifyConnectCard } from "@/features/panel/components/spotify-card";
 
 type CollectionKey = "capas" | "titulos" | "nomes";
 
@@ -46,7 +47,7 @@ export function MinhaContaClient({
   const [openCollection, setOpenCollection] = useState<CollectionKey | null>(null);
 
   return (
-    <div className="grid grid-cols-1 gap-[18px] pt-[1.5vh] sm:pt-[6vh] xl:grid-cols-[minmax(0,1fr)_280px]">
+    <div className="grid grid-cols-1 items-start gap-[18px] pt-[1.5vh] sm:pt-[6vh] xl:grid-cols-[minmax(0,1fr)_280px]">
       <BasicInfoCard
         account={account}
         updateField={updateField}
@@ -65,6 +66,7 @@ export function MinhaContaClient({
       />
 
       <section className="flex flex-col gap-[18px]">
+        <SpotifyConnectCard />
         <CollectionSummary
           title="Capas"
           count={unlockedBanners.length}
@@ -129,6 +131,7 @@ function BasicInfoCard({
   const [titlesOpen, setTitlesOpen] = useState(false);
   const { unlocked: unlockedTitleIds } = useMemberUnlockedTitles(ownerId, ["aprendiz"]);
   const { unlocked: unlockedNameIds } = useMemberUnlockedNames(ownerId);
+  const toast = useToast();
   return (
     <section className="rounded-[25px] bg-white px-[20px] py-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] sm:px-[36px] sm:py-[32px]">
       <SectionTitle>Informações básicas</SectionTitle>
@@ -158,7 +161,10 @@ function BasicInfoCard({
             onClose={() => setPickerOpen(false)}
             currentSrc={avatarSrc}
             ownerId={ownerId}
-            onSelect={onChangeAvatar}
+            onSelect={(src) => {
+              onChangeAvatar(src);
+              toast.show("Avatar atualizado.", "success");
+            }}
           />
 
           {/* Atalhos pros modais de personalização */}
@@ -195,6 +201,7 @@ function BasicInfoCard({
             onSelect={(id) => {
               updateField("activeNameId", id);
               setNamesOpen(false);
+              toast.show("Estilo de nome salvo.", "success");
             }}
             unlockedIds={unlockedNameIds}
           />
@@ -215,6 +222,7 @@ function BasicInfoCard({
                 next = [...prev, id];
               }
               updateField("activeTitleSlugs", next);
+              toast.show("Títulos atualizados.", "success");
             }}
             unlockedTitleIds={unlockedTitleIds}
             maxActive={2}
@@ -260,6 +268,14 @@ function BasicInfoCard({
           <div className="md:col-span-2">
             <SlugField value={account.slug} onCommit={updateSlug} />
           </div>
+          <div className="md:col-span-2">
+            <BirthdayField
+              value={account.birthday ?? null}
+              hidden={account.birthdayHidden ?? false}
+              onCommitDate={(date) => updateField("birthday", date)}
+              onCommitHidden={(h) => updateField("birthdayHidden", h)}
+            />
+          </div>
           <PasswordFields />
         </div>
       </div>
@@ -293,11 +309,20 @@ function Field({
   help?: string;
 }) {
   const [value, setValue] = useState(defaultValue);
+  const toast = useToast();
   // Sync local state when the prop changes (eg. when the parent finishes
   // hydrating account data from localStorage after mount).
   useEffect(() => {
     setValue(defaultValue);
   }, [defaultValue]);
+
+  const handleBlur = () => {
+    if (value !== defaultValue) {
+      onCommit?.(value);
+      toast.show("Alterações salvas.", "success");
+    }
+  };
+
   const inputClasses =
     "w-full border-none bg-[#ededed] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20 disabled:cursor-not-allowed disabled:bg-[#f4f1ef] disabled:text-[#8d8d8d]";
   const singleLineClasses = `${inputClasses} rounded-full px-6 py-4`;
@@ -318,7 +343,7 @@ function Field({
         <textarea
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          onBlur={() => onCommit?.(value)}
+          onBlur={handleBlur}
           disabled={disabled}
           rows={3}
           maxLength={maxLength}
@@ -329,7 +354,7 @@ function Field({
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          onBlur={() => onCommit?.(value)}
+          onBlur={handleBlur}
           disabled={disabled}
           maxLength={maxLength}
           className={singleLineClasses}
@@ -344,6 +369,129 @@ function Field({
   );
 }
 
+const MONTHS_PT = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+function BirthdayField({
+  value,
+  hidden,
+  onCommitDate,
+  onCommitHidden,
+}: {
+  value: string | null;
+  hidden: boolean;
+  onCommitDate: (date: string | null) => void;
+  onCommitHidden: (hidden: boolean) => void;
+}) {
+  const parsed = value ? new Date(value + "T00:00:00") : null;
+  const [day, setDay] = useState(parsed ? String(parsed.getDate()) : "");
+  const [month, setMonth] = useState(parsed ? String(parsed.getMonth() + 1) : "");
+  const [year, setYear] = useState(parsed ? String(parsed.getFullYear()) : "");
+  const [hiddenLocal, setHiddenLocal] = useState(hidden);
+  const [monthOpen, setMonthOpen] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    const p = value ? new Date(value + "T00:00:00") : null;
+    setDay(p ? String(p.getDate()) : "");
+    setMonth(p ? String(p.getMonth() + 1) : "");
+    setYear(p ? String(p.getFullYear()) : "");
+  }, [value]);
+  useEffect(() => { setHiddenLocal(hidden); }, [hidden]);
+
+  function commitDate(d = day, m = month, y = year) {
+    const di = parseInt(d, 10);
+    const mi = parseInt(m, 10);
+    const yi = parseInt(y, 10);
+    if (!di || !mi || !yi || yi < 1900 || yi > new Date().getFullYear()) return;
+    const padded = `${yi}-${String(mi).padStart(2, "0")}-${String(di).padStart(2, "0")}`;
+    onCommitDate(padded);
+    toast.show("Aniversário salvo.", "success");
+  }
+
+  const inputBase =
+    "border-none bg-[#ededed] text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none focus:outline-none focus:ring-2 focus:ring-[#ff4100]/20 rounded-full px-4 py-4";
+
+  return (
+    <div className="flex flex-col gap-[8px]">
+      <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+        Aniversário
+      </span>
+      <div className="flex flex-wrap gap-[8px]">
+        <input
+          type="number"
+          min={1}
+          max={31}
+          placeholder="Dia"
+          value={day}
+          onChange={(e) => setDay(e.target.value)}
+          onBlur={() => commitDate()}
+          className={`${inputBase} w-[90px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
+        />
+        {/* Select com seta customizada animada */}
+        <div className="relative flex-1 min-w-[130px]">
+          <select
+            value={month}
+            onChange={(e) => { setMonth(e.target.value); commitDate(day, e.target.value, year); }}
+            onFocus={() => setMonthOpen(true)}
+            onBlur={() => setMonthOpen(false)}
+            className={`${inputBase} w-full appearance-none pr-10`}
+          >
+            <option value="">Mês</option>
+            {MONTHS_PT.map((name, i) => (
+              <option key={i + 1} value={String(i + 1)}>{name}</option>
+            ))}
+          </select>
+          <ChevronDown
+            className={`pointer-events-none absolute right-4 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-[#8d8d8d] transition-transform duration-200 ${
+              monthOpen ? "rotate-180" : "rotate-0"
+            }`}
+            strokeWidth={2.2}
+          />
+        </div>
+        <input
+          type="number"
+          min={1900}
+          max={new Date().getFullYear()}
+          placeholder="Ano"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          onBlur={() => commitDate()}
+          className={`${inputBase} w-[110px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
+        />
+      </div>
+      <label className="mt-[10px] flex cursor-pointer items-center gap-[10px]">
+        {/* Toggle estilo Uiverse (RaspberryBee), adaptado: #ededed off · #ff4100 on */}
+        <div
+          role="checkbox"
+          aria-checked={hiddenLocal}
+          onClick={() => {
+            const next = !hiddenLocal;
+            setHiddenLocal(next);
+            onCommitHidden(next);
+            toast.show("Alterações salvas.", "success");
+          }}
+          className={`relative h-[34px] w-[59px] shrink-0 cursor-pointer rounded-[10px] transition-colors duration-[400ms] ${
+            hiddenLocal ? "bg-[#ff4100]" : "bg-[#ededed]"
+          }`}
+        >
+          <span
+            className="absolute bottom-[5px] left-[5px] h-[24px] w-[24px] rounded-[8px] bg-white shadow transition-all duration-[400ms]"
+            style={{
+              transform: hiddenLocal ? "translateX(25px)" : "rotate(270deg)",
+            }}
+          />
+        </div>
+        <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+          Ocultar meu ano de nascimento e idade
+        </span>
+      </label>
+    </div>
+  );
+}
+
 function SlugField({
   value,
   onCommit,
@@ -354,6 +502,7 @@ function SlugField({
   const [local, setLocal] = useState(value);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
   useEffect(() => {
     setLocal(value);
   }, [value]);
@@ -388,6 +537,7 @@ function SlugField({
       setError(apiErr);
     } else {
       setError(null);
+      toast.show("Endereço do perfil salvo.", "success");
     }
   };
 
@@ -448,6 +598,7 @@ function GameNickField({
     const i = value.indexOf("#");
     return i === -1 ? "" : value.slice(i + 1);
   });
+  const toast = useToast();
 
   // Re-sync split fields when the prop changes (post-hydration from localStorage).
   // We use a ref of the last value we emitted so we don't overwrite the user's
@@ -464,6 +615,9 @@ function GameNickField({
   function commit(nextName: string, nextTag: string) {
     const clean = nextTag.trim();
     const joined = clean ? `${nextName}#${clean}` : nextName;
+    if (joined !== lastEmitted.current) {
+      toast.show("Alterações salvas.", "success");
+    }
     lastEmitted.current = joined;
     onCommit(joined);
   }
@@ -509,7 +663,6 @@ function PasswordFields() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
   const mismatch = next.length > 0 && confirm.length > 0 && next !== confirm;
@@ -538,8 +691,7 @@ function PasswordFields() {
     setCurrent("");
     setNext("");
     setConfirm("");
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2500);
+    toast.show("Senha alterada com sucesso!", "success");
   }
 
   return (
@@ -628,7 +780,7 @@ function PasswordFields() {
             disabled={submitting}
             className="flex h-[52px] w-[110px] shrink-0 items-center justify-center rounded-[18px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? "..." : saved ? "Salvo" : "Salvar"}
+            {submitting ? "..." : "Salvar"}
           </button>
         </div>
       </label>

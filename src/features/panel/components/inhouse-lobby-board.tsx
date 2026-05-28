@@ -307,7 +307,7 @@ function InhouseMatchHeader({
       {/* Mobile: compact status pill no topo. Desktop: continua no centro. */}
       <div className="order-first flex items-center justify-center gap-[10px] xl:hidden">
         <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8b8b8b]">
-          {inhouseLobby.matchType} · {inhouseLobby.region}
+          {inhouseLobby.matchType}
         </span>
         <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
         <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
@@ -329,7 +329,7 @@ function InhouseMatchHeader({
       {/* Desktop only: bloco grande centralizado entre os times */}
       <div className="hidden text-center xl:block">
         <p className="text-[14px] font-bold tracking-[0em] text-[#8b8b8b]">
-          {inhouseLobby.matchType} - {inhouseLobby.region}
+          {inhouseLobby.matchType}
         </p>
         <p className="mt-2 text-[30px] font-bold leading-none tracking-[-0.03em] text-[#111111]">
           {statusLabel}
@@ -859,7 +859,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
           {/* Mobile-only: status block ENTRE os dois times */}
           <div className="order-2 my-[40px] flex items-center justify-center gap-[10px] xl:hidden">
             <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8b8b8b]">
-              {inhouseLobby.matchType} · {inhouseLobby.region}
+              {inhouseLobby.matchType}
             </span>
             <span className="h-[4px] w-[4px] rounded-full bg-[#d4d4d4]" />
             <span className="text-[13px] font-bold tracking-[-0.02em] text-[#111111]">
@@ -1004,6 +1004,8 @@ function InhouseListCard({
   inhouse: Inhouse;
   onRemove: () => void;
 }) {
+  const { user } = useAuth();
+  const isAdmin = !!user?.is_admin;
   const blueTeam = inhouse.players.filter((p) => p.side === "blue");
   const redTeam = inhouse.players.filter((p) => p.side === "red");
   const blueLeader =
@@ -1016,7 +1018,7 @@ function InhouseListCard({
       href={`/inhouse/${inhouse.shortCode ?? matchIdFromInhouseId(inhouse.id)}`}
       className="group relative flex w-full flex-col rounded-[var(--panel-radius-card)] bg-white px-[20px] py-[18px] text-left shadow-[0_16px_38px_rgba(0,0,0,0.06)] transition-opacity hover:opacity-85"
     >
-      {panelProfile.isAdmin && (
+      {isAdmin && (
         <span
           role="button"
           aria-label="Excluir inhouse"
@@ -1058,7 +1060,7 @@ function InhouseListCard({
       {/* Meta footer */}
       <div className="mt-[14px] flex items-center justify-between border-t border-[#f1eeec] pt-[10px]">
         <span className="text-[11px] font-semibold text-[#b0a8a4]">
-          5v5 Brasil · {formatRelative(inhouse.createdAt)}
+          5v5 · {formatRelative(inhouse.createdAt)}
         </span>
         <span className="text-[11px] font-semibold text-[#b0a8a4]">
           {inhouse.shortCode ?? matchIdFromInhouseId(inhouse.id)}

@@ -104,7 +104,7 @@ export function CreateTitleModal() {
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto no-scrollbar">
                 {/* Create form */}
                 <form
                   onSubmit={handleSubmit}

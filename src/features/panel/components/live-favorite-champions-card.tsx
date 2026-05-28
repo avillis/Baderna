@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { useAccount } from "@/features/panel/use-account";
+import { formatChampionName } from "@/features/panel/champion-utils";
 import {
   useRiotProfile,
   type RiotMastery,
@@ -42,7 +43,7 @@ function MasteryRow({ mastery }: { mastery: RiotMastery }) {
 
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-[18px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-          {mastery.championName ?? "—"}
+          {mastery.championName ? formatChampionName(mastery.championName) : "—"}
         </h3>
         <p className="mt-[4px] text-[14px] font-semibold tracking-[-0.03em] text-[#7d7d7d]">
           {formatPoints(mastery.championPoints)} pontos
