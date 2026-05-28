@@ -59,6 +59,7 @@ return [
         'rules_channel_id'   => env('DISCORD_RULES_CHANNEL_ID'),
         'rules_webhook'      => env('DISCORD_RULES_WEBHOOK_URL'),
         'birthdays_webhook'  => env('DISCORD_BIRTHDAYS_WEBHOOK_URL'),
+        'history_webhook'    => env('DISCORD_HISTORY_WEBHOOK_URL'),
     ],
 
 ];
