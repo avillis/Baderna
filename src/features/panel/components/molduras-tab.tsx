@@ -69,63 +69,52 @@ export function MoldurasTab() {
                   Nível {frame.level}
                 </p>
 
-                {owned ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white opacity-40 cursor-not-allowed"
-                  >
-                    Desbloqueada
-                  </button>
-                ) : (
-                  <>
-                    {/* Price row */}
-                    <div className="mb-2 flex items-center gap-1">
-                      <Image
-                        src="/images/coin/Coin_icon2.png"
-                        alt="moedas"
-                        width={22}
-                        height={22}
-                        unoptimized
-                      />
-                      <span className="text-[13px] font-semibold text-[#0f0f0f]">
-                        {frame.price.toLocaleString("pt-BR")}
-                      </span>
-                    </div>
+                {/* Price row — sempre visível */}
+                <div className="mb-2 flex items-center gap-1">
+                  <Image
+                    src="/images/coin/Coin_icon2.png"
+                    alt="moedas"
+                    width={22}
+                    height={22}
+                    unoptimized
+                  />
+                  <span className="text-[13px] font-semibold text-[#0f0f0f]">
+                    {frame.price.toLocaleString("pt-BR")}
+                  </span>
+                </div>
 
-                    {/* Buy button */}
-                    <button
-                      type="button"
-                      onClick={() => handleBuy(frame)}
-                      disabled={isLoading || !canAfford || !user}
-                      className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-70"
+                <button
+                  type="button"
+                  onClick={() => !owned && handleBuy(frame)}
+                  disabled={owned || isLoading || !canAfford || !user}
+                  className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#ff4100] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isLoading ? (
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
                     >
-                      {isLoading ? (
-                        <svg
-                          className="h-4 w-4 animate-spin"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v8H4z"
-                          />
-                        </svg>
-                      ) : (
-                        "Comprar"
-                      )}
-                    </button>
-                  </>
-                )}
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8H4z"
+                      />
+                    </svg>
+                  ) : owned ? (
+                    "Desbloqueada"
+                  ) : (
+                    "Comprar"
+                  )}
+                </button>
               </div>
             </div>
           );
