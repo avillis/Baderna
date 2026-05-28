@@ -156,7 +156,7 @@ export function MolduraPickerModal({
               <br />
               Atualiza junto com o seu rank.
             </p>
-            <div className="relative h-[260px] w-[260px]">
+            <div className="relative h-[380px] w-[380px]" style={{ marginTop: "-56px", marginBottom: "-16px" }}>
               <Image
                 src={rankFrameSrc}
                 alt="Moldura do rank"
