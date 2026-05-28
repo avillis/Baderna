@@ -13,6 +13,66 @@ import { renderWithMentions } from "@/features/panel/components/mention-text";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { VideoPlayer } from "@/features/panel/components/video-player";
 import { authToken, useAuth } from "@/features/panel/use-auth";
+
+// ── YouTube embed helpers ────────────────────────────────────────────────────
+const YT_RE =
+  /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[^\s]*)?/g;
+
+function extractYouTubeId(text: string): string | null {
+  YT_RE.lastIndex = 0;
+  const m = YT_RE.exec(text);
+  return m ? m[1] : null;
+}
+
+function stripYouTubeUrl(text: string): string {
+  YT_RE.lastIndex = 0;
+  return text.replace(YT_RE, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function YouTubeEmbed({ videoId }: { videoId: string }) {
+  const [playing, setPlaying] = useState(false);
+  const thumb = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  const fallback = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+  if (playing) {
+    return (
+      <div className="relative mt-[12px] aspect-video w-full overflow-hidden rounded-[16px] bg-black">
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+          className="absolute inset-0 h-full w-full"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+          title="YouTube video"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setPlaying(true)}
+      aria-label="Reproduzir vídeo"
+      className="group relative mt-[12px] block w-full overflow-hidden rounded-[16px] bg-black"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={thumb}
+        alt="Thumbnail do vídeo"
+        className="w-full object-cover transition-opacity duration-200 group-hover:opacity-80"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
+        loading="lazy"
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#ff0000] shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-transform duration-150 group-hover:scale-110">
+          <svg className="h-[26px] w-[26px] translate-x-[2px] text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      </div>
+    </button>
+  );
+}
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 
@@ -383,11 +443,20 @@ export function PostCard({
       {/* Body: full-width no mobile (sem ml). Em sm:+ fica indentado sob o avatar
           (avatar 48 + gap 14 = 62) pra manter o visual estilo Twitter. */}
       <div className="mt-[16px] sm:ml-[62px]">
-        {post.content && (
-          <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.45] text-[#0f0f0f] sm:text-[15px]">
-            {renderWithMentions(post.content, membersBySlug)}
-          </p>
-        )}
+        {post.content && (() => {
+          const ytId = extractYouTubeId(post.content);
+          const displayText = ytId ? stripYouTubeUrl(post.content) : post.content;
+          return (
+            <>
+              {displayText && (
+                <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.45] text-[#0f0f0f] sm:text-[15px]">
+                  {renderWithMentions(displayText, membersBySlug)}
+                </p>
+              )}
+              {ytId && <YouTubeEmbed videoId={ytId} />}
+            </>
+          );
+        })()}
 
         {media && (
           <button
