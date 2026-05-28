@@ -160,12 +160,26 @@ export default function RankingPage() {
                 href={`/membro/${member.id}`}
                 className="flex items-center gap-4 border-b border-[#f3ebe8] px-5 py-4 transition-colors last:border-0 hover:bg-[#fdfcfa]"
               >
-                <span
-                  className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em]"
-                  style={{ color: posColor ?? "#b0a8a4" }}
-                >
-                  {position}
-                </span>
+                {mode === "baderna" && position === 1 ? (
+                  <span
+                    className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em]"
+                    style={{
+                      background: "linear-gradient(135deg, #f0f8ff 0%, #a8ccff 22%, #d8a8ff 44%, #ffa8f4 66%, #a8eeff 88%, #f0f8ff 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    {position}
+                  </span>
+                ) : (
+                  <span
+                    className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em]"
+                    style={{ color: posColor ?? "#b0a8a4" }}
+                  >
+                    {position}
+                  </span>
+                )}
 
                 <div className="relative h-[44px] w-[44px] shrink-0 overflow-hidden rounded-full bg-[#ededed]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

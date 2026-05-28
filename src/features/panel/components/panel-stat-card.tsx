@@ -31,17 +31,17 @@ function StatSkeleton({
 
 function getRankBadernaEffect(value: string) {
   const num = parseInt(value.replace(/\D/g, ""), 10);
-  // #01 — diamante prismático
+  // #01 — diamante prismático (alto contraste: escuros profundos alternando com brilhos)
   if (num === 1)
     return {
       gradient: [
-        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,255,255,0.22) 1px, rgba(255,255,255,0.05) 2px, transparent 3px, transparent 34px)",
-        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,255,255,0.15) 1px, rgba(255,255,255,0.03) 2px, transparent 3px, transparent 34px)",
-        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,255,255,0.09) 1px, transparent 2px, transparent 24px)",
-        "linear-gradient(125deg, #f0f8ff 0%, #bcd4ff 12%, #c0b4ff 25%, #f0b0ff 38%, #ffd8e8 50%, #ffecd0 60%, #c8f4ff 72%, #b8d4ff 84%, #e8f4ff 100%)",
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,255,255,0.42) 1px, rgba(255,255,255,0.08) 2px, transparent 3px, transparent 22px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,255,255,0.30) 1px, rgba(255,255,255,0.06) 2px, transparent 3px, transparent 22px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,255,255,0.16) 1px, transparent 2px, transparent 16px)",
+        "linear-gradient(125deg, #f4faff 0%, #08112a 7%, #a0c8ff 14%, #040212 21%, #b088ff 28%, #040108 35%, #f0a0f8 42%, #060208 49%, #68e4ff 56%, #070f20 63%, #eef6ff 70%, #0e051c 77%, #c0d8ff 84%, #030a18 91%, #e4f0ff 100%)",
       ].join(", "),
-      glow: "0 0 30px rgba(160,216,255,0.75), 0 0 60px rgba(200,170,255,0.22), inset 1px 1px 6px rgba(255,255,255,0.35), inset -1px -1px 8px rgba(0,0,0,0.4)",
-      smoke: "rgba(215, 230, 255, 0.95)",
+      glow: "0 0 28px rgba(155,210,255,0.80), 0 0 55px rgba(200,165,255,0.28), 0 0 85px rgba(255,200,255,0.10), inset 1px 1px 8px rgba(255,255,255,0.45), inset -1px -1px 10px rgba(0,0,0,0.55)",
+      smoke: "rgba(218, 232, 255, 1)",
       isDiamond: true,
     };
   // #02 — vermelho
@@ -112,12 +112,6 @@ export function PanelStatCard({
           className="absolute inset-0"
           style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}
         />
-        {/* Diagonal shimmer sweep — só no card de diamante (#01) */}
-        {isDiamond && (
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="rank-diamond-shimmer absolute inset-0" />
-          </div>
-        )}
         <div className="relative z-10 flex h-full items-center px-[26px]">
           <div>
             <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
@@ -125,6 +119,18 @@ export function PanelStatCard({
             </p>
             {placeholder ? (
               <StatSkeleton featured />
+            ) : isDiamond ? (
+              <p
+                className="mt-[8px] text-[28px] font-bold leading-none tracking-[-0.03em]"
+                style={{
+                  background: "linear-gradient(135deg, #f0f8ff 0%, #a8ccff 22%, #d8a8ff 44%, #ffa8f4 66%, #a8eeff 88%, #f0f8ff 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                {value}
+              </p>
             ) : (
               <p className="mt-[8px] text-[28px] font-bold leading-none tracking-[-0.03em] text-white">
                 {value}

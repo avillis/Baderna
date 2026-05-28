@@ -372,33 +372,9 @@ button {
   animation-delay: -1.4s;
 }
 
-/* Diagonal light sweep para o card de diamante (#01 Rank da Baderna) */
-@keyframes rank-diamond-sweep {
-  0%   { transform: translateX(-160%) skewX(-15deg); opacity: 0; }
-  4%   { opacity: 1; }
-  40%  { transform: translateX(180%) skewX(-15deg); opacity: 1; }
-  46%  { opacity: 0; transform: translateX(180%) skewX(-15deg); }
-  100% { transform: translateX(180%) skewX(-15deg); opacity: 0; }
-}
-
-.rank-diamond-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.04) 32%,
-    rgba(255, 255, 255, 0.34) 50%,
-    rgba(255, 255, 255, 0.04) 68%,
-    transparent 100%
-  );
-  animation: rank-diamond-sweep 6s ease-in-out infinite;
-  animation-delay: 0.8s;
-  will-change: transform, opacity;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .rank-smoke--a,
-  .rank-smoke--b,
-  .rank-diamond-shimmer {
+  .rank-smoke--b {
     animation: none;
   }
 }

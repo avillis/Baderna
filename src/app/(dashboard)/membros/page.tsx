@@ -20,8 +20,8 @@ type RankEffect = { gradient: string; glow: string };
 // Segue a mesma lógica de cores do card "Rank da Baderna" no perfil.
 function getRankEffect(rank: number): RankEffect {
   if (rank === 1) return {
-    gradient: "linear-gradient(135deg, #c8e8ff, #6ab8f0)",
-    glow: "0 0 14px 3px rgba(100, 185, 255, 0.35)",
+    gradient: "linear-gradient(135deg, #f0f8ff 0%, #88b8ff 14%, #c090ff 28%, #f8a8f8 42%, #90e8ff 56%, #d8eeff 70%, #a8c8ff 85%, #f0f8ff 100%)",
+    glow: "0 0 16px 4px rgba(155,210,255,0.60), 0 0 30px 2px rgba(210,170,255,0.28)",
   };
   if (rank === 2) return {
     gradient: "linear-gradient(135deg, #ff8080, #ff4040)",
