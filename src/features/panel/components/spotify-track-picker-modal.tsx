@@ -13,7 +13,7 @@ type Props = {
 
 function SpotifyLogo({ className = "h-[16px] w-[16px]" }: { className?: string }) {
   return (
-    <svg className={className} fill="#1DB954" viewBox="0 0 24 24">
+    <svg className={className} fill="#ff4100" viewBox="0 0 24 24">
       <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
     </svg>
   );
@@ -73,7 +73,6 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
         {/* Header */}
         <div className="flex items-center justify-between px-[24px] pt-[24px] pb-[16px]">
           <div className="flex items-center gap-[10px]">
-            <SpotifyLogo className="h-[20px] w-[20px]" />
             <div>
               <p className="text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
                 Música favorita
@@ -107,7 +106,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
           {loading && (
             <div className="flex items-center justify-center py-[40px]">
               <svg
-                className="capas-spinner h-[28px] w-[28px] [&_circle]:stroke-[#1DB954]"
+                className="capas-spinner h-[28px] w-[28px] [&_circle]:stroke-[#ff4100]"
                 viewBox="25 25 50 50"
               >
                 <circle r="20" cy="50" cx="50" />
@@ -117,7 +116,6 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
 
           {!loading && !data?.connected && (
             <div className="flex flex-col items-center py-[32px] text-center">
-              <SpotifyLogo className="mb-[12px] h-[36px] w-[36px] opacity-30" />
               <p className="text-[14px] font-bold tracking-[-0.02em] text-[#8d8d8d]">
                 Last.fm não conectado
               </p>
@@ -148,7 +146,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
                     onClick={() => pick(track)}
                     className={`group flex w-full items-center gap-[12px] rounded-[12px] px-[10px] py-[8px] text-left transition-colors ${
                       isCurrent
-                        ? "bg-[#1DB954]/10 ring-1 ring-[#1DB954]/30"
+                        ? "bg-[#ff4100]/10 ring-1 ring-[#ff4100]/30"
                         : "hover:bg-[#f5f5f5]"
                     }`}
                   >
@@ -168,7 +166,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
 
                     {/* Track info */}
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[13px] font-bold tracking-[-0.02em] ${isCurrent ? "text-[#1DB954]" : "text-[#0f0f0f] group-hover:text-[#1DB954]"}`}>
+                      <p className={`truncate text-[13px] font-bold tracking-[-0.02em] ${isCurrent ? "text-[#ff4100]" : "text-[#0f0f0f] group-hover:text-[#ff4100]"}`}>
                         {track.name}
                       </p>
                       <p className="truncate text-[12px] font-medium text-[#8d8d8d]">
@@ -178,7 +176,7 @@ export function SpotifyTrackPickerModal({ currentSongId, onSave, onClose }: Prop
 
                     {/* Selected check */}
                     {isCurrent && (
-                      <div className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full bg-[#1DB954]">
+                      <div className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full bg-[#ff4100]">
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
