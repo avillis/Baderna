@@ -22,7 +22,7 @@ function TrackRow({ track, index }: { track: LastFmTrack; index: number }) {
       href={track.url ?? "#"}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-[12px] rounded-[10px] px-[10px] py-[8px] transition-colors hover:bg-[#f5f5f5]"
+      className={`group flex items-center gap-[12px] rounded-[10px] px-[10px] py-[8px] transition-colors ${track.nowPlaying ? "bg-[#D51007]/10 hover:bg-[#D51007]/15" : "hover:bg-[#f5f5f5]"}`}
     >
       {track.nowPlaying ? (
         <span className="flex w-[18px] shrink-0 items-center justify-center">
@@ -48,11 +48,6 @@ function TrackRow({ track, index }: { track: LastFmTrack; index: number }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] group-hover:text-[#D51007]">
           {track.name}
-          {track.nowPlaying && (
-            <span className="ml-[6px] text-[11px] font-semibold text-[#D51007]">
-              ouvindo agora
-            </span>
-          )}
         </p>
         <p className="truncate text-[12px] font-medium text-[#8d8d8d]">
           {track.artist}
