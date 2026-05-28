@@ -608,13 +608,11 @@ export function PostCard({
       )}
     </article>
     {commentsOpen && !expanded && (
-      <div className="mt-[8px]">
-        <PostCommentsSection
-          postId={post.id}
-          postOwnerId={post.author.id ?? null}
-          onCountChange={setLocalCommentsCount}
-        />
-      </div>
+      <PostCommentsSection
+        postId={post.id}
+        postOwnerId={post.author.id ?? null}
+        onCountChange={setLocalCommentsCount}
+      />
     )}
     </>
   );
