@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Flag, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flag, MoreHorizontal, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -64,11 +64,9 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
         loading="lazy"
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#ff0000] shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-transform duration-150 group-hover:scale-110">
-          <svg className="h-[26px] w-[26px] translate-x-[2px] text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </div>
+        <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white/95 text-[#0f0f0f] shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-transform group-hover:scale-105">
+          <Play className="ml-[2px] h-[24px] w-[24px]" fill="currentColor" />
+        </span>
       </div>
     </button>
   );
