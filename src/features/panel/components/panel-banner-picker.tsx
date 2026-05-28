@@ -216,10 +216,11 @@ export function PanelBannerPicker({
   const modal =
     (isOpen || closing) && typeof document !== "undefined"
       ? createPortal(
-          <div className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[100] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`}>
+          <div className={`${closing ? "modal-backdrop-out" : "modal-backdrop-in"} fixed inset-0 z-[100] flex items-center justify-center bg-black/38 px-4 py-6 backdrop-blur-[2px]`} onClick={handleClose}>
             <div
               className={`${closing ? "modal-panel-out" : "modal-panel-in"} relative flex h-[86vh] max-h-[820px] w-full max-w-[1180px] flex-col overflow-hidden rounded-[var(--panel-radius-shell)] bg-[#f7f7f7] shadow-[0px_30px_90px_rgba(0,0,0,0.18)]`}
               onAnimationEnd={() => { if (closing) { setClosing(false); setIsOpen(false); } }}
+              onClick={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
