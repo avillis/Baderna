@@ -116,6 +116,9 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-[#ff4100] selection:text-white;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* Bloqueia o pull-to-refresh nativo do navegador pra não conflitar
+       com o pull-to-refresh customizado do app. */
+    overscroll-behavior-y: none;
   }
   
   /* Custom thin scrollbar */
