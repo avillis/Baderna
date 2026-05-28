@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Play } from "lucide-react";
 
 import { authToken } from "@/features/panel/use-auth";
+
+const VIDEO_HOST_RE = /instagram\.com|tiktok\.com|twitter\.com|x\.com\/.*\/video|youtube\.com\/shorts/i;
+function isVideoUrl(url: string) { return VIDEO_HOST_RE.test(url); }
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
@@ -68,17 +72,26 @@ export function LinkPreview({ url }: { url: string }) {
       onClick={(e) => e.stopPropagation()}
       className="mt-[12px] block rounded-[16px] overflow-hidden border border-[#ededed] transition-colors hover:border-[#d8d8d8] hover:bg-[#fafafa]"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       {data.image && (
-        <img
-          src={data.image}
-          alt=""
-          className="w-full object-cover max-h-[200px]"
-          loading="lazy"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.display = "none";
-          }}
-        />
+        <div className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={data.image}
+            alt=""
+            className="w-full object-cover max-h-[200px]"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).parentElement!.style.display = "none";
+            }}
+          />
+          {isVideoUrl(url) && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-white/95 text-[#0f0f0f] shadow-[0_4px_20px_rgba(0,0,0,0.28)]">
+                <Play className="h-[20px] w-[20px]" fill="currentColor" />
+              </span>
+            </div>
+          )}
+        </div>
       )}
       <div className="p-[14px]">
         {data.siteName && (
