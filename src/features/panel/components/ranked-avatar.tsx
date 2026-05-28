@@ -38,7 +38,7 @@ export function RankedAvatar({
   priority = false,
   unranked = false,
   levelFrameSrc,
-  levelFrameScale = 1.2,
+  levelFrameScale = 1.75,
   levelFrameOffsetY = 0,
 }: RankedAvatarProps) {
   const [errored, setErrored] = useState(false);
