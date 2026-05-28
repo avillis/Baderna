@@ -24,12 +24,12 @@ function getRankEffect(rank: number): RankEffect {
     glow: "0 0 16px 4px rgba(155,210,255,0.60), 0 0 30px 2px rgba(210,170,255,0.28)",
   };
   if (rank === 2) return {
-    gradient: "linear-gradient(135deg, #ff8080, #ff4040)",
-    glow: "0 0 14px 3px rgba(255, 64, 64, 0.35)",
+    gradient: "linear-gradient(135deg, #ffe8e0 0%, #cc2020 14%, #ff4040 28%, #ff5820 42%, #ff1840 56%, #cc0020 70%, #ff8060 84%, #ffe0e0 100%)",
+    glow: "0 0 16px 4px rgba(255,55,55,0.60), 0 0 30px 2px rgba(220,30,30,0.25)",
   };
   if (rank === 3) return {
-    gradient: "linear-gradient(135deg, #c89eff, #9b59b6)",
-    glow: "0 0 14px 3px rgba(155, 89, 182, 0.30)",
+    gradient: "linear-gradient(135deg, #f0e8ff 0%, #5010a0 14%, #9040ff 28%, #4030c0 42%, #c030e0 56%, #400090 70%, #a050ff 84%, #ead0ff 100%)",
+    glow: "0 0 16px 4px rgba(155,75,255,0.55), 0 0 30px 2px rgba(120,45,210,0.25)",
   };
   if (rank <= 8) return {
     gradient: "linear-gradient(135deg, #ffe066, #ffb300)",

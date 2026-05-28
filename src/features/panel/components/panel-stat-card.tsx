@@ -43,19 +43,29 @@ function getRankBadernaEffect(value: string) {
       glow: "0 0 26px rgba(155,210,255,0.75), 0 0 52px rgba(200,165,255,0.26), inset 1px 1px 6px rgba(255,255,255,0.38), inset -1px -1px 8px rgba(0,0,0,0.42)",
       smoke: "rgba(218, 232, 255, 1)",
     };
-  // #02 — vermelho
+  // #02 — rubi facetado
   if (num === 2)
     return {
-      gradient: "linear-gradient(135deg, rgba(255,80,80,0.33) 0%, #ff4040 100%)",
-      glow: "0 0 22px rgba(255,80,80,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-      smoke: "rgba(255, 80, 80, 0.85)",
+      gradient: [
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(255,220,200,0.30) 1px, rgba(255,200,180,0.06) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(255,220,200,0.20) 1px, rgba(255,200,180,0.04) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(255,220,200,0.10) 1px, transparent 2px, transparent 20px)",
+        "linear-gradient(125deg, #ffe8e8 0%, #aa1820 10%, #ff3535 20%, #c04000 30%, #ff5820 40%, #ff1848 50%, #880010 60%, #ff4040 70%, #ff9060 82%, #ffe0d8 92%, #ffe8e8 100%)",
+      ].join(", "),
+      glow: "0 0 26px rgba(255,55,55,0.78), 0 0 52px rgba(220,30,30,0.28), inset 1px 1px 6px rgba(255,200,180,0.40), inset -1px -1px 8px rgba(80,0,0,0.50)",
+      smoke: "rgba(255, 75, 55, 1)",
     };
-  // #03 — roxo
+  // #03 — ametista facetada
   if (num === 3)
     return {
-      gradient: "linear-gradient(135deg, rgba(155,89,182,0.33) 0%, #9b59b6 100%)",
-      glow: "0 0 22px rgba(155,89,182,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-      smoke: "rgba(155, 89, 182, 0.85)",
+      gradient: [
+        "repeating-linear-gradient(62deg,  transparent 0px, rgba(220,190,255,0.30) 1px, rgba(200,170,255,0.06) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(-62deg, transparent 0px, rgba(220,190,255,0.20) 1px, rgba(200,170,255,0.04) 2px, transparent 3px, transparent 26px)",
+        "repeating-linear-gradient(0deg,   transparent 0px, rgba(220,190,255,0.10) 1px, transparent 2px, transparent 20px)",
+        "linear-gradient(125deg, #f0e8ff 0%, #501090 10%, #9040ff 20%, #3020c0 30%, #7060ff 40%, #c030e0 50%, #400090 60%, #a050ff 70%, #d080ff 82%, #f0e0ff 92%, #ead0ff 100%)",
+      ].join(", "),
+      glow: "0 0 26px rgba(155,75,255,0.78), 0 0 52px rgba(120,45,220,0.28), inset 1px 1px 6px rgba(220,180,255,0.40), inset -1px -1px 8px rgba(30,0,60,0.50)",
+      smoke: "rgba(165, 85, 255, 1)",
     };
   // #04–#08 — dourado
   if (num <= 8)
