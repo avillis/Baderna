@@ -117,7 +117,7 @@ function wrClass(rate: number) {
 function RoleCard({ role, stats }: { role: Role; stats: RoleStats }) {
   if (!stats.played) {
     return (
-      <div className="relative flex flex-col items-center justify-center rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[14px] min-h-[130px] gap-2">
+      <div className="relative flex flex-col items-center justify-center rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[12px] min-h-[104px] gap-2">
         <div className="h-[36px] w-[36px] rounded-full bg-white flex items-center justify-center">
           <Image
             src={laneIcon[role]}
@@ -135,7 +135,7 @@ function RoleCard({ role, stats }: { role: Role; stats: RoleStats }) {
   }
 
   return (
-    <div className="relative flex flex-col justify-between rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[14px] min-h-[130px]">
+    <div className="relative flex flex-col justify-between rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[12px] min-h-[104px]">
       <div className="absolute right-[12px] top-[12px] h-[32px] w-[32px] rounded-full bg-white flex items-center justify-center">
         <Image
           src={laneIcon[role]}
@@ -155,8 +155,8 @@ function RoleCard({ role, stats }: { role: Role; stats: RoleStats }) {
         </span>
       </div>
 
-      <div className="mt-auto pt-3 flex items-baseline gap-[4px]">
-        <span className="text-[20px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+      <div className="mt-auto pt-2 flex items-baseline gap-[4px]">
+        <span className="text-[18px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
           {stats.kda.toFixed(2)}
         </span>
         <span className="text-[10px] font-semibold text-[#c0c0c0] tracking-wide">kda</span>

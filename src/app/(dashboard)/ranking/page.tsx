@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Swords } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
+import { AniversariosClient } from "@/features/panel/components/aniversarios-client";
 import { MemberFlexCard } from "@/features/panel/components/lista-flex-client";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
@@ -94,7 +94,7 @@ function eloScore(rank: MemberRank | undefined): number {
 export default function RankingPage() {
   const members = useBadernaMembers();
   const ranks = useMemberRanks();
-  const [mode, setMode] = useState<"baderna" | "flex" | "inhouse">("baderna");
+  const [mode, setMode] = useState<"baderna" | "flex" | "aniversarios">("baderna");
 
   // Baderna: ordem natural da API (ranking oficial da Baderna)
   const badernaList = useMemo(() => {
@@ -113,9 +113,9 @@ export default function RankingPage() {
   }, [badernaList]);
 
   const TABS = [
-    { key: "baderna", label: "Baderna" },
-    { key: "flex",    label: "Flex"    },
-    { key: "inhouse", label: "Inhouse" },
+    { key: "baderna",      label: "Ranking da Baderna" },
+    { key: "flex",         label: "Ranking da Flex"    },
+    { key: "aniversarios", label: "Aniversários"       },
   ] as const;
 
   const tabIndex = TABS.findIndex((t) => t.key === mode);
@@ -129,9 +129,9 @@ export default function RankingPage() {
           </h1>
         </div>
 
-        {/* Toggle Baderna / Flex / Inhouse — ~1/3 da largura, alinhado à
-            esquerda no desktop; full width no mobile pra caber o toque. */}
-        <div className="relative mb-5 flex h-[40px] w-full items-center rounded-[25px] bg-[#ededed] p-[4px] md:w-1/3">
+        {/* Toggle — largura que comporta os rótulos, alinhado à esquerda no
+            desktop; full width no mobile pra caber o toque. */}
+        <div className="relative mb-5 flex h-[40px] w-full items-center rounded-[25px] bg-[#ededed] p-[4px] md:w-[560px]">
           {/* Sliding pill */}
           <div
             aria-hidden
@@ -157,19 +157,9 @@ export default function RankingPage() {
           ))}
         </div>
 
-        {mode === "inhouse" ? (
-          <div className="rounded-[25px] bg-white px-6 py-16 text-center shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-            <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#fff1ea] text-[#ff4100]">
-              <Swords className="h-[26px] w-[26px]" strokeWidth={2} />
-            </div>
-            <p className="text-[16px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-              Ranking de Inhouse em breve
-            </p>
-            <p className="mx-auto mt-1 max-w-[320px] text-[13px] font-medium text-[#989898]">
-              Vai ligar quando os resultados das partidas internas começarem a
-              ser registrados.
-            </p>
-          </div>
+        {mode === "aniversarios" ? (
+          // Aniversários: copia exata da página de aniversários.
+          <AniversariosClient />
         ) : mode === "baderna" ? (
           // Baderna: layout idêntico à página Membros (grid de 5 com molduras).
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
