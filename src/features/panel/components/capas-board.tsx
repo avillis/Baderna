@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { History, RotateCcw, Zap } from "lucide-react";
+import { Crown, History, RotateCcw, Zap } from "lucide-react";
 
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { MoldurasTab } from "@/features/panel/components/molduras-tab";
@@ -66,6 +66,40 @@ const TITLE_WEIGHTS: Array<[TitleRarity, number]> = [
   ["raro", 0.35],
   ["comum", 0.25],
 ];
+
+// Modo jester: remove comum/raro, só as melhores raridades com lendária
+// turbinada (4× a chance normal de 5%).
+const JESTER_WEIGHTS: Array<[TitleRarity, number]> = [
+  ["lendaria", 0.20],
+  ["exclusivo", 0.30],
+  ["epico", 0.50],
+];
+// Multiplicador de preço por aba no modo jester (sobre o preço-base).
+const JESTER_MULT: Record<"capas" | "titulos" | "nomes", number> = {
+  capas: 4,
+  titulos: 2.5,
+  nomes: 3,
+};
+
+// Picker de nome no modo jester (só épico/exclusivo/lendária).
+function pickJesterNameId(): string {
+  const r = Math.random();
+  let cum = 0;
+  for (const [rarity, weight] of JESTER_WEIGHTS) {
+    cum += weight;
+    if (r < cum) {
+      const bucket = NAMES_BY_RARITY[rarity];
+      if (bucket.length > 0)
+        return bucket[Math.floor(Math.random() * bucket.length)].id;
+    }
+  }
+  const all = [
+    ...NAMES_BY_RARITY.lendaria,
+    ...NAMES_BY_RARITY.exclusivo,
+    ...NAMES_BY_RARITY.epico,
+  ];
+  return (all[Math.floor(Math.random() * all.length)]?.id) ?? NAME_POOL_IDS[0];
+}
 // Sort order for the grid (rarest first). Limitado isn't in the pool.
 const TITLE_RARITY_RANK: Record<TitleRarity, number> = {
   limitado: 0,
@@ -301,6 +335,60 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     }
     return titlePoolIds[Math.floor(Math.random() * titlePoolIds.length)];
   }, [titlesByRarity, titlePoolIds]);
+  const pickJesterTitleId = useCallback((): string => {
+    const r = Math.random();
+    let cum = 0;
+    for (const [rarity, weight] of JESTER_WEIGHTS) {
+      cum += weight;
+      if (r < cum) {
+        const bucket = titlesByRarity[rarity];
+        if (bucket.length > 0)
+          return bucket[Math.floor(Math.random() * bucket.length)].id;
+      }
+    }
+    const all = [
+      ...titlesByRarity.lendaria,
+      ...titlesByRarity.exclusivo,
+      ...titlesByRarity.epico,
+    ];
+    return (all[Math.floor(Math.random() * all.length)]?.id)
+      ?? titlePoolIds[Math.floor(Math.random() * titlePoolIds.length)];
+  }, [titlesByRarity, titlePoolIds]);
+
+  // Banners agrupados pelas melhores raridades (pool do modo jester).
+  const jesterBannersByRarity = useMemo(() => {
+    const groups: Record<"lendaria" | "exclusivo" | "epico", string[]> = {
+      lendaria: [],
+      exclusivo: [],
+      epico: [],
+    };
+    for (const b of bannerPool) {
+      const rar = getBannerRarity(b);
+      if (rar === "lendaria" || rar === "exclusivo" || rar === "epico") {
+        groups[rar].push(b);
+      }
+    }
+    return groups;
+  }, [bannerPool]);
+  const pickJesterBanner = useCallback((): string => {
+    const r = Math.random();
+    let cum = 0;
+    for (const [rarity, weight] of JESTER_WEIGHTS) {
+      cum += weight;
+      if (r < cum) {
+        const bucket =
+          jesterBannersByRarity[rarity as "lendaria" | "exclusivo" | "epico"];
+        if (bucket && bucket.length > 0)
+          return bucket[Math.floor(Math.random() * bucket.length)];
+      }
+    }
+    const all = [
+      ...jesterBannersByRarity.lendaria,
+      ...jesterBannersByRarity.exclusivo,
+      ...jesterBannersByRarity.epico,
+    ];
+    return all[Math.floor(Math.random() * all.length)] ?? bannerPool[0];
+  }, [jesterBannersByRarity, bannerPool]);
 
   // ── Áudio da roleta ──────────────────────────────────────────────────────
   const audioCtxRef   = useRef<AudioContext | null>(null);
@@ -382,6 +470,8 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [previewSeed, setPreviewSeed] = useState(0);
   const [fastMode, setFastMode] = useState(false);
+  // Modo jester — só as melhores raridades, preço multiplicado.
+  const [jesterMode, setJesterMode] = useState(false);
   // Som da roleta — ligado por padrão. Ref espelha o estado pra os players
   // (chamados dentro de timeouts) lerem o valor atual.
   const [soundOn, setSoundOn] = useState(true);
@@ -565,24 +655,33 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     if (tab === "capas") {
       return {
         pool: bannerPool,
-        cost: storePrices.capa,
+        cost: jesterMode
+          ? Math.round(storePrices.capa * JESTER_MULT.capas)
+          : storePrices.capa,
         pickWinner: () =>
-          bannerPool[Math.floor(Math.random() * bannerPool.length)],
+          jesterMode
+            ? pickJesterBanner()
+            : bannerPool[Math.floor(Math.random() * bannerPool.length)],
         pickFiller: () =>
-          bannerPool[Math.floor(Math.random() * bannerPool.length)],
+          jesterMode
+            ? pickJesterBanner()
+            : bannerPool[Math.floor(Math.random() * bannerPool.length)],
         isOwned: (id: string) => isBannerUnlocked(id),
         ownedCount: unlockedBanners.length,
         totalCount: bannerPool.length,
         getRarity: (id: string): BannerRarity => getBannerRarity(id),
-        unlock: (id: string): Promise<unknown> | undefined => unlockBanner(id),
+        unlock: (id: string): Promise<unknown> | undefined =>
+          unlockBanner(id, false, jesterMode),
       };
     }
     if (tab === "titulos") {
       return {
         pool: titlePoolIds,
-        cost: storePrices.title,
-        pickWinner: () => pickWeightedTitleId(),
-        pickFiller: () => pickWeightedTitleId(),
+        cost: jesterMode
+          ? Math.round(storePrices.title * JESTER_MULT.titulos)
+          : storePrices.title,
+        pickWinner: () => (jesterMode ? pickJesterTitleId() : pickWeightedTitleId()),
+        pickFiller: () => (jesterMode ? pickJesterTitleId() : pickWeightedTitleId()),
         isOwned: (id: string) => unlockedTitles.includes(id),
         ownedCount: unlockedTitles.length,
         totalCount: titlePool.length,
@@ -591,29 +690,35 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
         // SEM guard — backend é a fonte de verdade: cobra se for novo,
         // devolve saldo cheio se for duplicada (necessário pra reverter o
         // débito otimista feito antes do spin animar).
-        unlock: (id: string): Promise<unknown> | undefined => unlockTitle(id),
+        unlock: (id: string): Promise<unknown> | undefined =>
+          unlockTitle(id, jesterMode),
       };
     }
     // nomes
     return {
       pool: NAME_POOL_IDS,
-      cost: storePrices.name,
-      pickWinner: () => pickWeightedNameId(),
-      pickFiller: () => pickWeightedNameId(),
+      cost: jesterMode
+        ? Math.round(storePrices.name * JESTER_MULT.nomes)
+        : storePrices.name,
+      pickWinner: () => (jesterMode ? pickJesterNameId() : pickWeightedNameId()),
+      pickFiller: () => (jesterMode ? pickJesterNameId() : pickWeightedNameId()),
       isOwned: (id: string) => isNameUnlocked(id),
       ownedCount: unlockedNames.length,
       totalCount: NAME_POOL.length,
       getRarity: (id: string): BannerRarity =>
         (NAME_BY_ID[id]?.rarity ?? "comum") as BannerRarity,
-      unlock: (id: string): Promise<unknown> | undefined => unlockName(id),
+      unlock: (id: string): Promise<unknown> | undefined =>
+        unlockName(id, jesterMode),
     };
   }, [
     tab,
+    jesterMode,
     storePrices,
     bannerPool,
     isBannerUnlocked,
     unlockedBanners,
     unlockBanner,
+    pickJesterBanner,
     unlockedTitles,
     setUnlockedTitles,
     unlockTitle,
@@ -621,6 +726,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     titlePoolIds,
     titleById,
     pickWeightedTitleId,
+    pickJesterTitleId,
     unlockedNames,
     isNameUnlocked,
     unlockName,
@@ -658,8 +764,9 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [coins]);
-  // Free spin (capas only) lets the user bypass the cost.
-  const usingFreeSpin = tab === "capas" && freeSpinAvailable;
+  // Free spin (capas only) lets the user bypass the cost. Não combina com o
+  // modo jester (que é sempre pago / premium).
+  const usingFreeSpin = tab === "capas" && freeSpinAvailable && !jesterMode;
   const canOpen =
     !spinning && !unlocking && (usingFreeSpin || coins >= activeConfig.cost);
 
@@ -672,23 +779,24 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
     let pick: () => string;
     if (tab === "capas") {
       pool = bannerPool;
-      pick = () => pool[Math.floor(Math.random() * pool.length)];
+      pick = jesterMode
+        ? () => pickJesterBanner()
+        : () => pool[Math.floor(Math.random() * pool.length)];
     } else if (tab === "titulos") {
       pool = titlePoolIds;
-      pick = () => pickWeightedTitleId();
+      pick = jesterMode ? () => pickJesterTitleId() : () => pickWeightedTitleId();
     } else {
       pool = NAME_POOL_IDS;
-      pick = () => pickWeightedNameId();
+      pick = jesterMode ? () => pickJesterNameId() : () => pickWeightedNameId();
     }
     if (pool.length === 0) return [];
     const items: string[] = [];
     for (let i = 0; i < ROULETTE_LENGTH; i++) items.push(pick());
     return items;
-    // Intentionally only rerolls on tab change or the manual reset button.
-    // Pool reference changes (e.g. titles reloading from storage) would
-    // otherwise reroll the strip on every render — we don't want that.
+    // Rerola na troca de aba, no reset manual ou ao alternar o modo jester.
+    // Mudanças de referência do pool (ex: títulos recarregando) NÃO rerolam.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, previewSeed]);
+  }, [tab, previewSeed, jesterMode]);
 
   const displayStrip = rouletteItems.length > 0 ? rouletteItems : previewStrip;
 
@@ -1100,6 +1208,18 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
               </button>
               <button
                 type="button"
+                onClick={() => setJesterMode((v) => !v)}
+                aria-label={jesterMode ? "Desativar modo jester" : "Ativar modo jester"}
+                title={jesterMode ? "Modo jester ativado" : "Modo jester (só melhores raridades, preço maior)"}
+                aria-pressed={jesterMode}
+                className={`flex h-[44px] w-[44px] items-center justify-center rounded-[14px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
+                  jesterMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
+                }`}
+              >
+                <Crown className="h-[18px] w-[18px]" strokeWidth={2.2} />
+              </button>
+              <button
+                type="button"
                 onClick={() => setSoundOn((v) => !v)}
                 aria-label={soundOn ? "Desativar som da roleta" : "Ativar som da roleta"}
                 title={soundOn ? "Som ligado" : "Som desligado"}
@@ -1170,6 +1290,18 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
               }`}
             >
               <Zap className="h-[18px] w-[18px]" strokeWidth={2.2} fill="currentColor" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setJesterMode((v) => !v)}
+              aria-label={jesterMode ? "Desativar modo jester" : "Ativar modo jester"}
+              title={jesterMode ? "Modo jester ativado" : "Modo jester (só melhores raridades, preço maior)"}
+              aria-pressed={jesterMode}
+              className={`flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
+                jesterMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
+              }`}
+            >
+              <Crown className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </button>
             <button
               type="button"
