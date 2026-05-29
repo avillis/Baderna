@@ -319,9 +319,11 @@ export function PostComposer({
                 disabled={!!poll}
                 aria-label="Adicionar GIF"
                 aria-expanded={giphyOpen}
-                className="flex h-[22px] w-[22px] items-center justify-center rounded-[7px] text-[9px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70 disabled:opacity-30"
+                className="flex h-[32px] w-[32px] items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:opacity-30"
               >
-                GIF
+                <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[7px] text-[8px] font-bold shadow-[inset_0_0_0_1.5px_currentColor]">
+                  GIF
+                </span>
               </button>
               <input
                 ref={videoInput}
@@ -342,30 +344,22 @@ export function PostComposer({
                 title="Adicionar vídeo (até 20MB)"
                 className="flex h-[32px] w-[32px] items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                <svg
-                  className="h-[26px] w-[26px]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="5"
-                    ry="5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  />
-                  <path
-                    d="M10 8.5L16 12L10 15.5V8.5Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[7px] shadow-[inset_0_0_0_1.5px_currentColor]">
+                  <svg
+                    className="h-[16px] w-[16px]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M8 6L18 12L8 18Z"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
               </button>
               {/* Enquete */}
               <button
@@ -385,10 +379,10 @@ export function PostComposer({
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M9 5.5h12M9 13h12M9 20.5h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <circle cx="4.5" cy="5.5" r="1.6" fill="currentColor" />
-                  <circle cx="4.5" cy="13" r="1.6" fill="currentColor" />
-                  <circle cx="4.5" cy="20.5" r="1.6" fill="currentColor" />
+                  <path d="M9 4.5h12M9 12h12M9 19.5h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="4.5" cy="4.5" r="1.6" fill="currentColor" />
+                  <circle cx="4.5" cy="12" r="1.6" fill="currentColor" />
+                  <circle cx="4.5" cy="19.5" r="1.6" fill="currentColor" />
                 </svg>
               </button>
               {uploading && (
