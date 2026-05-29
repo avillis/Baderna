@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { StyledName } from "@/features/panel/components/styled-name";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { useRiotProfile, type RiotMatch, type RiotProfile } from "@/features/panel/use-riot-profile";
 import type { RankType } from "@/features/panel/rank-utils";
@@ -210,14 +211,16 @@ function hasCachedProfile(riotId: string): boolean {
   }
 }
 
-function MemberFlexCard({
+export function MemberFlexCard({
   displayName,
   nickname,
+  styleId,
   riotId,
   index,
 }: {
   displayName: string;
   nickname: string;
+  styleId?: string;
   riotId: string;
   index: number;
 }) {
@@ -276,8 +279,8 @@ function MemberFlexCard({
           unranked={!profile || rank.label === "Sem classificação"}
         />
         <div className="min-w-0 flex-1">
-          <h2 className="max-w-full truncate text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f] lg:max-w-[140px]">
-            {nickname}
+          <h2 className="max-w-full truncate-glow text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f] lg:max-w-[140px]">
+            <StyledName styleId={styleId}>{nickname}</StyledName>
           </h2>
           <p className="mt-0.5 max-w-full truncate text-[12px] font-semibold text-[#8d8d8d] lg:max-w-[140px]">
             {displayName}
@@ -337,6 +340,7 @@ export function ListaFlexClient() {
             index={index}
             displayName={m.name}
             nickname={m.nickname}
+            styleId={m.activeNameId}
             riotId={riotId}
           />
         );

@@ -6,11 +6,11 @@ import { useMemo, useState } from "react";
 import { Swords } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
+import { MemberFlexCard } from "@/features/panel/components/lista-flex-client";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import {
-  formatRankLabel,
   useMemberRanks,
   type MemberRank,
 } from "@/features/panel/use-member-ranks";
@@ -29,19 +29,6 @@ const TIER_ORDER = [
 ];
 
 const DIVISION_VALUE: Record<string, number> = { IV: 0, III: 1, II: 2, I: 3 };
-
-const TIER_COLOR: Record<string, string> = {
-  IRON: "#7a7166",
-  BRONZE: "#a9744f",
-  SILVER: "#9fb2c4",
-  GOLD: "#e3b34a",
-  PLATINUM: "#4ea3a0",
-  EMERALD: "#2faf6b",
-  DIAMOND: "#5b8def",
-  MASTER: "#b25cdb",
-  GRANDMASTER: "#d6453d",
-  CHALLENGER: "#f0c674",
-};
 
 // Moldura (gradiente + glow) por posição — idêntica ao card da página Membros.
 type RankEffect = { gradient: string; glow: string };
@@ -226,74 +213,25 @@ export default function RankingPage() {
             })}
           </div>
         ) : (
-        <div className="overflow-hidden rounded-[25px] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-          {sorted.map(({ member, rank, score }, index) => {
-            const position = index + 1;
-            const tier = rank?.tier?.toUpperCase();
-            const tierColor = (tier && TIER_COLOR[tier]) || "#b0a8a4";
-            const hasRank = score >= 0;
-            const avatar = member.avatarSrc || getChampionAvatarSrc(member.id);
-
-            return (
-              <Link
+          // Flex: mesmo layout da página Flex (cards com winrate/KDA por lane),
+          // porém ordenado por elo (sorted).
+          <div className="flex flex-col gap-4">
+            {sorted.map(({ member }, index) => (
+              <MemberFlexCard
                 key={member.id}
-                href={`/membro/${member.id}`}
-                className="flex items-center gap-4 border-b border-[#f3ebe8] px-5 py-4 transition-colors last:border-0 hover:bg-[#fdfcfa]"
-              >
-                <span
-                  className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em] text-[#b0a8a4]"
-                >
-                  {position}
-                </span>
-
-                <div className="relative h-[44px] w-[44px] shrink-0 overflow-hidden rounded-full bg-[#ededed]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={avatar} alt={member.nickname} className="h-full w-full object-cover" />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                    <StyledName styleId={member.activeNameId}>
-                      {member.nickname}
-                    </StyledName>
-                  </div>
-                  <div className="mt-0.5 truncate text-[12px] font-medium text-[#989898]">
-                    {member.name}
-                  </div>
-                </div>
-
-                <div className="shrink-0 text-right">
-                  {hasRank ? (
-                    <>
-                      <div
-                        className="flex items-center justify-end gap-1.5 text-[13px] font-bold tracking-[-0.01em]"
-                        style={{ color: tierColor }}
-                      >
-                        <span className="h-[8px] w-[8px] rounded-full" style={{ backgroundColor: tierColor }} />
-                        {formatRankLabel(rank)}
-                      </div>
-                      {rank?.lp != null && (
-                        <div className="mt-0.5 text-[11px] font-semibold text-[#b0a8a4]">
-                          {rank.lp} PDL
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-[12px] font-semibold text-[#cdc6c1]">
-                      Sem rank
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-
-          {sorted.length === 0 && (
-            <p className="px-5 py-16 text-center text-[14px] font-medium text-[#8d8d8d]">
-              Sem membros pra rankear ainda.
-            </p>
-          )}
-        </div>
+                index={index}
+                displayName={member.name}
+                nickname={member.nickname}
+                styleId={member.activeNameId}
+                riotId={`${member.summonerName}#${member.tagLine}`}
+              />
+            ))}
+            {sorted.length === 0 && (
+              <div className="rounded-[25px] bg-white px-6 py-16 text-center text-[14px] font-medium text-[#8d8d8d] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+                Sem membros com Flex pra rankear ainda.
+              </div>
+            )}
+          </div>
         )}
       </div>
     </PanelShell>
