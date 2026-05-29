@@ -79,7 +79,7 @@ class PostController extends Controller
             'video_url' => 'nullable|string|max:1000',
             // Enquete (opcional). Mutuamente exclusiva com mídia no frontend.
             'poll'                     => 'nullable|array',
-            'poll.title'               => 'required_with:poll|string|max:200',
+            'poll.title'               => 'nullable|string|max:200',
             'poll.multiple'            => 'nullable|boolean',
             'poll.duration_minutes'    => 'nullable|integer|min:5|max:10080',
             'poll.options'             => 'required_with:poll|array|min:2|max:6',
@@ -116,7 +116,7 @@ class PostController extends Controller
             $closesAt = $minutes > 0 ? now()->addMinutes($minutes) : now()->addDay();
             $poll = PostPoll::create([
                 'post_id'   => $post->id,
-                'title'     => trim($pollData['title']),
+                'title'     => trim((string) ($pollData['title'] ?? '')),
                 'multiple'  => (bool) ($pollData['multiple'] ?? false),
                 'closes_at' => $closesAt,
             ]);
