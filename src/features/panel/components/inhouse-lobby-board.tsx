@@ -72,10 +72,16 @@ const laneIconByKey = {
 const SPECIALIST_ICON = "/images/lanes/Specialist_icon.png";
 
 function PlayerAvatar({ player }: { player: InhousePlayer }) {
-  if (player.avatarSrc) {
+  const allMembers = useBadernaMembers();
+  const member =
+    allMembers.find((m) => m.id === player.id) ??
+    allMembers.find((m) => m.nickname === player.nickname);
+  const avatarSrc = member?.avatarSrc || player.avatarSrc;
+
+  if (avatarSrc) {
     return (
       <img
-        src={player.avatarSrc}
+        src={avatarSrc}
         alt={player.nickname}
         className="h-[40px] w-[40px] shrink-0 rounded-full object-cover"
       />
@@ -1079,19 +1085,25 @@ function InhouseListCard({
 
 function CaptainAvatar({ player }: { player: InhousePlayer }) {
   const imgRef = useRef<HTMLImageElement>(null);
+  const allMembers = useBadernaMembers();
+  const member =
+    allMembers.find((m) => m.id === player.id) ??
+    allMembers.find((m) => m.nickname === player.nickname);
+  const avatarSrc = member?.avatarSrc || player.avatarSrc;
+
   // Inicia "loaded" se a imagem já estiver em cache (complete=true antes do
   // primeiro paint). Evita o flash do skeleton em refreshes.
   const [loaded, setLoaded] = useState(() => false);
   useEffect(() => {
     if (imgRef.current?.complete) setLoaded(true);
-  }, [player.avatarSrc]);
+  }, [avatarSrc]);
   return (
     <div className="relative h-[48px] w-[48px] shrink-0 overflow-hidden rounded-full ring-[2px] ring-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] bg-[#ededed]">
-      {player.avatarSrc ? (
+      {avatarSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           ref={imgRef}
-          src={player.avatarSrc}
+          src={avatarSrc}
           alt=""
           className="h-full w-full object-cover"
           onLoad={() => setLoaded(true)}
@@ -1139,25 +1151,31 @@ function TeamRow({
       <div className="flex shrink-0 items-center">
         {team
           .filter((p) => p.id !== leader.id)
-          .map((p, i) => (
-            <div
-              key={p.id}
-              className="relative -ml-[6px] h-[24px] w-[24px] overflow-hidden rounded-full ring-2 ring-white first:ml-0"
-              style={{ zIndex: 10 - i }}
-              title={p.nickname}
-            >
-              {p.avatarSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={p.avatarSrc}
-                  alt=""
-                  className="h-full w-full object-cover bg-[#ededed]"
-                />
-              ) : (
-                <div className="h-full w-full bg-[#ededed]" />
-              )}
-            </div>
-          ))}
+          .map((p, i) => {
+            const pm =
+              allMembers.find((m) => m.id === p.id) ??
+              allMembers.find((m) => m.nickname === p.nickname);
+            const src = pm?.avatarSrc || p.avatarSrc;
+            return (
+              <div
+                key={p.id}
+                className="relative -ml-[6px] h-[24px] w-[24px] overflow-hidden rounded-full ring-2 ring-white first:ml-0"
+                style={{ zIndex: 10 - i }}
+                title={p.nickname}
+              >
+                {src ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={src}
+                    alt=""
+                    className="h-full w-full object-cover bg-[#ededed]"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-[#ededed]" />
+                )}
+              </div>
+            );
+          })}
       </div>
     </div>
   );
