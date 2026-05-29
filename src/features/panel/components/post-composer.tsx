@@ -385,10 +385,10 @@ export function PostComposer({
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M10 5.5h10M10 12h10M10 18.5h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <circle cx="5.5" cy="5.5" r="1.6" fill="currentColor" />
-                  <circle cx="5.5" cy="12" r="1.6" fill="currentColor" />
-                  <circle cx="5.5" cy="18.5" r="1.6" fill="currentColor" />
+                  <path d="M9 4.5h12M9 12h12M9 19.5h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="4.5" cy="4.5" r="1.6" fill="currentColor" />
+                  <circle cx="4.5" cy="12" r="1.6" fill="currentColor" />
+                  <circle cx="4.5" cy="19.5" r="1.6" fill="currentColor" />
                 </svg>
               </button>
               {uploading && (
