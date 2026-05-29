@@ -226,7 +226,7 @@ export default function MembrosPage() {
                 {compareMode ? "Cancelar comparação" : "Comparar membros"}
               </button>
               {compareMode && selectedIds.length < 2 && (
-                <span className="text-[12px] font-medium leading-snug text-[#989898]">
+                <span className="ml-auto text-right text-[12px] font-medium leading-snug text-[#989898]">
                   Toque em 2 membros pra comparar.
                 </span>
               )}
