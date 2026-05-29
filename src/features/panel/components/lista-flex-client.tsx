@@ -272,7 +272,7 @@ export function MemberFlexCard({
       <div
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="flex w-full shrink-0 cursor-pointer flex-col items-center gap-0 text-center sm:cursor-default lg:w-[220px] lg:flex-row lg:items-center lg:gap-4 lg:text-left"
+        className="flex w-full shrink-0 cursor-pointer flex-col items-center gap-0 text-center sm:cursor-default lg:w-1/3 lg:flex-row lg:items-center lg:gap-4 lg:text-left"
       >
         <RankMedal
           rankType={rank.type}
@@ -298,7 +298,7 @@ export function MemberFlexCard({
       </div>
 
       <div
-        className={`flex-1 gap-3 sm:grid sm:grid-cols-5 lg:max-w-[720px] ${
+        className={`flex-1 gap-3 sm:grid sm:grid-cols-5 ${
           expanded ? "grid" : "hidden"
         }`}
       >
