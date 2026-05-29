@@ -595,9 +595,13 @@ export function PostCommentsSection({
             onClick={() => setGiphyOpen((v) => !v)}
             aria-label="Adicionar GIF"
             aria-expanded={giphyOpen}
-            className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-[6px] text-[8px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70"
           >
-            GIF
+            {/* Mesma caixa do composer de post, escalada uniformemente (~0.92)
+                pra ficar proporcional ao ícone de imagem de 24px do comentário. */}
+            <span className="flex h-[22px] w-[22px] scale-[0.92] items-center justify-center rounded-[7px] text-[8px] font-bold shadow-[inset_0_0_0_1.5px_currentColor]">
+              GIF
+            </span>
           </button>
 
           <button
