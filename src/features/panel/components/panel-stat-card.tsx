@@ -9,6 +9,8 @@ type PanelStatCardProps = {
   rankFrameSrc?: string;
   featuredSrc?: string;
   placeholder?: boolean;
+  /** Só no tom rank-baderna: mostra a pill de BP ao lado do #NN. */
+  badernaPoints?: number | null;
 };
 
 function StatSkeleton({
@@ -96,6 +98,7 @@ export function PanelStatCard({
   rankFrameSrc,
   featuredSrc,
   placeholder = false,
+  badernaPoints,
 }: PanelStatCardProps) {
   const isFeatured = tone === "featured";
   const isRank = tone === "rank";
@@ -121,7 +124,7 @@ export function PanelStatCard({
           className="absolute inset-0"
           style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}
         />
-        <div className="relative z-10 flex h-full items-center px-[26px]">
+        <div className="relative z-10 flex h-full items-center justify-between gap-3 px-[26px]">
           <div>
             <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
               {eyebrow}
@@ -134,6 +137,19 @@ export function PanelStatCard({
               </p>
             )}
           </div>
+          {typeof badernaPoints === "number" && (
+            <span className="inline-flex h-[36px] shrink-0 items-center gap-[6px] rounded-[12px] bg-[#ededed] px-[14px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] shadow-[0_4px_14px_rgba(0,0,0,0.18)]">
+              <Image
+                src="/images/bp.png"
+                alt=""
+                width={20}
+                height={20}
+                className="h-[20px] w-[20px] object-contain"
+                unoptimized
+              />
+              {badernaPoints.toLocaleString("pt-BR")} BP
+            </span>
+          )}
         </div>
       </article>
     );

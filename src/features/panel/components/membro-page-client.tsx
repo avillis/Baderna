@@ -253,8 +253,6 @@ export function MembroPageClient({ slug }: { slug: string }) {
     panelStats[0],
     {
       ...panelStats[1],
-      // "Rank da Baderna" → mostra os BP que sustentam essa posição no ranking.
-      eyebrow: `${badernaPoints.toLocaleString("pt-BR")} BP`,
       value: `#${String(badernaRank).padStart(2, "0")}`,
     },
     { ...panelStats[2], eyebrow: member.rankName },
@@ -292,6 +290,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
     primaryLane: apiMember?.primaryLane ?? null,
     secondaryLane: apiMember?.secondaryLane ?? null,
     badernaRank,
+    badernaPoints,
     fallbackRankEyebrow: stats[2].eyebrow,
     fallbackRankValue: stats[2].value,
     fallbackRankFrameSrc: profile.rankFrameSrc,
