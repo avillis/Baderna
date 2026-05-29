@@ -60,7 +60,7 @@ function NotifItem({
   return (
     <div
       className={`flex cursor-pointer items-center gap-[12px] border-b border-[#f0e9e5] p-[12px] transition-colors duration-150 ${
-        notif.read_at ? "bg-white opacity-70 hover:bg-[#fafafa]" : "bg-[#fff4f4] hover:bg-[#ffeaea]"
+        notif.read_at ? "bg-white opacity-70 hover:bg-[#fafafa]" : "bg-[#f5f5f5] hover:bg-[#efefef]"
       }`}
       onClick={() => onClick(notif.id)}
     >
