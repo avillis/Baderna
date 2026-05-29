@@ -104,8 +104,9 @@ export default function RankingPage() {
           </p>
         </div>
 
-        {/* Toggle Baderna / Flex / Inhouse */}
-        <div className="relative mb-5 flex h-[40px] w-full items-center rounded-[25px] bg-[#ededed] p-[4px]">
+        {/* Toggle Baderna / Flex / Inhouse — ~1/3 da largura, alinhado à
+            esquerda no desktop; full width no mobile pra caber o toque. */}
+        <div className="relative mb-5 flex h-[40px] w-full items-center rounded-[25px] bg-[#ededed] p-[4px] md:w-1/3">
           {/* Sliding pill */}
           <div
             aria-hidden
