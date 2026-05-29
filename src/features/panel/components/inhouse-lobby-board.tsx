@@ -290,9 +290,13 @@ function InhouseMatchHeader({
   const teamNames = useTeamNames();
   const allMembers = useBadernaMembers();
   // Procura o teamName custom do membro pela API (settings de "Minha conta").
-  // Cai pra teamNames (localStorage por user_id) se for guest. Default = "Time {nick}".
+  // Fallback por nickname quando o slug gravado no inhouse não bate com o do
+  // banco (ex: summoner_name com caracteres coreanos gera slugs distintos em
+  // PHP e JS). Cai pra localStorage/default se for guest.
   function resolveTeamLabel(leader: InhousePlayer): string {
-    const member = allMembers.find((m) => m.id === leader.id);
+    const member =
+      allMembers.find((m) => m.id === leader.id) ??
+      allMembers.find((m) => m.nickname === leader.nickname);
     const apiTeam = member?.teamName?.trim();
     if (apiTeam && apiTeam !== `Time ${leader.nickname}`) return apiTeam;
     if (apiTeam) return apiTeam;
@@ -583,7 +587,9 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
   const allMembersForRank = useBadernaMembers();
   const teamNames = useTeamNames();
   function resolveTeamLabel(leader: InhousePlayer): string {
-    const member = allMembersForRank.find((m) => m.id === leader.id);
+    const member =
+      allMembersForRank.find((m) => m.id === leader.id) ??
+      allMembersForRank.find((m) => m.nickname === leader.nickname);
     const apiTeam = member?.teamName?.trim();
     if (apiTeam && apiTeam !== `Time ${leader.nickname}`) return apiTeam;
     if (apiTeam) return apiTeam;
@@ -1107,7 +1113,11 @@ function TeamRow({
 }) {
   const teamNames = useTeamNames();
   const allMembers = useBadernaMembers();
-  const member = allMembers.find((m) => m.id === leader.id);
+  // Fallback por nickname: slug gravado no inhouse pode não bater com o slug
+  // do banco quando há caracteres não-ASCII no summoner_name (ex: coreano).
+  const member =
+    allMembers.find((m) => m.id === leader.id) ??
+    allMembers.find((m) => m.nickname === leader.nickname);
   const apiTeam = member?.teamName?.trim();
   const label =
     apiTeam || teamNames[leader.id] || `Time ${leader.nickname}`;
