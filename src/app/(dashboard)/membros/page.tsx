@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Search } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
@@ -111,6 +111,15 @@ export default function MembrosPage() {
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showCompare, setShowCompare] = useState(false);
+  // Pill de comparar: anima entrada/saída (igual ao dropdown do sininho).
+  // Mantém montado durante a saída até o onAnimationEnd desmontar.
+  const [pillClosing, setPillClosing] = useState(false);
+  const prevCompareMode = useRef(false);
+  useEffect(() => {
+    if (prevCompareMode.current && !compareMode) setPillClosing(true);
+    if (compareMode) setPillClosing(false);
+    prevCompareMode.current = compareMode;
+  }, [compareMode]);
 
   // Baderna: ordem natural da API + posição fixa (#NN) antes de filtrar.
   const badernaList = useMemo(() => {
@@ -354,9 +363,16 @@ export default function MembrosPage() {
       </div>
 
       {/* Barra de comparação */}
-      {compareMode && (
+      {(compareMode || pillClosing) && (
         <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center px-4 xl:left-[423px] xl:right-[45px] 2xl:left-[443px]">
-          <div className="flex items-center gap-[12px] rounded-[20px] bg-[#0f0f0f] py-[10px] pl-[20px] pr-[10px] shadow-[0px_8px_40px_rgba(0,0,0,0.22)]">
+          <div
+            onAnimationEnd={() => {
+              if (pillClosing) setPillClosing(false);
+            }}
+            className={`flex items-center gap-[12px] rounded-[20px] bg-[#0f0f0f] py-[10px] pl-[20px] pr-[10px] shadow-[0px_8px_40px_rgba(0,0,0,0.22)] ${
+              pillClosing ? "dropdown-up-out" : "dropdown-up-in"
+            }`}
+          >
             <span className="text-[13px] font-semibold tracking-[-0.02em] text-white">
               {selectedIds.length}/2 selecionados
             </span>
