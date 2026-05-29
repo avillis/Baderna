@@ -465,7 +465,7 @@ function SidebarInner({
           <Link
             href="/minha-conta"
             onClick={onNavigate}
-            className="flex min-w-0 items-center gap-3 px-[2px] py-[2px] text-left transition-opacity duration-200 hover:opacity-80"
+            className="flex min-w-0 flex-1 items-center gap-3 px-[2px] py-[2px] text-left transition-opacity duration-200 hover:opacity-80"
           >
             <div className="relative h-[30px] w-[30px] shrink-0 overflow-hidden rounded-full ring-1 ring-[#ece1db]">
               <Image
@@ -489,19 +489,25 @@ function SidebarInner({
               return (
                 <span
                   title={account.gameNick || fallback}
-                  className="max-w-[156px] truncate-glow pr-1 text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#0f0f0f]"
+                  className="flex min-w-0 flex-1 items-center"
                 >
                   {nick ? (
                     <>
-                      <StyledName styleId={account.activeNameId}>
-                        {nick}
-                      </StyledName>
+                      <span className="min-w-0 truncate-glow text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#0f0f0f]">
+                        <StyledName styleId={account.activeNameId}>
+                          {nick}
+                        </StyledName>
+                      </span>
                       {tag && (
-                        <span className="ml-[4px] text-[#8d8d8d]">#{tag}</span>
+                        <span className="ml-[4px] shrink-0 text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#8d8d8d]">
+                          #{tag}
+                        </span>
                       )}
                     </>
                   ) : (
-                    fallback
+                    <span className="min-w-0 truncate-glow text-[16px] font-semibold leading-none tracking-[-0.03em] text-[#0f0f0f]">
+                      {fallback}
+                    </span>
                   )}
                 </span>
               );

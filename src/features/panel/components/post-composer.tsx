@@ -150,7 +150,13 @@ export function PostComposer({
                 placeholder="Qual a boa de hoje? Use @ pra mencionar alguém"
                 rows={4}
                 maxLength={2000}
-                className="w-full resize-none border-none bg-transparent text-[15px] tracking-[-0.01em] text-[#0f0f0f] outline-none placeholder:text-[#a89e99] sm:text-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className={`w-full resize-none border-none bg-transparent text-[15px] tracking-[-0.01em] text-[#0f0f0f] outline-none placeholder:text-[#a89e99] sm:text-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden${
+                  mediaUrl
+                    ? " min-h-[90px] sm:min-h-[180px]"
+                    : isVideoMedia
+                      ? " min-h-[56px] sm:min-h-[112px]"
+                      : ""
+                }`}
               />
               {mentions.dropdown}
             </div>

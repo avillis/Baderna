@@ -609,7 +609,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
               </div>
             </div>
             <div className="grid grid-cols-[1.67fr_minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
-              <div className="col-start-1 col-span-1 flex flex-col gap-8">
+              <div className="col-start-1 col-span-1 flex min-w-0 flex-col gap-8">
                 {pinnedPost && (
                   <PinnedPostCard
                     post={pinnedPost}
