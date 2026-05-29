@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\SpotifyController;
 use App\Http\Controllers\Api\LastFmController;
 use App\Http\Controllers\Api\PostBookmarksController;
 use App\Http\Controllers\Api\PostPinController;
+use App\Http\Controllers\Api\PostPollController;
 use App\Http\Controllers\Api\LinkPreviewController;
 
 // ── Spotify callback (sem auth — recupera user pelo state criptografado) ──
@@ -111,6 +112,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Bookmarks
     Route::post('/posts/{id}/bookmark', [PostBookmarksController::class, 'toggle'])->whereNumber('id');
+
+    // Enquete (poll) — votar/desvotar numa opção
+    Route::post('/posts/{id}/poll/vote', [PostPollController::class, 'vote'])->whereNumber('id');
 
     // Pin no perfil
     Route::post('/posts/{id}/pin', [PostPinController::class, 'toggle'])->whereNumber('id');
