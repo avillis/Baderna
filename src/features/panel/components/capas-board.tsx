@@ -243,6 +243,30 @@ function CrownIcon({ className }: { className?: string }) {
   );
 }
 
+// Tooltip dos botões da roleta — aparece no hover, acima do botão.
+function ActionTooltip({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="group/tip relative flex">
+      {children}
+      {/* Ancorado à direita do botão (cresce pra esquerda) pra não vazar a
+          borda direita do conteúdo. Seta aponta pro centro do botão. */}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full right-0 z-50 mb-[10px] w-max max-w-[220px] translate-y-[4px] rounded-[10px] bg-[#0f0f0f] px-[11px] py-[7px] text-center text-[11px] font-semibold leading-snug tracking-[-0.01em] text-white opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-200 ease-out group-hover/tip:translate-y-0 group-hover/tip:opacity-100"
+      >
+        {label}
+        <span className="absolute right-[21px] top-full h-[8px] w-[8px] -translate-y-1/2 rotate-45 bg-[#0f0f0f]" />
+      </span>
+    </div>
+  );
+}
+
 const ROULETTE_LENGTH = 42;
 const WIN_INDEX = 34; // The card that lands under the indicator
 // Splash art native aspect ≈ 1215:717 (landscape rectangle)
@@ -1209,7 +1233,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                   jesterMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
                 }`}
               >
-                <CrownIcon className="h-[22px] w-[22px]" />
+                <CrownIcon className="h-[21px] w-[21px]" />
               </button>
             </div>
           </div>
@@ -1250,40 +1274,43 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
 
           {/* Reset + fast no desktop (absoluto à direita) */}
           <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-[10px] md:flex">
-            <button
-              type="button"
-              onClick={resetRoulette}
-              disabled={spinning}
-              aria-label="Resetar roleta"
-              title="Resetar roleta"
-              className="flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <RotateCcw className="h-[18px] w-[18px]" strokeWidth={2.2} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setFastMode((v) => !v)}
-              aria-label={fastMode ? "Desativar modo rápido" : "Ativar modo rápido"}
-              title={fastMode ? "Modo rápido ativado" : "Acelerar animação"}
-              aria-pressed={fastMode}
-              className={`flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
-                fastMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
-              }`}
-            >
-              <Zap className="h-[18px] w-[18px]" strokeWidth={2.2} fill="currentColor" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setJesterMode((v) => !v)}
-              aria-label={jesterMode ? "Desativar modo jester" : "Ativar modo jester"}
-              title={jesterMode ? "Modo jester ativado" : "Modo jester (só melhores raridades, preço maior)"}
-              aria-pressed={jesterMode}
-              className={`flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
-                jesterMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
-              }`}
-            >
-              <CrownIcon className="h-[22px] w-[22px]" />
-            </button>
+            <ActionTooltip label="Reembaralha as prévias da roleta">
+              <button
+                type="button"
+                onClick={resetRoulette}
+                disabled={spinning}
+                aria-label="Resetar roleta"
+                className="flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] text-[#0f0f0f] transition-colors hover:bg-[#e3e3e3] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <RotateCcw className="h-[18px] w-[18px]" strokeWidth={2.2} />
+              </button>
+            </ActionTooltip>
+            <ActionTooltip label="Modo rápido — acelera a animação do giro">
+              <button
+                type="button"
+                onClick={() => setFastMode((v) => !v)}
+                aria-label={fastMode ? "Desativar modo rápido" : "Ativar modo rápido"}
+                aria-pressed={fastMode}
+                className={`flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
+                  fastMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
+                }`}
+              >
+                <Zap className="h-[18px] w-[18px]" strokeWidth={2.2} fill="currentColor" />
+              </button>
+            </ActionTooltip>
+            <ActionTooltip label="Modo jester — só as melhores raridades (lendária turbinada), mas o preço aumenta">
+              <button
+                type="button"
+                onClick={() => setJesterMode((v) => !v)}
+                aria-label={jesterMode ? "Desativar modo jester" : "Ativar modo jester"}
+                aria-pressed={jesterMode}
+                className={`flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
+                  jesterMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
+                }`}
+              >
+                <CrownIcon className="h-[21px] w-[21px]" />
+              </button>
+            </ActionTooltip>
           </div>
         </div>
         {tab === "capas" && (
