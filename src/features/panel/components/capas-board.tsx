@@ -232,7 +232,13 @@ function formatToken(value: string): string {
 function CrownIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
-      <path d="M3 8L7 11.5L12 4L17 11.5L21 8L19 18H5L3 8Z" />
+      <path
+        d="M3 8L7 11.5L12 4L17 11.5L21 8L19 18H5L3 8Z"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
