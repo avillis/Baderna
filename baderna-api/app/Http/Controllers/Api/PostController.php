@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostBookmark;
 use App\Models\PostLike;
+use App\Models\PostPoll;
+use App\Models\PostPollOption;
 use App\Models\User;
 use App\Notifications\MemberNotification;
 use App\Support\Mentions;
@@ -18,7 +20,7 @@ class PostController extends Controller
     {
         $userId = $request->user()->id;
 
-        $q = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src'])
+        $q = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src', 'poll.options'])
             ->withCount(['likes', 'comments'])
             ->orderByDesc('id')
             ->limit(5);
@@ -42,14 +44,14 @@ class PostController extends Controller
             ->toArray();
 
         return response()->json([
-            'posts' => $posts->map(fn ($p) => $this->serialize($p, $likedIds, $bookmarkedIds)),
+            'posts' => $posts->map(fn ($p) => $this->serialize($p, $likedIds, $bookmarkedIds, $userId)),
         ]);
     }
 
     public function show(Request $request, string $idOrCode)
     {
         $userId = $request->user()->id;
-        $query = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src'])
+        $query = Post::with(['user:id,name,display_name,summoner_name,tagLine,avatar_src', 'poll.options'])
             ->withCount(['likes', 'comments']);
 
         // Aceita ID numérico (compat com links antigos) OU short_code novo.
@@ -63,7 +65,7 @@ class PostController extends Controller
         $liked = PostLike::where('user_id', $userId)->where('post_id', $post->id)->exists();
         $bookmarked = PostBookmark::where('user_id', $userId)->where('post_id', $post->id)->exists();
         return response()->json([
-            'post' => $this->serialize($post, $liked ? [$post->id] : [], $bookmarked ? [$post->id] : []),
+            'post' => $this->serialize($post, $liked ? [$post->id] : [], $bookmarked ? [$post->id] : [], $userId),
         ]);
     }
 
@@ -74,16 +76,28 @@ class PostController extends Controller
             'image_url' => 'nullable|string|max:1000',
             'gif_url'   => 'nullable|string|max:1000',
             'video_url' => 'nullable|string|max:1000',
+            // Enquete (opcional). Mutuamente exclusiva com mídia no frontend.
+            'poll'                     => 'nullable|array',
+            'poll.title'               => 'required_with:poll|string|max:200',
+            'poll.multiple'            => 'nullable|boolean',
+            'poll.duration_minutes'    => 'nullable|integer|min:5|max:10080',
+            'poll.options'             => 'required_with:poll|array|min:2|max:6',
+            'poll.options.*.text'      => 'required|string|max:80',
+            'poll.options.*.image_url' => 'nullable|string|max:1000',
         ]);
 
-        // Precisa de pelo menos UM dos quatro (não dá pra postar nada vazio).
+        $pollData = $data['poll'] ?? null;
+
+        // Enquete e mídia são mutuamente exclusivas; enquete tem prioridade.
         $content = trim((string)($data['content'] ?? ''));
-        $imageUrl = $data['image_url'] ?? null;
-        $gifUrl = $data['gif_url'] ?? null;
-        $videoUrl = $data['video_url'] ?? null;
-        if ($content === '' && !$imageUrl && !$gifUrl && !$videoUrl) {
+        $imageUrl = $pollData ? null : ($data['image_url'] ?? null);
+        $gifUrl   = $pollData ? null : ($data['gif_url'] ?? null);
+        $videoUrl = $pollData ? null : ($data['video_url'] ?? null);
+
+        // Precisa de pelo menos UM: texto, mídia ou enquete.
+        if ($content === '' && !$imageUrl && !$gifUrl && !$videoUrl && !$pollData) {
             return response()->json([
-                'errors' => ['content' => ['Adicione um texto, imagem, GIF ou vídeo.']],
+                'errors' => ['content' => ['Adicione um texto, imagem, GIF, vídeo ou enquete.']],
             ], 422);
         }
 
@@ -95,7 +109,37 @@ class PostController extends Controller
             'video_url' => $videoUrl,
         ]);
 
-        $post->load('user:id,name,display_name,summoner_name,tagLine,avatar_src');
+        // Cria a enquete + opções (descarta opções com texto vazio; valida >=2).
+        if ($pollData) {
+            $minutes = (int) ($pollData['duration_minutes'] ?? 0);
+            $closesAt = $minutes > 0 ? now()->addMinutes($minutes) : now()->addDay();
+            $poll = PostPoll::create([
+                'post_id'   => $post->id,
+                'title'     => trim($pollData['title']),
+                'multiple'  => (bool) ($pollData['multiple'] ?? false),
+                'closes_at' => $closesAt,
+            ]);
+            $position = 0;
+            foreach (array_values($pollData['options']) as $opt) {
+                $text = trim((string) ($opt['text'] ?? ''));
+                if ($text === '') continue;
+                PostPollOption::create([
+                    'poll_id'   => $poll->id,
+                    'text'      => $text,
+                    'image_url' => $opt['image_url'] ?? null,
+                    'position'  => $position++,
+                ]);
+            }
+            // Se sobrou menos de 2 opções válidas, desfaz tudo.
+            if ($position < 2) {
+                $post->delete(); // cascade derruba poll+options
+                return response()->json([
+                    'errors' => ['poll' => ['A enquete precisa de pelo menos 2 opções.']],
+                ], 422);
+            }
+        }
+
+        $post->load('user:id,name,display_name,summoner_name,tagLine,avatar_src', 'poll.options');
         $post->loadCount(['likes', 'comments']);
 
         // Notifica @mencionados no conteúdo (skip self).
@@ -110,7 +154,7 @@ class PostController extends Controller
             );
         }
 
-        return response()->json(['post' => $this->serialize($post, [], [])], 201);
+        return response()->json(['post' => $this->serialize($post, [], [], $request->user()->id)], 201);
     }
 
     public function destroy(Request $request, int $id)
@@ -259,7 +303,7 @@ class PostController extends Controller
         ]);
     }
 
-    private function serialize(Post $post, array $likedIds, array $bookmarkedIds = []): array
+    private function serialize(Post $post, array $likedIds, array $bookmarkedIds = [], ?int $viewerId = null): array
     {
         $u = $post->user;
         $summoner = $u?->summoner_name ?? '';
@@ -277,6 +321,7 @@ class PostController extends Controller
             'commentsCount' => $post->comments_count ?? 0,
             'liked'      => in_array($post->id, $likedIds, true),
             'bookmarked' => in_array($post->id, $bookmarkedIds, true),
+            'poll'       => $post->poll ? $post->poll->serialize($viewerId) : null,
             'author'     => [
                 'id'        => $u?->id,
                 'name'      => $u?->display_name ?: $u?->name,
