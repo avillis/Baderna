@@ -91,7 +91,7 @@ function eloScore(rank: MemberRank | undefined): number {
   return tierIdx * 100000 + div * 1000 + lp;
 }
 
-export default function RankingPage() {
+export default function MembrosPage() {
   const members = useBadernaMembers();
   const ranks = useMemberRanks();
   const [mode, setMode] = useState<"baderna" | "flex" | "aniversarios">("baderna");
@@ -125,7 +125,7 @@ export default function RankingPage() {
       <div className="pt-[1.5vh] sm:pt-[6vh]">
         <div className="mb-6">
           <h1 className="text-[24px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-            Ranking da Baderna
+            Membros
           </h1>
         </div>
 

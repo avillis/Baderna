@@ -266,7 +266,7 @@ export function MemberFlexCard({
       };
 
   return (
-    <article className="flex flex-col gap-4 rounded-[var(--panel-radius-card)] bg-white px-6 py-8 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] lg:flex-row lg:items-center lg:py-5">
+    <article className="flex flex-col gap-4 rounded-[var(--panel-radius-card)] bg-white px-6 py-8 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] lg:flex-row lg:items-center lg:py-5 lg:max-w-[920px]">
       {/* Mobile: medalha em cima, nome/nick/elo centralizados abaixo.
           lg+: lado a lado, alinhado à esquerda. */}
       <div

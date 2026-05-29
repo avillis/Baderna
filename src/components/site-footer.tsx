@@ -17,7 +17,7 @@ const TEXT_SECTIONS = [
     label: "Navegue",
     items: [
       { label: "Feed", href: "/" },
-      { label: "Ranking", href: "/ranking" },
+      { label: "Membros", href: "/membros" },
       { label: "Loja", href: "/loja" },
       { label: "Inhouse", href: "/inhouse" },
     ],

@@ -144,16 +144,7 @@ export function AniversariosClient() {
   const { members, loading } = useBirthdays();
 
   return (
-    <div className="pt-[1.5vh] sm:pt-[6vh]">
-      <div className="mb-[24px]">
-        <h1 className="text-[26px] font-bold tracking-[-0.04em] text-[#0f0f0f]">
-          Aniversários
-        </h1>
-        <p className="mt-[4px] text-[14px] font-medium text-[#8d8d8d]">
-          Celebre com quem faz parte da Baderna.
-        </p>
-      </div>
-
+    <div>
       {loading ? (
         <div className="flex items-center justify-center py-[80px]">
           <svg
