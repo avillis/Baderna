@@ -30,7 +30,7 @@ function MemberAvatar({
     <img
       src={src}
       alt={nickname}
-      className="h-[44px] w-[44px] shrink-0 rounded-full object-cover ring-1 ring-[#ece1db]"
+      className="h-[44px] w-[44px] shrink-0 rounded-full object-cover"
     />
   );
 }
