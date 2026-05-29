@@ -159,6 +159,15 @@ export default function MembrosPage() {
       return [...prev, id];
     });
   }
+  function handleSetMode(key: "baderna" | "flex" | "aniversarios") {
+    setMode(key);
+    // Comparar só existe na aba Baderna; ao sair, desliga pra não travar.
+    if (key !== "baderna") {
+      setCompareMode(false);
+      setSelectedIds([]);
+      setShowCompare(false);
+    }
+  }
 
   const compareSides: CompareSide[] = useMemo(
     () =>
@@ -202,23 +211,26 @@ export default function MembrosPage() {
                 className="w-full rounded-full border-none bg-white py-3.5 pl-[46px] pr-5 text-sm font-medium text-[#0f0f0f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#b0a8a4] focus:ring-2 focus:ring-[#ff4100]/20"
               />
             </div>
-            <button
-              type="button"
-              onClick={toggleCompareMode}
-              className={`inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] px-6 text-[13px] font-bold tracking-[-0.02em] transition-opacity hover:opacity-90 ${
-                compareMode ? "bg-[#0f0f0f] text-white" : "bg-[#ff4100] text-white"
-              }`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" className="h-[14px] w-[14px]" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {compareMode ? "Cancelar comparação" : "Comparar membros"}
-            </button>
-            {compareMode && selectedIds.length < 2 && (
-              <span className="text-[12px] font-medium text-[#989898]">
-                Toque em 2 membros pra comparar.
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleCompareMode}
+                disabled={mode !== "baderna"}
+                className={`inline-flex h-[50px] shrink-0 items-center justify-center gap-[8px] rounded-[18px] px-6 text-[13px] font-bold tracking-[-0.02em] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  compareMode ? "bg-[#ff4100] text-white" : "bg-[#ededed] text-[#0f0f0f]"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-[14px] w-[14px]" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {compareMode ? "Cancelar comparação" : "Comparar membros"}
+              </button>
+              {compareMode && selectedIds.length < 2 && (
+                <span className="text-[12px] font-medium leading-snug text-[#989898]">
+                  Toque em 2 membros pra comparar.
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Direita: switcher das abas */}
@@ -235,7 +247,7 @@ export default function MembrosPage() {
               <button
                 key={key}
                 type="button"
-                onClick={() => setMode(key)}
+                onClick={() => handleSetMode(key)}
                 className={`relative z-[1] flex h-full flex-1 items-center justify-center rounded-[25px] text-[12px] font-semibold transition-colors duration-300 ${
                   mode === key
                     ? "text-[#0f0f0f]"
@@ -284,16 +296,26 @@ export default function MembrosPage() {
                 </>
               );
 
-              if (compareMode) {
-                return (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => toggleSelect(member.id)}
-                    className={`${baseClass} ${
-                      isSelected ? "scale-[1.02] ring-2 ring-[#ff4100]" : "hover:scale-[1.02]"
-                    }`}
-                  >
+              // Sempre Link (mesmo elemento) — no modo comparar, intercepta o
+              // clique pra selecionar em vez de navegar. Evita remontar o card
+              // (e o avatar) ao alternar o modo, que causava o "piscar".
+              return (
+                <Link
+                  key={member.id}
+                  href={`/membro/${member.id}`}
+                  onClick={(e) => {
+                    if (compareMode) {
+                      e.preventDefault();
+                      toggleSelect(member.id);
+                    }
+                  }}
+                  className={`${baseClass} ${
+                    compareMode && isSelected
+                      ? "scale-[1.02] ring-2 ring-[#ff4100]"
+                      : "hover:scale-[1.02]"
+                  }`}
+                >
+                  {compareMode && (
                     <span
                       className={`absolute right-3 top-3 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 transition-colors ${
                         isSelected
@@ -303,17 +325,7 @@ export default function MembrosPage() {
                     >
                       <Check className="h-[15px] w-[15px]" strokeWidth={3} />
                     </span>
-                    {inner}
-                  </button>
-                );
-              }
-
-              return (
-                <Link
-                  key={member.id}
-                  href={`/membro/${member.id}`}
-                  className={`${baseClass} hover:scale-[1.02]`}
-                >
+                  )}
                   {inner}
                 </Link>
               );
