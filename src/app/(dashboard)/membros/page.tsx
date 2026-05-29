@@ -225,11 +225,6 @@ export default function MembrosPage() {
                 </svg>
                 {compareMode ? "Cancelar comparação" : "Comparar membros"}
               </button>
-              {compareMode && selectedIds.length < 2 && (
-                <span className="ml-auto text-right text-[12px] font-medium leading-snug text-[#989898]">
-                  Toque em 2 membros pra comparar.
-                </span>
-              )}
             </div>
           </div>
 
@@ -359,7 +354,7 @@ export default function MembrosPage() {
       </div>
 
       {/* Barra de comparação */}
-      {compareMode && selectedIds.length > 0 && (
+      {compareMode && (
         <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center px-4 xl:left-[423px] xl:right-[45px] 2xl:left-[443px]">
           <div className="flex items-center gap-[12px] rounded-[20px] bg-[#0f0f0f] py-[10px] pl-[20px] pr-[10px] shadow-[0px_8px_40px_rgba(0,0,0,0.22)]">
             <span className="text-[13px] font-semibold tracking-[-0.02em] text-white">
