@@ -18,6 +18,10 @@ import { panelProfile } from "@/features/panel/panel-data";
 import { useTeamNames } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+import {
+  MOBILE_DRAWER_WIDTH,
+  useMobileNav,
+} from "@/features/panel/components/mobile-nav";
 import type { RankType } from "@/features/panel/rank-utils";
 
 const RANK_POINTS: Record<RankType, number> = {
@@ -1362,6 +1366,10 @@ function MobilePoolBottomSheet({
   redLabel: string;
 }) {
   const [open, setOpen] = useState(false);
+  // Quando o drawer mobile abre, a página inteira é empurrada 280px pra direita
+  // via `left`. Mas este sheet é position:fixed (ancorado na viewport), então
+  // não acompanha sozinho — espelhamos o push com um translateX próprio.
+  const { open: drawerOpen } = useMobileNav();
 
   useEffect(() => {
     if (!open) return;
@@ -1373,6 +1381,7 @@ function MobilePoolBottomSheet({
   }, [open]);
 
   const handleLabel = "Controles";
+  const pushX = drawerOpen ? `${MOBILE_DRAWER_WIDTH}px` : "0px";
 
   return (
     <>
@@ -1386,7 +1395,9 @@ function MobilePoolBottomSheet({
         className="fixed inset-x-0 bottom-0 z-40 rounded-t-[24px] bg-[#ededed] shadow-[0_-12px_50px_rgba(0,0,0,0.18)] transition-transform duration-300 ease-out"
         style={{
           maxHeight: "85vh",
-          transform: open ? "translateY(0)" : "translateY(calc(100% - 64px))",
+          transform: `translateX(${pushX}) ${
+            open ? "translateY(0)" : "translateY(calc(100% - 64px))"
+          }`,
         }}
       >
         {/* Handle — clica pra alternar abrir/fechar */}
