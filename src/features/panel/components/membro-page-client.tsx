@@ -51,6 +51,7 @@ const DEFAULT_BIO = "";
 type ApiMember = {
   id: string;
   userId: number;
+  badernaPoints?: number;
   name: string;
   nickname: string | null;
   activeNameId: string | null;
@@ -246,11 +247,14 @@ export function MembroPageClient({ slug }: { slug: string }) {
   };
 
   const badernaRank = badernaRankIndex > 0 ? badernaRankIndex : 1;
+  const badernaPoints = apiMember?.badernaPoints ?? 0;
 
   const stats = [
     panelStats[0],
     {
       ...panelStats[1],
+      // "Rank da Baderna" → mostra os BP que sustentam essa posição no ranking.
+      eyebrow: `${badernaPoints.toLocaleString("pt-BR")} BP`,
       value: `#${String(badernaRank).padStart(2, "0")}`,
     },
     { ...panelStats[2], eyebrow: member.rankName },

@@ -296,6 +296,9 @@ export default function MembrosPage() {
                     <p className="mt-[6px] text-[13px] font-medium tracking-[-0.01em] text-[#989898]">
                       {member.name}
                     </p>
+                    <p className="mt-[10px] text-[14px] font-bold tracking-[-0.02em] text-[#ff4100]">
+                      {(member.badernaPoints ?? 0).toLocaleString("pt-BR")} BP
+                    </p>
                   </div>
                 </>
               );

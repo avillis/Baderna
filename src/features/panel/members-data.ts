@@ -25,6 +25,8 @@ export type BadernaMember = {
   activeNameId?: string;
   /** Slug da moldura de nível equipada (ex. "level-frame-100"). null = usa moldura do rank. */
   activeFrameId?: string | null;
+  /** Pontos da Baderna (BP) — ranking interno. Vem do /members já calculado. */
+  badernaPoints?: number;
 };
 
 // Membros virão da API. Lista vazia enquanto a migração pro Laravel rola.

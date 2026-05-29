@@ -64,11 +64,13 @@ class AppSettingsController extends Controller
 
     public function updateInhousePoints(Request $request)
     {
+        // BP pode ser NEGATIVO (ao contrário de coin_rewards): perder uma Flex
+        // pode tirar pontos do ranking interno. Bounds só pra sanidade.
         $data = $request->validate([
-            'flex.win'     => 'required|integer|min:0',
-            'flex.loss'    => 'required|integer|min:0',
-            'inhouse.win'  => 'required|integer|min:0',
-            'inhouse.loss' => 'required|integer|min:0',
+            'flex.win'     => 'required|integer|min:-1000|max:1000',
+            'flex.loss'    => 'required|integer|min:-1000|max:1000',
+            'inhouse.win'  => 'required|integer|min:-1000|max:1000',
+            'inhouse.loss' => 'required|integer|min:-1000|max:1000',
         ]);
 
         AppSetting::put(self::INHOUSE_POINTS_KEY, $data);

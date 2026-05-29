@@ -62,6 +62,7 @@ function formatRankLabel(tier: string | undefined, division: string | null | und
 type ApiMember = {
   id: string;
   userId: number;
+  badernaPoints?: number;
   name: string;
   nickname: string | null;
   summonerName: string | null;
@@ -282,6 +283,7 @@ export function useBadernaMembers(): BadernaMember[] {
         teamName: m.teamName ?? null,
         activeNameId: m.activeNameId ?? undefined,
         activeFrameId: m.activeFrameId ?? null,
+        badernaPoints: m.badernaPoints ?? 0,
       };
     });
 

@@ -38,7 +38,6 @@ function PointsField({
       </span>
       <input
         type="number"
-        min={0}
         step={1}
         value={value}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
@@ -85,8 +84,9 @@ export function AdminInhousePointsCard() {
       </div>
 
       <p className="mt-5 text-[11px] leading-[1.5] text-[#9a9a9a]">
-        Pontos creditados por partida, usados pra montar o ranking interno da
-        Baderna.
+        Pontos por partida, usados pra montar o ranking interno da Baderna.
+        Pode ser negativo — ex: derrota na Flex tira pontos. Mudar aqui
+        recalcula o ranking de todo mundo na hora.
       </p>
     </aside>
   );
