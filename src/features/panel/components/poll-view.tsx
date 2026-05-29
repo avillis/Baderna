@@ -37,7 +37,7 @@ export function PollView({
   return (
     <div className="mt-[12px] flex flex-col gap-[8px]">
       {poll.title && (
-        <p className="text-[15px] font-bold leading-snug tracking-[-0.02em] text-[#0f0f0f]">
+        <p className="text-[15px] font-medium leading-snug tracking-[-0.01em] text-[#0f0f0f]">
           {poll.title}
         </p>
       )}
@@ -53,36 +53,40 @@ export function PollView({
                 type="button"
                 onClick={() => handle(opt.id)}
                 disabled={poll.closed}
-                className={`relative flex h-[42px] w-full items-center overflow-hidden rounded-[12px] border text-left transition-colors ${
-                  opt.votedByMe ? "border-[#ff4100]/50" : "border-[#ece6e3]"
-                } ${poll.closed ? "cursor-default" : "hover:border-[#ff4100]/40"}`}
+                className={`relative flex h-[56px] w-full items-center overflow-hidden rounded-[14px] border text-left transition-colors ${
+                  opt.votedByMe ? "border-[#0f0f0f]/25" : "border-[#e6e0dd]"
+                } ${poll.closed ? "cursor-default" : "hover:border-[#0f0f0f]/30"}`}
               >
-                {/* Barra de resultado */}
+                {/* Barra de resultado (cinza neutro) */}
                 <span
                   className={`absolute inset-y-0 left-0 transition-[width] duration-300 ${
-                    opt.votedByMe ? "bg-[#ff4100]/15" : "bg-[#f1ede9]"
+                    opt.votedByMe ? "bg-[#ebe5e1]" : "bg-[#f4f1ee]"
                   }`}
                   style={{ width: `${pct}%` }}
                 />
-                <span className="relative flex w-full items-center gap-[10px] px-[12px]">
-                  {opt.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={opt.imageUrl}
-                      alt=""
-                      className="h-[28px] w-[28px] shrink-0 rounded-[7px] object-cover"
-                    />
-                  )}
-                  <span className="flex min-w-0 flex-1 items-center gap-[6px]">
-                    <span className="truncate text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f]">
+                <span className="relative flex w-full items-center justify-between gap-[10px] px-[14px]">
+                  {/* Nome à esquerda */}
+                  <span className="flex min-w-0 items-center gap-[6px]">
+                    <span className="truncate text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
                       {opt.text}
                     </span>
                     {opt.votedByMe && (
-                      <Check className="h-[14px] w-[14px] shrink-0 text-[#ff4100]" strokeWidth={3} />
+                      <Check className="h-[14px] w-[14px] shrink-0 text-[#0f0f0f]" strokeWidth={2.6} />
                     )}
                   </span>
-                  <span className="shrink-0 text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                    {pct}%
+                  {/* Porcentagem + foto grande à direita */}
+                  <span className="flex shrink-0 items-center gap-[10px]">
+                    <span className="text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
+                      {pct}%
+                    </span>
+                    {opt.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={opt.imageUrl}
+                        alt=""
+                        className="h-[40px] w-[40px] shrink-0 rounded-[10px] object-cover"
+                      />
+                    )}
                   </span>
                 </span>
               </button>
@@ -94,17 +98,21 @@ export function PollView({
               key={opt.id}
               type="button"
               onClick={() => handle(opt.id)}
-              className="flex h-[42px] w-full items-center justify-center gap-[8px] rounded-full border border-[#ff4100]/40 px-[12px] text-[14px] font-bold tracking-[-0.02em] text-[#ff4100] transition-colors hover:bg-[#fff4f0]"
+              className="flex h-[56px] w-full items-center justify-between gap-[10px] rounded-[14px] border border-[#e6e0dd] px-[14px] text-left transition-colors hover:bg-[#f7f5f3]"
             >
+              {/* Nome à esquerda */}
+              <span className="min-w-0 truncate text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
+                {opt.text}
+              </span>
+              {/* Foto grande à direita */}
               {opt.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={opt.imageUrl}
                   alt=""
-                  className="h-[26px] w-[26px] shrink-0 rounded-[7px] object-cover"
+                  className="h-[40px] w-[40px] shrink-0 rounded-[10px] object-cover"
                 />
               )}
-              <span className="truncate">{opt.text}</span>
             </button>
           );
         })}
