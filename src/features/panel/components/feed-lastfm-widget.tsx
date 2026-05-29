@@ -71,7 +71,7 @@ export function FeedLastFmWidget() {
           >
             {/* Avatar do membro com bolinha de nowPlaying */}
             <div className="relative h-[34px] w-[34px] shrink-0">
-              <div className="h-[34px] w-[34px] overflow-hidden rounded-full bg-[#ededed]">
+              <div className="relative h-[34px] w-[34px] overflow-hidden rounded-full bg-[#ededed]">
                 {entry.memberAvatar && (
                   <Image
                     src={entry.memberAvatar}

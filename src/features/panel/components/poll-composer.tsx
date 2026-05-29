@@ -172,14 +172,36 @@ export function PollComposer({
                   </svg>
                 ) : (
                   <svg
+                    className="h-[24px] w-[24px]"
                     viewBox="0 0 24 24"
                     fill="none"
-                    className="h-[22px] w-[22px]"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <rect x="3" y="3" width="18" height="18" rx="5" ry="5" stroke="currentColor" strokeWidth="1.6" />
-                    <circle cx="8.5" cy="9" r="1.5" stroke="currentColor" strokeWidth="1.6" />
-                    <path d="M19.5 18.5L14.5 13L6 20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    <defs>
+                      <clipPath id="poll-img-icon-clip">
+                        <rect x="3" y="3" width="18" height="18" rx="5" ry="5" />
+                      </clipPath>
+                    </defs>
+                    <rect
+                      x="3"
+                      y="3"
+                      width="18"
+                      height="18"
+                      rx="5"
+                      ry="5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <g clipPath="url(#poll-img-icon-clip)">
+                      <circle cx="8.5" cy="9" r="1.6" stroke="currentColor" strokeWidth="1.5" />
+                      <path
+                        d="M21 15.5L16.5 11L6 21.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </g>
                   </svg>
                 )}
                 {opt.imageUrl && (
