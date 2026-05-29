@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\LastFmController;
 use App\Http\Controllers\Api\PostBookmarksController;
 use App\Http\Controllers\Api\PostPinController;
 use App\Http\Controllers\Api\PostPollController;
+use App\Http\Controllers\Api\PurchaseHistoryController;
 use App\Http\Controllers\Api\LinkPreviewController;
 
 // ── Spotify callback (sem auth — recupera user pelo state criptografado) ──
@@ -161,6 +162,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // ilimitado. Débito agora é feito atomicamente dentro do unlocks/store.
     Route::get('/account/unlocks', [MemberUnlocksController::class, 'index']);
     Route::post('/account/unlocks', [MemberUnlocksController::class, 'store']);
+
+    // Histórico de compras (spins) da loja
+    Route::get('/account/purchase-history', [PurchaseHistoryController::class, 'index']);
+    Route::post('/account/purchase-history', [PurchaseHistoryController::class, 'store']);
 
     // Comentários nos perfis
     Route::post('/members/{slug}/comments', [MemberCommentsController::class, 'store']);
