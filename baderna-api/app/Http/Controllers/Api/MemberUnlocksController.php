@@ -28,9 +28,12 @@ class MemberUnlocksController extends Controller
      * Mantém em sync com molduras-data.ts no frontend.
      */
     private const MOLDURA_PRICE = [
+        // Molduras de nível
         'level-frame-1'   => 50,
         'level-frame-30'  => 100,
         'level-frame-50'  => 150,
+        'level-frame-68'  => 175,
+        'level-frame-69'  => 175,
         'level-frame-75'  => 200,
         'level-frame-100' => 250,
         'level-frame-125' => 350,
@@ -48,6 +51,26 @@ class MemberUnlocksController extends Controller
         'level-frame-450' => 2050,
         'level-frame-475' => 2250,
         'level-frame-500' => 2450,
+        'level-frame-525' => 2650,
+        'level-frame-550' => 2850,
+        'level-frame-575' => 3050,
+        'level-frame-600' => 3250,
+        // Molduras de campeão
+        'champion-frame-azir'     => 500,
+        'champion-frame-gnar'     => 500,
+        'champion-frame-illaoi'   => 500,
+        'champion-frame-jinx'     => 500,
+        'champion-frame-katarina' => 500,
+        'champion-frame-leona'    => 500,
+        'champion-frame-lilia'    => 500,
+        'champion-frame-lux'      => 500,
+        'champion-frame-nautilus' => 500,
+        'champion-frame-rell'     => 500,
+        'champion-frame-smolder'  => 500,
+        'champion-frame-thresh'   => 500,
+        'champion-frame-veigar'   => 500,
+        'champion-frame-vex'      => 500,
+        'champion-frame-zoe'      => 500,
     ];
 
     /**

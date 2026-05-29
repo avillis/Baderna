@@ -17,6 +17,8 @@ class MemberNotification extends Notification
         private readonly string  $message,
         private readonly string  $actionUrl,
         private readonly ?string $authorAvatar = null,
+        private readonly ?string $authorSlug = null,
+        private readonly ?string $authorName = null,
     ) {}
 
     public function via(object $notifiable): array
@@ -30,6 +32,8 @@ class MemberNotification extends Notification
             'message'       => $this->message,
             'action_url'    => $this->actionUrl,
             'author_avatar' => $this->authorAvatar,
+            'author_slug'   => $this->authorSlug,
+            'author_name'   => $this->authorName,
         ];
     }
 }

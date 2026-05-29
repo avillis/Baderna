@@ -9,6 +9,7 @@ use App\Models\Post;
 use App\Notifications\MemberNotification;
 use App\Support\Mentions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PostCommentsController extends Controller
 {
@@ -119,6 +120,8 @@ class PostCommentsController extends Controller
                     Mentions::authorDisplayName($author) . ' ' . $contextWord,
                     $actionUrl,
                     $author->avatar_src,
+                    Str::slug((string) ($author->summoner_name ?? '')),
+                    Mentions::authorDisplayName($author),
                 ));
             }
         }

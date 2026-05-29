@@ -11,6 +11,7 @@ use App\Notifications\MemberNotification;
 use App\Support\Mentions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
@@ -159,6 +160,8 @@ class PostController extends Controller
                         Mentions::authorDisplayName($liker) . ' curtiu seu post',
                         $actionUrl,
                         $liker->avatar_src,
+                        Str::slug((string) ($liker->summoner_name ?? '')),
+                        Mentions::authorDisplayName($liker),
                     ));
                 }
             }
@@ -200,6 +203,8 @@ class PostController extends Controller
                 "{$reporterName} reportou um post",
                 $actionUrl,
                 $reporter->avatar_src,
+                Str::slug((string) ($reporter->summoner_name ?? '')),
+                $reporterName,
             ));
         }
 

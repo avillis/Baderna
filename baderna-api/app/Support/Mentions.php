@@ -81,6 +81,8 @@ class Mentions
                 $message,
                 $actionUrl,
                 $author->avatar_src,
+                Str::slug((string) ($author->summoner_name ?? '')),
+                self::authorDisplayName($author),
             ));
         }
     }
