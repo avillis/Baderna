@@ -367,6 +367,10 @@ function SidebarInner({
   const { user } = useAuth();
   const { account } = useAccount();
   const profileSlugSource = account.gameNick.split("#")[0] || user?.name || "";
+  // Reaproveita o href já resolvido do "Meu Perfil" (slug do membro). Fallback
+  // pra /minha-conta se ainda não houver slug (ex.: dados não carregados).
+  const meuPerfilHref =
+    menuItems.find((i) => i.label === "Meu Perfil")?.href ?? "/minha-conta";
 
   const [acctOpen, setAcctOpen] = useState(false);
   const [acctRect, setAcctRect] = useState<DOMRect | null>(null);
@@ -462,7 +466,7 @@ function SidebarInner({
       <div className="mt-auto border-t border-[#f3ebe8] px-[6px] pb-[12px] pt-[18px]">
         <div className="flex items-center justify-between gap-3">
           <Link
-            href="/minha-conta"
+            href={meuPerfilHref}
             onClick={onNavigate}
             className="flex min-w-0 flex-1 items-center gap-3 px-[2px] py-[2px] text-left transition-opacity duration-200 hover:opacity-80"
           >
