@@ -590,7 +590,7 @@ export function PanelSidebar() {
       </aside>
 
       {/* Mobile: header (hamburguer à esquerda, logo à direita) */}
-      <header className="fixed inset-x-0 top-[12px] z-[80] flex h-[64px] items-center justify-between bg-transparent px-[16px] sm:px-[24px] xl:hidden">
+      <header className="fixed inset-x-0 top-[12px] z-[45] flex h-[64px] items-center justify-between bg-transparent px-[16px] sm:px-[24px] xl:hidden">
         <button
           type="button"
           aria-label={drawerOpen ? "Fechar menu" : "Abrir menu"}
