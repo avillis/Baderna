@@ -24,13 +24,17 @@ function NotifItem({
     ? members.find((m) => m.id === notif.data.author_slug)
     : null;
 
-  // Fallback pra notificações antigas (sem author_slug): tenta casar pelo
-  // prefixo da mensagem contra name e nickname de cada membro.
-  // Ex: "Pudim co canela curtiu seu post" → encontra o membro "Pudim co canela".
+  // Fallback pra notificações antigas (sem author_slug): testa name E nickname
+  // separadamente — não "name || nickname", que ignoraria nickname quando name
+  // existe mas é o nome da conta (display_name ausente).
+  // API retorna: name = display_name ?: account_name; nickname = summoner_name.
+  // Mentions::authorDisplayName usa display_name ?: summoner_name ?: name,
+  // então a mensagem pode começar com qualquer um dos dois.
   const memberByMsg = !memberBySlug
     ? members.find((m) => {
-        const n = m.name || m.nickname;
-        return n ? notif.data.message.startsWith(n) : false;
+        const msg = notif.data.message;
+        return (m.name ? msg.startsWith(m.name) : false) ||
+               (m.nickname ? msg.startsWith(m.nickname) : false);
       })
     : null;
 
@@ -38,10 +42,14 @@ function NotifItem({
 
   const avatarSrc = member?.avatarSrc || notif.data.author_avatar || "/default-avatar.png";
 
-  // author_name: vem do payload nas novas; derivado do lookup nas antigas.
-  const authorName =
-    notif.data.author_name ??
-    (member ? (member.name || member.nickname) : null);
+  // author_name: vem do payload nas novas; derivado do prefixo que casou nas antigas.
+  const authorName = notif.data.author_name ?? (() => {
+    if (!memberByMsg) return null;
+    const msg = notif.data.message;
+    if (memberByMsg.name && msg.startsWith(memberByMsg.name)) return memberByMsg.name;
+    if (memberByMsg.nickname && msg.startsWith(memberByMsg.nickname)) return memberByMsg.nickname;
+    return null;
+  })();
 
   // Separa nome da ação ("X curtiu seu post" → "X" + " curtiu seu post")
   const action =
