@@ -187,9 +187,9 @@ export default function MembrosPage() {
   );
 
   const TABS = [
-    { key: "baderna",      label: "Ranking da Baderna" },
-    { key: "flex",         label: "Ranking da Flex"    },
-    { key: "aniversarios", label: "Aniversários"       },
+    { key: "baderna",      label: "Baderna"      },
+    { key: "flex",         label: "Flex"         },
+    { key: "aniversarios", label: "Aniversários" },
   ] as const;
 
   const tabIndex = TABS.findIndex((t) => t.key === mode);
