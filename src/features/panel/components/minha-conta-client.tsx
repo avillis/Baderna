@@ -564,7 +564,7 @@ function SlugField({
   };
 
   const inputClasses =
-    "flex-1 border-none bg-transparent text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400";
+    "min-w-0 flex-1 border-none bg-transparent text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400";
   const wrapperClasses = `flex items-center gap-[2px] rounded-full bg-[#ededed] pl-6 pr-4 py-4 focus-within:ring-2 ${
     error ? "focus-within:ring-red-300 ring-1 ring-red-300" : "focus-within:ring-[#ff4100]/20"
   }`;
@@ -575,7 +575,7 @@ function SlugField({
         Endereço do perfil
       </span>
       <div className={wrapperClasses}>
-        <span className="text-[14px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+        <span className="shrink-0 whitespace-nowrap text-[14px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
           bdrn.com.br/membro/
         </span>
         <input
