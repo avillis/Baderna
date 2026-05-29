@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Crown, History, RotateCcw, Zap } from "lucide-react";
+import { History, RotateCcw, Zap } from "lucide-react";
 
 import { getSplashImageSrc } from "@/features/panel/banner-selection";
 import { MoldurasTab } from "@/features/panel/components/molduras-tab";
@@ -228,17 +228,11 @@ function formatToken(value: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// Ícone de som (toggle de mute da roleta). Laranja = ligado (padrão).
-function SoundIcon({ className }: { className?: string }) {
+// Coroa do modo jester — sólida, sem linha de base separada.
+function CrownIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M12 6H12.01M8.8 22H15.2C16.8802 22 17.7202 22 18.362 21.673C18.9265 21.3854 19.3854 20.9265 19.673 20.362C20 19.7202 20 18.8802 20 17.2V6.8C20 5.11984 20 4.27976 19.673 3.63803C19.3854 3.07354 18.9265 2.6146 18.362 2.32698C17.7202 2 16.8802 2 15.2 2H8.8C7.11984 2 6.27976 2 5.63803 2.32698C5.07354 2.6146 4.6146 3.07354 4.32698 3.63803C4 4.27976 4 5.11984 4 6.8V17.2C4 18.8802 4 19.7202 4.32698 20.362C4.6146 20.9265 5.07354 21.3854 5.63803 21.673C6.27976 22 7.11984 22 8.8 22ZM12.5 6C12.5 6.27614 12.2761 6.5 12 6.5C11.7239 6.5 11.5 6.27614 11.5 6C11.5 5.72386 11.7239 5.5 12 5.5C12.2761 5.5 12.5 5.72386 12.5 6ZM16 14C16 16.2091 14.2091 18 12 18C9.79086 18 8 16.2091 8 14C8 11.7909 9.79086 10 12 10C14.2091 10 16 11.7909 16 14Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 8L7 11.5L12 4L17 11.5L21 8L19 18H5L3 8Z" />
     </svg>
   );
 }
@@ -416,7 +410,6 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   }, []);
 
   function playWinAudio() {
-    if (!soundOnRef.current) return;
     const ctx = audioCtxRef.current;
     const buf = winBuffRef.current;
     if (!ctx || !buf) return;
@@ -428,7 +421,6 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   }
 
   function playSpinAudio(duration: number) {
-    if (!soundOnRef.current) return;
     const ctx = audioCtxRef.current;
     const buf = audioBuffRef.current;
     if (!ctx || !buf) return;
@@ -472,11 +464,6 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
   const [fastMode, setFastMode] = useState(false);
   // Modo jester — só as melhores raridades, preço multiplicado.
   const [jesterMode, setJesterMode] = useState(false);
-  // Som da roleta — ligado por padrão. Ref espelha o estado pra os players
-  // (chamados dentro de timeouts) lerem o valor atual.
-  const [soundOn, setSoundOn] = useState(true);
-  const soundOnRef = useRef(soundOn);
-  soundOnRef.current = soundOn;
   const [confettiBurst, setConfettiBurst] = useState(0);
   const [burstPos, setBurstPos] = useState<{ x: number; y: number } | null>(
     null,
@@ -1216,19 +1203,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                   jesterMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
                 }`}
               >
-                <Crown className="h-[18px] w-[18px]" strokeWidth={2.2} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setSoundOn((v) => !v)}
-                aria-label={soundOn ? "Desativar som da roleta" : "Ativar som da roleta"}
-                title={soundOn ? "Som ligado" : "Som desligado"}
-                aria-pressed={soundOn}
-                className={`flex h-[44px] w-[44px] items-center justify-center rounded-[14px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
-                  soundOn ? "text-[#ff4100]" : "text-[#0f0f0f]"
-                }`}
-              >
-                <SoundIcon className="h-[18px] w-[18px]" />
+                <CrownIcon className="h-[22px] w-[22px]" />
               </button>
             </div>
           </div>
@@ -1301,19 +1276,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 jesterMode ? "text-[#ff4100]" : "text-[#0f0f0f]"
               }`}
             >
-              <Crown className="h-[18px] w-[18px]" strokeWidth={2.2} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setSoundOn((v) => !v)}
-              aria-label={soundOn ? "Desativar som da roleta" : "Ativar som da roleta"}
-              title={soundOn ? "Som ligado" : "Som desligado"}
-              aria-pressed={soundOn}
-              className={`flex h-[50px] w-[50px] items-center justify-center rounded-[18px] bg-[#ededed] transition-colors hover:bg-[#e3e3e3] ${
-                soundOn ? "text-[#ff4100]" : "text-[#0f0f0f]"
-              }`}
-            >
-              <SoundIcon className="h-[18px] w-[18px]" />
+              <CrownIcon className="h-[22px] w-[22px]" />
             </button>
           </div>
         </div>
