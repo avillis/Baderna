@@ -3,10 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Check, Search } from "lucide-react";
 
 import { PanelShell } from "@/features/panel/components/panel-shell";
 import { AniversariosClient } from "@/features/panel/components/aniversarios-client";
 import { MemberFlexCard } from "@/features/panel/components/lista-flex-client";
+import {
+  MemberCompareModal,
+  type CompareSide,
+} from "@/features/panel/components/member-compare-modal";
 import { StyledName } from "@/features/panel/components/styled-name";
 import { getChampionAvatarSrc } from "@/features/panel/champion-avatar";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
@@ -91,26 +96,86 @@ function eloScore(rank: MemberRank | undefined): number {
   return tierIdx * 100000 + div * 1000 + lp;
 }
 
+function normalize(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
 export default function MembrosPage() {
   const members = useBadernaMembers();
   const ranks = useMemberRanks();
   const [mode, setMode] = useState<"baderna" | "flex" | "aniversarios">("baderna");
+  const [query, setQuery] = useState("");
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showCompare, setShowCompare] = useState(false);
 
-  // Baderna: ordem natural da API (ranking oficial da Baderna)
+  // Baderna: ordem natural da API + posição fixa (#NN) antes de filtrar.
   const badernaList = useMemo(() => {
-    return members.map((member) => {
+    return members.map((member, index) => {
       const rank = member.userId != null ? ranks[member.userId] : undefined;
-      return { member, rank, score: eloScore(rank) };
+      return { member, rank, score: eloScore(rank), badernaRank: index + 1 };
     });
   }, [members, ranks]);
 
-  // Flex: ordenado por elo. Filtra quem não tem Riot ID conectada —
-  // ranking por elo só faz sentido pra conta linkada com a Riot.
+  // Flex: ordenado por elo (só quem tem Riot ID conectada).
   const sorted = useMemo(() => {
     return [...badernaList]
       .filter(({ member }) => !!member.summonerName && !!member.tagLine)
       .sort((a, b) => b.score - a.score);
   }, [badernaList]);
+
+  // Busca por nick / nome / summoner, aplicada às duas listas.
+  const matchesQuery = useMemo(() => {
+    const q = normalize(query.trim());
+    return (m: (typeof members)[number]) =>
+      !q || normalize(`${m.nickname} ${m.name} ${m.summonerName ?? ""}`).includes(q);
+  }, [query, members]);
+
+  const filteredBaderna = useMemo(
+    () => badernaList.filter(({ member }) => matchesQuery(member)),
+    [badernaList, matchesQuery],
+  );
+  const filteredFlex = useMemo(
+    () => sorted.filter(({ member }) => matchesQuery(member)),
+    [sorted, matchesQuery],
+  );
+
+  function toggleCompareMode() {
+    setCompareMode((on) => {
+      if (on) {
+        setSelectedIds([]);
+        setShowCompare(false);
+      }
+      return !on;
+    });
+  }
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+  }
+
+  const compareSides: CompareSide[] = useMemo(
+    () =>
+      selectedIds
+        .map((id) => badernaList.find((r) => r.member.id === id))
+        .filter((r): r is (typeof badernaList)[number] => Boolean(r))
+        .map((r) => ({
+          member: r.member,
+          badernaRank: r.badernaRank,
+          rank: r.member.userId != null ? ranks[r.member.userId] : undefined,
+          riotId:
+            r.member.summonerName && r.member.tagLine
+              ? `${r.member.summonerName}#${r.member.tagLine}`
+              : null,
+        })),
+    [selectedIds, badernaList, ranks],
+  );
 
   const TABS = [
     { key: "baderna",      label: "Ranking da Baderna" },
@@ -123,68 +188,86 @@ export default function MembrosPage() {
   return (
     <PanelShell showBanner={false}>
       <div className="pt-[1.5vh] sm:pt-[6vh]">
-        <div className="mb-6">
-          <h1 className="text-[24px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-            Membros
-          </h1>
-        </div>
-
-        {/* Toggle — largura que comporta os rótulos, alinhado à esquerda no
-            desktop; full width no mobile pra caber o toque. */}
-        <div className="relative mb-5 flex h-[40px] w-full items-center rounded-[25px] bg-[#ededed] p-[4px] md:w-[560px]">
-          {/* Sliding pill */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute top-[4px] bottom-[4px] w-[calc((100%-8px)/3)] rounded-[25px] bg-white"
-            style={{
-              transform: `translateX(${tabIndex * 100}%)`,
-              transition: "transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-            }}
-          />
-          {TABS.map(({ key, label }) => (
+        {/* Topo: busca + comparar à esquerda; switcher à direita. */}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          {/* Esquerda: busca em cima, comparar embaixo */}
+          <div className="flex w-full flex-col gap-3 lg:max-w-[360px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-[18px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#b0a8a4]" strokeWidth={2} />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Buscar por nick ou nome…"
+                className="w-full rounded-full border-none bg-white py-3.5 pl-[46px] pr-5 text-sm font-medium text-[#0f0f0f] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] outline-none placeholder:text-[#b0a8a4] focus:ring-2 focus:ring-[#ff4100]/20"
+              />
+            </div>
             <button
-              key={key}
               type="button"
-              onClick={() => setMode(key)}
-              className={`relative z-[1] flex h-full flex-1 items-center justify-center rounded-[25px] text-[13px] font-semibold transition-colors duration-300 ${
-                mode === key
-                  ? "text-[#0f0f0f]"
-                  : "text-black/40 hover:text-black/70"
+              onClick={toggleCompareMode}
+              className={`inline-flex h-[50px] items-center justify-center gap-[8px] rounded-[18px] px-6 text-[13px] font-bold tracking-[-0.02em] transition-opacity hover:opacity-90 ${
+                compareMode ? "bg-[#0f0f0f] text-white" : "bg-[#ff4100] text-white"
               }`}
             >
-              {label}
+              <svg viewBox="0 0 24 24" fill="none" className="h-[14px] w-[14px]" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 17H20M20 17L16 13M20 17L16 21M20 7H4M4 7L8 3M4 7L8 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {compareMode ? "Cancelar comparação" : "Comparar membros"}
             </button>
-          ))}
+            {compareMode && selectedIds.length < 2 && (
+              <span className="text-[12px] font-medium text-[#989898]">
+                Toque em 2 membros pra comparar.
+              </span>
+            )}
+          </div>
+
+          {/* Direita: switcher das abas */}
+          <div className="relative flex h-[40px] w-full shrink-0 items-center rounded-[25px] bg-[#ededed] p-[4px] lg:w-[460px]">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute top-[4px] bottom-[4px] w-[calc((100%-8px)/3)] rounded-[25px] bg-white"
+              style={{
+                transform: `translateX(${tabIndex * 100}%)`,
+                transition: "transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+              }}
+            />
+            {TABS.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setMode(key)}
+                className={`relative z-[1] flex h-full flex-1 items-center justify-center rounded-[25px] text-[12px] font-semibold transition-colors duration-300 ${
+                  mode === key
+                    ? "text-[#0f0f0f]"
+                    : "text-black/40 hover:text-black/70"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {mode === "aniversarios" ? (
           // Aniversários: copia exata da página de aniversários.
           <AniversariosClient />
         ) : mode === "baderna" ? (
-          // Baderna: layout idêntico à página Membros (grid de 5 com molduras).
+          // Baderna: grid de 5 com molduras + busca/comparação.
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-            {badernaList.map(({ member }, index) => {
-              const badernaRank = index + 1;
+            {filteredBaderna.map(({ member, badernaRank }) => {
               const rankEffect = getRankEffect(badernaRank);
               const avatar = member.avatarSrc || getChampionAvatarSrc(member.id);
-              return (
-                <Link
-                  key={member.id}
-                  href={`/membro/${member.id}`}
-                  className="relative flex flex-col items-center rounded-[25px] bg-white px-6 py-10 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:scale-[1.02]"
-                >
-                  {/* Avatar com moldura */}
+              const isSelected = selectedIds.includes(member.id);
+              const baseClass =
+                "relative flex flex-col items-center rounded-[25px] bg-white px-6 py-10 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-transform duration-200";
+              const inner = (
+                <>
                   <div
                     className="rounded-full p-[3px]"
                     style={{ background: rankEffect.gradient, boxShadow: rankEffect.glow }}
                   >
-                    <MemberAvatar
-                      src={avatar}
-                      alt={member.nickname}
-                    />
+                    <MemberAvatar src={avatar} alt={member.nickname} />
                   </div>
-
-                  {/* Nome + posição */}
                   <div className="mt-4 text-center">
                     <h2 className="text-[17px] font-bold leading-none tracking-[-0.03em] text-[#0f0f0f]">
                       <StyledName styleId={member.activeNameId}>
@@ -198,15 +281,53 @@ export default function MembrosPage() {
                       {member.name}
                     </p>
                   </div>
+                </>
+              );
+
+              if (compareMode) {
+                return (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => toggleSelect(member.id)}
+                    className={`${baseClass} ${
+                      isSelected ? "scale-[1.02] ring-2 ring-[#ff4100]" : "hover:scale-[1.02]"
+                    }`}
+                  >
+                    <span
+                      className={`absolute right-3 top-3 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 transition-colors ${
+                        isSelected
+                          ? "border-[#ff4100] bg-[#ff4100] text-white"
+                          : "border-[#e3ddd9] bg-white text-transparent"
+                      }`}
+                    >
+                      <Check className="h-[15px] w-[15px]" strokeWidth={3} />
+                    </span>
+                    {inner}
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={member.id}
+                  href={`/membro/${member.id}`}
+                  className={`${baseClass} hover:scale-[1.02]`}
+                >
+                  {inner}
                 </Link>
               );
             })}
+            {filteredBaderna.length === 0 && (
+              <div className="col-span-full rounded-[25px] bg-white px-6 py-16 text-center text-[14px] font-medium text-[#8d8d8d] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+                Nenhum membro encontrado.
+              </div>
+            )}
           </div>
         ) : (
-          // Flex: mesmo layout da página Flex (cards com winrate/KDA por lane),
-          // porém ordenado por elo (sorted).
+          // Flex: cards com winrate/KDA por lane, ordenado por elo + busca.
           <div className="flex flex-col gap-4">
-            {sorted.map(({ member }, index) => (
+            {filteredFlex.map(({ member }, index) => (
               <MemberFlexCard
                 key={member.id}
                 index={index}
@@ -216,14 +337,41 @@ export default function MembrosPage() {
                 riotId={`${member.summonerName}#${member.tagLine}`}
               />
             ))}
-            {sorted.length === 0 && (
+            {filteredFlex.length === 0 && (
               <div className="rounded-[25px] bg-white px-6 py-16 text-center text-[14px] font-medium text-[#8d8d8d] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-                Sem membros com Flex pra rankear ainda.
+                Nenhum membro encontrado.
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Barra de comparação */}
+      {compareMode && selectedIds.length > 0 && (
+        <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center px-4 xl:left-[423px] xl:right-[45px] 2xl:left-[443px]">
+          <div className="flex items-center gap-[12px] rounded-[20px] bg-[#0f0f0f] py-[10px] pl-[20px] pr-[10px] shadow-[0px_8px_40px_rgba(0,0,0,0.22)]">
+            <span className="text-[13px] font-semibold tracking-[-0.02em] text-white">
+              {selectedIds.length}/2 selecionados
+            </span>
+            <button
+              type="button"
+              disabled={selectedIds.length < 2}
+              onClick={() => setShowCompare(true)}
+              className="inline-flex h-[38px] items-center justify-center rounded-[12px] bg-[#ff4100] px-[18px] text-[13px] font-bold tracking-[-0.02em] text-white transition-opacity hover:opacity-85 disabled:opacity-40"
+            >
+              Comparar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showCompare && compareSides.length === 2 && (
+        <MemberCompareModal
+          left={compareSides[0]}
+          right={compareSides[1]}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
     </PanelShell>
   );
 }
