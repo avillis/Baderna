@@ -53,10 +53,11 @@ export function pollDurationMinutes(p: PollEditorState): number {
   return Math.max(5, Math.min(10080, total));
 }
 
-/** Enquete válida pra postar: título preenchido + >=2 opções com texto. */
+/** Enquete válida pra postar: >=2 opções com texto. Título é opcional
+ *  (a pergunta pode ir no texto do post, estilo Twitter). */
 export function isPollValid(p: PollEditorState): boolean {
   const filled = p.options.filter((o) => o.text.trim().length > 0);
-  return p.title.trim().length > 0 && filled.length >= MIN_POLL_OPTIONS;
+  return filled.length >= MIN_POLL_OPTIONS;
 }
 
 function rangeOptions(max: number) {
@@ -140,7 +141,7 @@ export function PollComposer({
         type="text"
         value={value.title}
         onChange={(e) => patch({ title: e.target.value.slice(0, MAX_TITLE_LEN) })}
-        placeholder="Pergunta da enquete"
+        placeholder="Pergunta da enquete (opcional)"
         className="mb-[12px] w-full border-none bg-transparent text-[15px] font-semibold tracking-[-0.01em] text-[#0f0f0f] outline-none placeholder:text-[#a89e99]"
       />
 
