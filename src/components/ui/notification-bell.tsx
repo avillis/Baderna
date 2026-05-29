@@ -3,7 +3,74 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useNotifications } from "@/features/panel/use-notifications";
+import { useNotifications, type AppNotification } from "@/features/panel/use-notifications";
+import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+import { StyledName } from "@/features/panel/components/styled-name";
+
+/** Item de notificação individual: busca avatar e estilo de nome atuais do autor. */
+function NotifItem({
+  notif,
+  onClick,
+  onRemove,
+}: {
+  notif: AppNotification;
+  onClick: (id: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const members = useBadernaMembers();
+  const member = notif.data.author_slug
+    ? members.find((m) => m.id === notif.data.author_slug)
+    : null;
+
+  const avatarSrc = member?.avatarSrc || notif.data.author_avatar || "/default-avatar.png";
+
+  // Se author_name existir, separa o nome da ação ("X curtiu seu post" → "X" + " curtiu seu post")
+  const authorName = notif.data.author_name ?? null;
+  const action =
+    authorName && notif.data.message.startsWith(authorName)
+      ? notif.data.message.slice(authorName.length)
+      : null;
+
+  return (
+    <div
+      className={`flex cursor-pointer items-center gap-[12px] border-b border-[#f0e9e5] p-[12px] transition-colors duration-150 ${
+        notif.read_at ? "bg-white opacity-70 hover:bg-[#fafafa]" : "bg-[#fff4f4] hover:bg-[#ffeaea]"
+      }`}
+      onClick={() => onClick(notif.id)}
+    >
+      <img
+        src={avatarSrc}
+        alt="Avatar"
+        className="h-[36px] w-[36px] shrink-0 rounded-full object-cover ring-1 ring-[#ece1db]"
+      />
+      <div className="min-w-0 flex-1">
+        <Link
+          href={notif.data.action_url}
+          className="block text-[13px] font-medium leading-snug tracking-[-0.01em] text-[#0f0f0f] hover:text-[#ff4100]"
+        >
+          {action ? (
+            <>
+              <StyledName styleId={member?.activeNameId ?? "preto"}>{authorName!}</StyledName>
+              {action}
+            </>
+          ) : (
+            notif.data.message
+          )}
+        </Link>
+      </div>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onRemove(notif.id); }}
+        aria-label="Excluir notificação"
+        className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full text-[#a59c95] transition-colors hover:bg-[#f0e9e5] hover:text-[#0f0f0f]"
+      >
+        <svg className="h-[12px] w-[12px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M18 6L6 18M6 6l12 12" strokeWidth="2.4" strokeLinecap="round" />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 export default function NotificationBell({
   placement = "up",
@@ -70,14 +137,17 @@ export default function NotificationBell({
   const panel = (
     <>
       <div className="flex items-center justify-between border-b border-[#f0e9e5] px-[16px] py-[12px]">
-        <h3 className="text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-          Notificações
-        </h3>
-        {unreadCount > 0 ? (
-          <span className="rounded-full bg-[#fff4f4] px-[8px] py-[4px] text-[12px] font-semibold text-[#ff4100]">
-            {unreadCount} novas
-          </span>
-        ) : notifications.length > 0 ? (
+        <div className="flex items-center gap-[8px]">
+          <h3 className="text-[15px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+            Notificações
+          </h3>
+          {unreadCount > 0 && (
+            <span className="rounded-full bg-[#fff4f4] px-[8px] py-[4px] text-[12px] font-semibold text-[#ff4100]">
+              {unreadCount} novas
+            </span>
+          )}
+        </div>
+        {notifications.length > 0 && (
           <button
             type="button"
             onClick={() => removeAll?.()}
@@ -85,7 +155,7 @@ export default function NotificationBell({
           >
             Limpar
           </button>
-        ) : null}
+        )}
       </div>
 
       <div className="max-h-[320px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -116,46 +186,12 @@ export default function NotificationBell({
           </div>
         ) : (
           notifications.map((notif) => (
-            <div
+            <NotifItem
               key={notif.id}
-              className={`flex cursor-pointer items-center gap-[12px] border-b border-[#f0e9e5] p-[12px] transition-colors duration-150 ${
-                notif.read_at ? "bg-white opacity-70 hover:bg-[#fafafa]" : "bg-[#fff4f4] hover:bg-[#ffeaea]"
-              }`}
-              onClick={() => handleNotificationClick(notif.id)}
-            >
-              <img
-                src={notif.data.author_avatar || "/default-avatar.png"}
-                alt="Avatar"
-                className="h-[36px] w-[36px] shrink-0 rounded-full object-cover ring-1 ring-[#ece1db]"
-              />
-              <div className="min-w-0 flex-1">
-                <Link
-                  href={notif.data.action_url}
-                  className="block text-[13px] font-medium leading-snug tracking-[-0.01em] text-[#0f0f0f] hover:text-[#ff4100]"
-                >
-                  {notif.data.message}
-                </Link>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  remove(notif.id);
-                }}
-                aria-label="Excluir notificação"
-                className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full text-[#a59c95] transition-colors hover:bg-[#f0e9e5] hover:text-[#0f0f0f]"
-              >
-                <svg
-                  className="h-[12px] w-[12px]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M18 6L6 18M6 6l12 12" strokeWidth="2.4" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
+              notif={notif}
+              onClick={handleNotificationClick}
+              onRemove={remove}
+            />
           ))
         )}
       </div>
