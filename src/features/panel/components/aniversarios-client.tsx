@@ -104,7 +104,7 @@ function DaysChip({ daysUntil, isToday }: { daysUntil: number; isToday: boolean 
 
 function BirthdayCard({ member }: { member: BirthdayMember }) {
   const href = member.slug ? `/membro/${member.slug}` : "#";
-  const dateShort = `${member.birthdayDay} de ${MONTHS_FULL[member.birthdayMonth - 1]}`;
+  const dateShort = `${member.birthdayDay} de ${MONTHS_FULL[member.birthdayMonth - 1].toLowerCase()}`;
 
   const ageText = member.isToday
     ? member.age !== null ? `faz ${member.age} anos hoje 🥳` : "aniversário hoje 🥳"
