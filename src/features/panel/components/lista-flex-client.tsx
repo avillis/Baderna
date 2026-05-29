@@ -279,10 +279,10 @@ export function MemberFlexCard({
           unranked={!profile || rank.label === "Sem classificação"}
         />
         <div className="min-w-0 flex-1">
-          <h2 className="max-w-full truncate-glow text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f] lg:max-w-[140px]">
+          <h2 className="break-words text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
             <StyledName styleId={styleId}>{nickname}</StyledName>
           </h2>
-          <p className="mt-0.5 max-w-full truncate text-[12px] font-semibold text-[#8d8d8d] lg:max-w-[140px]">
+          <p className="mt-0.5 break-words text-[12px] font-semibold text-[#8d8d8d]">
             {displayName}
           </p>
           <p className="mt-1 mb-[8px] max-w-full truncate text-[11px] font-bold text-[#313131] lg:mb-0 lg:max-w-[140px]">
