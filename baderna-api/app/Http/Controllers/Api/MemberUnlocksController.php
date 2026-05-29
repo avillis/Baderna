@@ -24,6 +24,17 @@ class MemberUnlocksController extends Controller
     ];
 
     /**
+     * Multiplicador do "modo jester" por tipo. Remove comum/raro e turbina
+     * lendária no front; aqui o preço sobe proporcionalmente sobre o preço-base
+     * (recalcula automático se o admin mudar o preço da categoria).
+     */
+    private const JESTER_MULT = [
+        'capa'  => 4.0,
+        'title' => 2.5,
+        'name'  => 3.0,
+    ];
+
+    /**
      * Preço server-side por slug de moldura de nível.
      * Mantém em sync com molduras-data.ts no frontend.
      */
@@ -99,9 +110,10 @@ class MemberUnlocksController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kind' => 'required|string|in:' . implode(',', self::KINDS),
-            'slug' => 'required|string|max:120',
-            'free' => 'sometimes|boolean',
+            'kind'   => 'required|string|in:' . implode(',', self::KINDS),
+            'slug'   => 'required|string|max:120',
+            'free'   => 'sometimes|boolean',
+            'jester' => 'sometimes|boolean',
         ]);
 
         $user = $request->user();
@@ -118,6 +130,10 @@ class MemberUnlocksController extends Controller
             // Custo dinâmico via AppSetting (admin pode ajustar); fallback pro valor fixo
             $costs = AppSetting::get('store_prices', self::SPIN_COST);
             $cost = $isFree ? 0 : ($costs[$data['kind']] ?? self::SPIN_COST[$data['kind']] ?? 0);
+            // Modo jester: multiplica o preço-base (não combina com free spin).
+            if (!$isFree && !empty($data['jester']) && isset(self::JESTER_MULT[$data['kind']])) {
+                $cost = (int) round($cost * self::JESTER_MULT[$data['kind']]);
+            }
         }
 
         $result = DB::transaction(function () use ($user, $data, $cost) {
