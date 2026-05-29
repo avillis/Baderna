@@ -187,38 +187,53 @@ export default function RankingPage() {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                    <StyledName styleId={member.activeNameId}>
-                      {member.nickname}
-                    </StyledName>
-                  </div>
-                  <div className="mt-0.5 truncate text-[12px] font-medium text-[#989898]">
-                    {member.name}
-                  </div>
-                </div>
-
-                <div className="shrink-0 text-right">
-                  {hasRank ? (
-                    <>
-                      <div
-                        className="flex items-center justify-end gap-1.5 text-[13px] font-bold tracking-[-0.01em]"
-                        style={{ color: tierColor }}
-                      >
-                        <span className="h-[8px] w-[8px] rounded-full" style={{ backgroundColor: tierColor }} />
-                        {formatRankLabel(rank)}
-                      </div>
-                      {rank?.lp != null && (
-                        <div className="mt-0.5 text-[11px] font-semibold text-[#b0a8a4]">
-                          {rank.lp} PDL
-                        </div>
-                      )}
-                    </>
+                  {mode === "baderna" ? (
+                    // Baderna: só o nome (estilizado), sem o nickname embaixo.
+                    <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                      <StyledName styleId={member.activeNameId}>
+                        {member.name}
+                      </StyledName>
+                    </div>
                   ) : (
-                    <span className="text-[12px] font-semibold text-[#cdc6c1]">
-                      Sem rank
-                    </span>
+                    <>
+                      <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                        <StyledName styleId={member.activeNameId}>
+                          {member.nickname}
+                        </StyledName>
+                      </div>
+                      <div className="mt-0.5 truncate text-[12px] font-medium text-[#989898]">
+                        {member.name}
+                      </div>
+                    </>
                   )}
                 </div>
+
+                {/* Rank (Ouro/Platina/PDL) só na aba Flex — o ranking Baderna
+                    tem lógica própria, então não mostra o elo da Riot aqui. */}
+                {mode !== "baderna" && (
+                  <div className="shrink-0 text-right">
+                    {hasRank ? (
+                      <>
+                        <div
+                          className="flex items-center justify-end gap-1.5 text-[13px] font-bold tracking-[-0.01em]"
+                          style={{ color: tierColor }}
+                        >
+                          <span className="h-[8px] w-[8px] rounded-full" style={{ backgroundColor: tierColor }} />
+                          {formatRankLabel(rank)}
+                        </div>
+                        {rank?.lp != null && (
+                          <div className="mt-0.5 text-[11px] font-semibold text-[#b0a8a4]">
+                            {rank.lp} PDL
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-[12px] font-semibold text-[#cdc6c1]">
+                        Sem rank
+                      </span>
+                    )}
+                  </div>
+                )}
               </Link>
             );
           })}
