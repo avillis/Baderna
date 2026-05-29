@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { useToast } from "@/components/toast";
@@ -171,7 +171,16 @@ export function PollComposer({
                     <circle r="20" cy="50" cx="50" />
                   </svg>
                 ) : (
-                  <ImagePlus className="h-[18px] w-[18px]" strokeWidth={1.8} />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="h-[22px] w-[22px]"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="5" ry="5" stroke="currentColor" strokeWidth="1.6" />
+                    <circle cx="8.5" cy="9" r="1.5" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M19.5 18.5L14.5 13L6 20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 )}
                 {opt.imageUrl && (
                   <span
