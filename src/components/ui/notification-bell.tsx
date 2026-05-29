@@ -18,14 +18,32 @@ function NotifItem({
   onRemove: (id: string) => void;
 }) {
   const members = useBadernaMembers();
-  const member = notif.data.author_slug
+
+  // Lookup primário: por slug (notificações novas que têm author_slug no payload).
+  const memberBySlug = notif.data.author_slug
     ? members.find((m) => m.id === notif.data.author_slug)
     : null;
 
+  // Fallback pra notificações antigas (sem author_slug): tenta casar pelo
+  // prefixo da mensagem contra name e nickname de cada membro.
+  // Ex: "Pudim co canela curtiu seu post" → encontra o membro "Pudim co canela".
+  const memberByMsg = !memberBySlug
+    ? members.find((m) => {
+        const n = m.name || m.nickname;
+        return n ? notif.data.message.startsWith(n) : false;
+      })
+    : null;
+
+  const member = memberBySlug ?? memberByMsg;
+
   const avatarSrc = member?.avatarSrc || notif.data.author_avatar || "/default-avatar.png";
 
-  // Se author_name existir, separa o nome da ação ("X curtiu seu post" → "X" + " curtiu seu post")
-  const authorName = notif.data.author_name ?? null;
+  // author_name: vem do payload nas novas; derivado do lookup nas antigas.
+  const authorName =
+    notif.data.author_name ??
+    (member ? (member.name || member.nickname) : null);
+
+  // Separa nome da ação ("X curtiu seu post" → "X" + " curtiu seu post")
   const action =
     authorName && notif.data.message.startsWith(authorName)
       ? notif.data.message.slice(authorName.length)
