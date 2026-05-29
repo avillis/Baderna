@@ -9,6 +9,10 @@ export const NOTIFICATIONS_UPDATED_EVENT = "baderna:notifications-updated";
 
 export interface NotificationData {
   author_avatar?: string;
+  /** Slug do membro autor (ex: "neorotico") — permite buscar avatar/estilo atuais. */
+  author_slug?: string;
+  /** Nome de exibição do autor no momento da notificação — renderizado com StyledName. */
+  author_name?: string;
   action_url: string;
   message: string;
 }
