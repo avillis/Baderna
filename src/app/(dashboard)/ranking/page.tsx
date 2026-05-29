@@ -140,9 +140,6 @@ export default function RankingPage() {
           <h1 className="text-[24px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
             Ranking da Baderna
           </h1>
-          <p className="text-[14px] font-medium text-[#8d8d8d]">
-            Baderna, Flex e Inhouse — veja quem tá na frente.
-          </p>
         </div>
 
         {/* Toggle Baderna / Flex / Inhouse — ~1/3 da largura, alinhado à
