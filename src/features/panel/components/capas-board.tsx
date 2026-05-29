@@ -244,11 +244,14 @@ function CrownIcon({ className }: { className?: string }) {
 }
 
 // Tooltip dos botões da roleta — aparece no hover, acima do botão.
+// Título em cima + descrição embaixo; fundo #ededed e sombra padrão do site.
 function ActionTooltip({
-  label,
+  title,
+  desc,
   children,
 }: {
-  label: string;
+  title: string;
+  desc: string;
   children: React.ReactNode;
 }) {
   return (
@@ -258,10 +261,11 @@ function ActionTooltip({
           borda direita do conteúdo. Seta aponta pro centro do botão. */}
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full right-0 z-50 mb-[10px] w-max max-w-[220px] translate-y-[4px] rounded-[10px] bg-[#0f0f0f] px-[11px] py-[7px] text-center text-[11px] font-semibold leading-snug tracking-[-0.01em] text-white opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-200 ease-out group-hover/tip:translate-y-0 group-hover/tip:opacity-100"
+        className="pointer-events-none absolute bottom-full right-0 z-50 mb-[10px] flex w-max max-w-[230px] translate-y-[4px] flex-col rounded-[12px] bg-[#ededed] px-[12px] py-[9px] text-left leading-[1.3] opacity-0 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-all duration-200 ease-out group-hover/tip:translate-y-0 group-hover/tip:opacity-100"
       >
-        {label}
-        <span className="absolute right-[21px] top-full h-[8px] w-[8px] -translate-y-1/2 rotate-45 bg-[#0f0f0f]" />
+        <span className="text-[12px] font-bold text-[#0f0f0f]">{title}</span>
+        <span className="mt-[2px] text-[11px] font-medium text-[#7c7c7c]">{desc}</span>
+        <span className="absolute right-[21px] top-full h-[8px] w-[8px] -translate-y-1/2 rotate-45 bg-[#ededed]" />
       </span>
     </div>
   );
@@ -1274,7 +1278,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
 
           {/* Reset + fast no desktop (absoluto à direita) */}
           <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-[10px] md:flex">
-            <ActionTooltip label="Reembaralha as prévias da roleta">
+            <ActionTooltip title="Reembaralhar" desc="Sorteia novas prévias na roleta">
               <button
                 type="button"
                 onClick={resetRoulette}
@@ -1285,7 +1289,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 <RotateCcw className="h-[18px] w-[18px]" strokeWidth={2.2} />
               </button>
             </ActionTooltip>
-            <ActionTooltip label="Modo rápido — acelera a animação do giro">
+            <ActionTooltip title="Modo rápido" desc="Acelera a animação do giro">
               <button
                 type="button"
                 onClick={() => setFastMode((v) => !v)}
@@ -1298,7 +1302,7 @@ export function CapasBoard({ pool: bannerPool }: CapasBoardProps) {
                 <Zap className="h-[18px] w-[18px]" strokeWidth={2.2} fill="currentColor" />
               </button>
             </ActionTooltip>
-            <ActionTooltip label="Modo jester — só as melhores raridades (lendária turbinada), mas o preço aumenta">
+            <ActionTooltip title="Modo jester" desc="Só as melhores raridades, com lendária turbinada. O preço aumenta.">
               <button
                 type="button"
                 onClick={() => setJesterMode((v) => !v)}
