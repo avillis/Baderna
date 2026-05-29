@@ -52,8 +52,8 @@ export function PollView({
                 onClick={() => handle(opt.id)}
                 disabled={poll.closed}
                 className={`relative flex h-[56px] w-full items-center overflow-hidden rounded-[14px] border text-left transition-colors ${
-                  opt.votedByMe ? "border-[#0f0f0f]/25" : "border-[#e6e0dd]"
-                } ${poll.closed ? "cursor-default" : "hover:border-[#0f0f0f]/30"}`}
+                  opt.votedByMe ? "border-[#ff4100]" : "border-[#e6e0dd]"
+                } ${poll.closed ? "cursor-default" : "hover:border-[#d8d2ce]"}`}
               >
                 {/* Barra de resultado */}
                 <span
@@ -71,20 +71,8 @@ export function PollView({
                     />
                   )}
                   {/* Nome */}
-                  <span className="flex min-w-0 flex-1 items-center gap-[6px]">
-                    <span className="truncate text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
-                      {opt.text}
-                    </span>
-                    {opt.votedByMe && (
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        className="h-[13px] w-[13px] shrink-0 text-[#0f0f0f]"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="M5 11L9 15L17 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
+                  <span className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
+                    {opt.text}
                   </span>
                   {/* Porcentagem à direita */}
                   <span className="shrink-0 text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
