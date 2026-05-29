@@ -53,7 +53,9 @@ export function PollView({
                 disabled={poll.closed}
                 className={`relative flex h-[56px] w-full items-center overflow-hidden rounded-[14px] border text-left transition-colors ${
                   opt.votedByMe ? "border-[#ff4100]" : "border-[#e6e0dd]"
-                } ${poll.closed ? "cursor-default" : "hover:border-[#d8d2ce]"}`}
+                } ${poll.closed ? "cursor-default" : ""} ${
+                  !poll.closed && !opt.votedByMe ? "hover:border-[#d8d2ce]" : ""
+                }`}
               >
                 {/* Barra de resultado */}
                 <span
