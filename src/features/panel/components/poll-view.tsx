@@ -1,7 +1,5 @@
 "use client";
 
-import { Check } from "lucide-react";
-
 import type { PollData } from "@/features/panel/use-posts";
 
 function formatTimeLeft(closesAt: string | null, closed: boolean): string {
@@ -57,11 +55,9 @@ export function PollView({
                   opt.votedByMe ? "border-[#0f0f0f]/25" : "border-[#e6e0dd]"
                 } ${poll.closed ? "cursor-default" : "hover:border-[#0f0f0f]/30"}`}
               >
-                {/* Barra de resultado (cinza neutro) */}
+                {/* Barra de resultado */}
                 <span
-                  className={`absolute inset-y-0 left-0 transition-[width] duration-300 ${
-                    opt.votedByMe ? "bg-[#ebe5e1]" : "bg-[#f4f1ee]"
-                  }`}
+                  className="absolute inset-y-0 left-0 bg-[#ededed] transition-[width] duration-300"
                   style={{ width: `${pct}%` }}
                 />
                 <span className="relative flex w-full items-center gap-[10px] px-[12px]">
@@ -80,7 +76,14 @@ export function PollView({
                       {opt.text}
                     </span>
                     {opt.votedByMe && (
-                      <Check className="h-[14px] w-[14px] shrink-0 text-[#0f0f0f]" strokeWidth={2.6} />
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="h-[13px] w-[13px] shrink-0 text-[#0f0f0f]"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M5 11L9 15L17 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     )}
                   </span>
                   {/* Porcentagem à direita */}
