@@ -64,9 +64,18 @@ export function PollView({
                   }`}
                   style={{ width: `${pct}%` }}
                 />
-                <span className="relative flex w-full items-center justify-between gap-[10px] px-[14px]">
-                  {/* Nome à esquerda */}
-                  <span className="flex min-w-0 items-center gap-[6px]">
+                <span className="relative flex w-full items-center gap-[10px] px-[12px]">
+                  {/* Foto à esquerda */}
+                  {opt.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={opt.imageUrl}
+                      alt=""
+                      className="h-[40px] w-[40px] shrink-0 rounded-[10px] object-cover"
+                    />
+                  )}
+                  {/* Nome */}
+                  <span className="flex min-w-0 flex-1 items-center gap-[6px]">
                     <span className="truncate text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
                       {opt.text}
                     </span>
@@ -74,19 +83,9 @@ export function PollView({
                       <Check className="h-[14px] w-[14px] shrink-0 text-[#0f0f0f]" strokeWidth={2.6} />
                     )}
                   </span>
-                  {/* Porcentagem + foto grande à direita */}
-                  <span className="flex shrink-0 items-center gap-[10px]">
-                    <span className="text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
-                      {pct}%
-                    </span>
-                    {opt.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={opt.imageUrl}
-                        alt=""
-                        className="h-[40px] w-[40px] shrink-0 rounded-[10px] object-cover"
-                      />
-                    )}
+                  {/* Porcentagem à direita */}
+                  <span className="shrink-0 text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
+                    {pct}%
                   </span>
                 </span>
               </button>
@@ -98,13 +97,9 @@ export function PollView({
               key={opt.id}
               type="button"
               onClick={() => handle(opt.id)}
-              className="flex h-[56px] w-full items-center justify-between gap-[10px] rounded-[14px] border border-[#e6e0dd] px-[14px] text-left transition-colors hover:bg-[#f7f5f3]"
+              className="flex h-[56px] w-full items-center gap-[10px] rounded-[14px] border border-[#e6e0dd] px-[12px] text-left transition-colors hover:bg-[#f7f5f3]"
             >
-              {/* Nome à esquerda */}
-              <span className="min-w-0 truncate text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
-                {opt.text}
-              </span>
-              {/* Foto grande à direita */}
+              {/* Foto à esquerda */}
               {opt.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -113,6 +108,10 @@ export function PollView({
                   className="h-[40px] w-[40px] shrink-0 rounded-[10px] object-cover"
                 />
               )}
+              {/* Nome */}
+              <span className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-[-0.01em] text-[#0f0f0f]">
+                {opt.text}
+              </span>
             </button>
           );
         })}
