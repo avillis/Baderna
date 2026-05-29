@@ -237,7 +237,7 @@ export function LastFmConnectCard() {
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function LastFmSkeleton() {
   return (
-    <div className="min-w-0 overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <div className="min-w-0 shrink-0 overflow-x-clip rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       {/* Header — logo e título aparecem direto, sem skeleton */}
       <div className="mb-[16px] flex items-center gap-[8px]">
         <LastFmLogo className="h-[18px] w-[18px]" />
@@ -285,7 +285,7 @@ export function LastFmProfileModule({ slug }: { slug: string }) {
   const nowPlaying = data.recentlyPlayed.find((t) => t.nowPlaying);
 
   return (
-    <div className="min-w-0 overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <div className="min-w-0 shrink-0 overflow-x-clip rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       <div className="mb-[16px] flex items-center gap-[8px]">
         <LastFmLogo className="h-[18px] w-[18px]" />
         <h3 className="text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
