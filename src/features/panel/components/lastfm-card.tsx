@@ -52,7 +52,7 @@ function TrackRow({ track, index }: { track: LastFmTrack; index: number }) {
       href={track.url ?? "#"}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex items-center gap-[12px] rounded-[10px] px-[10px] py-[8px] transition-colors ${track.nowPlaying ? "bg-[#D51007]/10 hover:bg-[#D51007]/15" : "hover:bg-[#f5f5f5]"}`}
+      className={`group flex min-w-0 items-center gap-[12px] rounded-[10px] px-[10px] py-[8px] transition-colors ${track.nowPlaying ? "bg-[#D51007]/10 hover:bg-[#D51007]/15" : "hover:bg-[#f5f5f5]"}`}
     >
       {track.nowPlaying ? (
         <span className="flex w-[18px] shrink-0 items-center justify-center">
@@ -123,7 +123,7 @@ export function LastFmConnectCard() {
   }
 
   return (
-    <div className="overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <div className="min-w-0 overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[28px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       {/* Header */}
       <div className="flex w-fit items-center gap-[10px]">
         <LastFmLogo className="h-[22px] w-[22px] shrink-0" />
@@ -237,7 +237,7 @@ export function LastFmConnectCard() {
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function LastFmSkeleton() {
   return (
-    <div className="overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <div className="min-w-0 overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       {/* Header — logo e título aparecem direto, sem skeleton */}
       <div className="mb-[16px] flex items-center gap-[8px]">
         <LastFmLogo className="h-[18px] w-[18px]" />
@@ -285,7 +285,7 @@ export function LastFmProfileModule({ slug }: { slug: string }) {
   const nowPlaying = data.recentlyPlayed.find((t) => t.nowPlaying);
 
   return (
-    <div className="overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <div className="min-w-0 overflow-hidden rounded-[var(--panel-radius-card)] bg-white p-[24px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       <div className="mb-[16px] flex items-center gap-[8px]">
         <LastFmLogo className="h-[18px] w-[18px]" />
         <h3 className="text-[14px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
