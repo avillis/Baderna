@@ -15,6 +15,7 @@ import { PostCommentsSection } from "@/features/panel/components/post-comments-s
 import {
   apiDeletePost,
   apiToggleLike,
+  apiVotePoll,
   fetchPost,
   getMockPost,
   isLocalDev,
@@ -105,6 +106,14 @@ export default function PostPage() {
     router.push("/");
   }
 
+  async function handleVotePoll(postId: number, optionId: number) {
+    if (!post || !post.poll) return;
+    // Mock: sem API.
+    if (postId === MOCK_POST_ID) return;
+    const fresh = await apiVotePoll(postId, optionId);
+    if (fresh) setPost((p) => (p ? { ...p, poll: fresh } : p));
+  }
+
   return (
     <PanelShell showBanner={false}>
       <section className="grid gap-[20px] pb-[80px] pt-[1.5vh] sm:pt-[6vh] xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -151,6 +160,7 @@ export default function PostPage() {
               post={post}
               onLike={handleLike}
               onDelete={handleDelete}
+              onVotePoll={handleVotePoll}
               expanded
             />
             <PostCommentsSection

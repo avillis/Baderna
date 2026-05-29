@@ -6,24 +6,27 @@ import { useRef, useState } from "react";
 
 import { useToast } from "@/components/toast";
 import { GiphyPickerInline } from "@/features/panel/components/giphy-picker-modal";
+import {
+  PollComposer,
+  isPollValid,
+  makeEmptyPoll,
+  pollDurationMinutes,
+  type PollEditorState,
+} from "@/features/panel/components/poll-composer";
 import { useAccount } from "@/features/panel/use-account";
 import { useMentions } from "@/features/panel/use-mentions";
 import {
   MAX_VIDEO_SIZE_BYTES,
   uploadPostImage,
   uploadPostVideo,
+  type CreatePostInput,
   type FeedPost,
 } from "@/features/panel/use-posts";
 
 export function PostComposer({
   onCreate,
 }: {
-  onCreate: (input: {
-    content: string;
-    imageUrl?: string | null;
-    gifUrl?: string | null;
-    videoUrl?: string | null;
-  }) => Promise<FeedPost | null>;
+  onCreate: (input: CreatePostInput) => Promise<FeedPost | null>;
 }) {
   const { account } = useAccount();
   const toast = useToast();
@@ -31,6 +34,7 @@ export function PostComposer({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [poll, setPoll] = useState<PollEditorState | null>(null);
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [giphyOpen, setGiphyOpen] = useState(false);
@@ -43,7 +47,23 @@ export function PostComposer({
     inputRef: textareaRef,
   });
 
-  const canPost = text.trim().length > 0 || imageUrl || gifUrl || videoUrl;
+  const hasMedia = !!(imageUrl || gifUrl || videoUrl);
+  const canPost = poll
+    ? isPollValid(poll)
+    : text.trim().length > 0 || hasMedia;
+
+  function togglePoll() {
+    if (poll) {
+      setPoll(null);
+      return;
+    }
+    // Enquete e mídia são mutuamente exclusivas.
+    setImageUrl(null);
+    setGifUrl(null);
+    setVideoUrl(null);
+    setGiphyOpen(false);
+    setPoll(makeEmptyPoll());
+  }
 
   function handlePaste(e: React.ClipboardEvent) {
     const imageItem = Array.from(e.clipboardData.items).find((item) =>
@@ -64,6 +84,7 @@ export function PostComposer({
       // Mídia mutuamente exclusiva pra simplificar layout.
       setGifUrl(null);
       setVideoUrl(null);
+      setPoll(null);
     } catch (err) {
       toast.show(err instanceof Error ? err.message : "Falha no upload.");
     } finally {
@@ -83,6 +104,7 @@ export function PostComposer({
       setVideoUrl(url);
       setImageUrl(null);
       setGifUrl(null);
+      setPoll(null);
     } catch (err) {
       toast.show(err instanceof Error ? err.message : "Falha no upload.");
     } finally {
@@ -96,9 +118,19 @@ export function PostComposer({
     try {
       const created = await onCreate({
         content: text.trim(),
-        imageUrl,
-        gifUrl,
-        videoUrl,
+        imageUrl: poll ? null : imageUrl,
+        gifUrl: poll ? null : gifUrl,
+        videoUrl: poll ? null : videoUrl,
+        poll: poll
+          ? {
+              title: poll.title.trim(),
+              multiple: poll.multiple,
+              durationMinutes: pollDurationMinutes(poll),
+              options: poll.options
+                .filter((o) => o.text.trim().length > 0)
+                .map((o) => ({ text: o.text.trim(), imageUrl: o.imageUrl })),
+            }
+          : null,
       });
       if (!created) {
         toast.show("Não foi possível postar. Tenta de novo.");
@@ -108,6 +140,7 @@ export function PostComposer({
       setImageUrl(null);
       setGifUrl(null);
       setVideoUrl(null);
+      setPoll(null);
     } finally {
       setPosting(false);
     }
@@ -212,6 +245,10 @@ export function PostComposer({
               </div>
             )}
           </div>
+
+          {poll && (
+            <PollComposer value={poll} onChange={setPoll} onRemove={() => setPoll(null)} />
+          )}
         </div>
       </div>
 
@@ -233,9 +270,9 @@ export function PostComposer({
               <button
                 type="button"
                 onClick={() => fileInput.current?.click()}
-                disabled={uploading}
+                disabled={uploading || !!poll}
                 aria-label="Adicionar imagem"
-                className="flex h-[32px] w-[32px] items-center justify-center transition-opacity hover:opacity-70 disabled:opacity-50"
+                className="flex h-[32px] w-[32px] items-center justify-center transition-opacity hover:opacity-70 disabled:opacity-30"
               >
                 <svg
                   className="h-[26px] w-[26px] text-[#0f0f0f]"
@@ -279,9 +316,10 @@ export function PostComposer({
               <button
                 type="button"
                 onClick={() => setGiphyOpen((v) => !v)}
+                disabled={!!poll}
                 aria-label="Adicionar GIF"
                 aria-expanded={giphyOpen}
-                className="flex h-[22px] w-[22px] items-center justify-center rounded-[7px] text-[9px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70"
+                className="flex h-[22px] w-[22px] items-center justify-center rounded-[7px] text-[9px] font-bold text-[#0f0f0f] shadow-[inset_0_0_0_1.5px_#0f0f0f] transition-opacity hover:opacity-70 disabled:opacity-30"
               >
                 GIF
               </button>
@@ -299,10 +337,10 @@ export function PostComposer({
               <button
                 type="button"
                 onClick={() => videoInput.current?.click()}
-                disabled={uploading}
+                disabled={uploading || !!poll}
                 aria-label="Adicionar vídeo (até 20MB)"
                 title="Adicionar vídeo (até 20MB)"
-                className="flex h-[32px] w-[32px] items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-[32px] w-[32px] items-center justify-center text-[#0f0f0f] transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <svg
                   className="h-[26px] w-[26px]"
@@ -327,6 +365,30 @@ export function PostComposer({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
+                </svg>
+              </button>
+              {/* Enquete */}
+              <button
+                type="button"
+                onClick={togglePoll}
+                disabled={hasMedia}
+                aria-label="Criar enquete"
+                aria-pressed={!!poll}
+                title="Criar enquete"
+                className={`flex h-[32px] w-[32px] items-center justify-center transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30 ${
+                  poll ? "text-[#ff4100]" : "text-[#0f0f0f]"
+                }`}
+              >
+                <svg
+                  className="h-[24px] w-[24px]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M9 6h11M9 12h11M9 18h11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <circle cx="4.5" cy="6" r="1.4" fill="currentColor" />
+                  <circle cx="4.5" cy="12" r="1.4" fill="currentColor" />
+                  <circle cx="4.5" cy="18" r="1.4" fill="currentColor" />
                 </svg>
               </button>
               {uploading && (

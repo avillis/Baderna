@@ -7,6 +7,31 @@ import { authToken } from "@/features/panel/use-auth";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
+export type PollOption = {
+  id: number;
+  text: string;
+  imageUrl: string | null;
+  votes: number;
+  votedByMe: boolean;
+};
+
+export type PollData = {
+  title: string;
+  multiple: boolean;
+  closesAt: string | null;
+  closed: boolean;
+  totalVotes: number;
+  options: PollOption[];
+};
+
+/** Rascunho de enquete montado no composer (antes de virar post). */
+export type PollDraft = {
+  title: string;
+  multiple: boolean;
+  durationMinutes: number;
+  options: { text: string; imageUrl: string | null }[];
+};
+
 export type FeedPost = {
   id: number;
   shortCode: string;
@@ -19,6 +44,7 @@ export type FeedPost = {
   commentsCount: number;
   liked: boolean;
   bookmarked: boolean;
+  poll: PollData | null;
   author: {
     id: number | null;
     name: string | null;
@@ -56,12 +82,32 @@ export async function fetchPost(idOrCode: string | number): Promise<FeedPost | n
   return data.post ?? null;
 }
 
-async function postCreate(payload: {
+export type CreatePostInput = {
   content: string;
   imageUrl?: string | null;
   gifUrl?: string | null;
   videoUrl?: string | null;
-}): Promise<FeedPost | null> {
+  poll?: PollDraft | null;
+};
+
+async function postCreate(payload: CreatePostInput): Promise<FeedPost | null> {
+  const body: Record<string, unknown> = {
+    content: payload.content,
+    image_url: payload.imageUrl ?? null,
+    gif_url: payload.gifUrl ?? null,
+    video_url: payload.videoUrl ?? null,
+  };
+  if (payload.poll) {
+    body.poll = {
+      title: payload.poll.title,
+      multiple: payload.poll.multiple,
+      duration_minutes: payload.poll.durationMinutes,
+      options: payload.poll.options.map((o) => ({
+        text: o.text,
+        image_url: o.imageUrl ?? null,
+      })),
+    };
+  }
   const res = await fetch(`${API_BASE}/posts`, {
     method: "POST",
     headers: {
@@ -69,16 +115,55 @@ async function postCreate(payload: {
       Accept: "application/json",
       ...authHeaders(),
     },
-    body: JSON.stringify({
-      content: payload.content,
-      image_url: payload.imageUrl ?? null,
-      gif_url: payload.gifUrl ?? null,
-      video_url: payload.videoUrl ?? null,
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) return null;
   const data = (await res.json()) as ApiOne;
   return data.post ?? null;
+}
+
+async function apiVotePoll(
+  postId: number,
+  optionId: number,
+): Promise<PollData | null> {
+  const res = await fetch(`${API_BASE}/posts/${postId}/poll/vote`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ option_id: optionId }),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { poll: PollData };
+  return data.poll ?? null;
+}
+
+/** Aplica o voto localmente (otimista), espelhando a regra do backend.
+ *  totalVotes (votantes distintos) não dá pra recalcular no cliente — fica
+ *  como está e é reconciliado pela resposta do servidor. */
+function applyVoteOptimistic(poll: PollData, optionId: number): PollData {
+  const target = poll.options.find((o) => o.id === optionId);
+  if (!target) return poll;
+  let options: PollOption[];
+  if (poll.multiple) {
+    options = poll.options.map((o) =>
+      o.id === optionId
+        ? { ...o, votedByMe: !o.votedByMe, votes: o.votes + (o.votedByMe ? -1 : 1) }
+        : o,
+    );
+  } else {
+    const wasVoted = target.votedByMe;
+    options = poll.options.map((o) => {
+      if (o.id === optionId) {
+        return { ...o, votedByMe: !wasVoted, votes: o.votes + (wasVoted ? -1 : 1) };
+      }
+      if (o.votedByMe) return { ...o, votedByMe: false, votes: o.votes - 1 };
+      return o;
+    });
+  }
+  return { ...poll, options };
 }
 
 export async function uploadPostImage(file: File): Promise<string | null> {
@@ -175,6 +260,7 @@ const MOCK_POST: FeedPost = {
   commentsCount: 2,
   liked: false,
   bookmarked: false,
+  poll: null,
   author: {
     id: -1,
     name: "Mock Tester",
@@ -232,12 +318,7 @@ export function usePosts() {
   }, [posts, loadingMore, hasMore, loading]);
 
   const createPost = useCallback(
-    async (input: {
-      content: string;
-      imageUrl?: string | null;
-      gifUrl?: string | null;
-      videoUrl?: string | null;
-    }) => {
+    async (input: CreatePostInput) => {
       const created = await postCreate(input);
       if (!created) return null;
       setPosts((curr) => [created, ...curr]);
@@ -245,6 +326,24 @@ export function usePosts() {
     },
     [],
   );
+
+  const votePoll = useCallback(async (postId: number, optionId: number) => {
+    // Update otimista
+    setPosts((curr) =>
+      curr.map((p) =>
+        p.id === postId && p.poll
+          ? { ...p, poll: applyVoteOptimistic(p.poll, optionId) }
+          : p,
+      ),
+    );
+    if (postId === MOCK_POST_ID) return;
+    const fresh = await apiVotePoll(postId, optionId);
+    if (fresh) {
+      setPosts((curr) =>
+        curr.map((p) => (p.id === postId ? { ...p, poll: fresh } : p)),
+      );
+    }
+  }, []);
 
   const toggleLike = useCallback(async (id: number) => {
     // Update otimista
@@ -303,6 +402,7 @@ export function usePosts() {
     createPost,
     toggleLike,
     deletePost,
+    votePoll,
   };
 }
 
@@ -337,5 +437,5 @@ export function formatPostDateLong(iso: string): string {
   return `${date} às ${time}`;
 }
 
-// Exporta o toggle/delete pra páginas individuais (post detail) usarem.
-export { apiToggleLike, apiDeletePost };
+// Exporta o toggle/delete/vote pra páginas individuais (post detail) usarem.
+export { apiToggleLike, apiDeletePost, apiVotePoll };

@@ -74,6 +74,7 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { apiPinPost, formatPostDate, formatPostDateLong, type FeedPost } from "@/features/panel/use-posts";
 import { LinkPreview } from "@/features/panel/components/link-preview";
+import { PollView } from "@/features/panel/components/poll-view";
 import { PostCommentsSection } from "@/features/panel/components/post-comments-section";
 
 const URL_RE = /https?:\/\/[^\s]+/g;
@@ -82,11 +83,13 @@ export function PostCard({
   post,
   onLike,
   onDelete,
+  onVotePoll,
   expanded = false,
 }: {
   post: FeedPost;
   onLike?: (id: number) => void;
   onDelete?: (id: number) => void;
+  onVotePoll?: (postId: number, optionId: number) => void;
   /** True na página permalink: imagem em resolução completa sem crop. */
   expanded?: boolean;
 }) {
@@ -540,6 +543,13 @@ export function PostCard({
           <div className="mt-[12px]">
             <VideoPlayer src={post.videoUrl} expanded={expanded} />
           </div>
+        )}
+
+        {post.poll && (
+          <PollView
+            poll={post.poll}
+            onVote={(optionId) => onVotePoll?.(post.id, optionId)}
+          />
         )}
 
         {/* Linha de ações: like + comentários + reações + bookmark. */}

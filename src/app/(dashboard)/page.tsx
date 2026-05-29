@@ -21,6 +21,7 @@ export default function FeedPage() {
     createPost,
     toggleLike,
     deletePost,
+    votePoll,
   } = usePosts();
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +85,7 @@ export default function FeedPage() {
               post={post}
               onLike={toggleLike}
               onDelete={deletePost}
+              onVotePoll={votePoll}
             />
           ))}
 
