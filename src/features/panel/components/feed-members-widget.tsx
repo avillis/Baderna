@@ -48,7 +48,7 @@ export function FeedMembersWidget() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate-glow text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f]">
-                  <StyledName styleId={m.activeNameId}>{m.name}</StyledName>
+                  <StyledName styleId={m.activeNameId}>{m.nickname}</StyledName>
                 </p>
                 <p className="truncate text-[12px] text-[#8d8d8d]">
                   {m.rankName}
