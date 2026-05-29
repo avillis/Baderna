@@ -248,7 +248,7 @@ function LastFmSkeleton() {
         <SectionHeading>Mais ouvidas (último mês)</SectionHeading>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center gap-[12px] px-[10px] py-[8px]">
-            <div className="h-[12px] w-[18px] shrink-0 rounded-[3px] skeleton-shimmer" />
+            <span className="w-[18px] shrink-0 text-center text-[12px] font-bold text-[#bdbdbd]">{i + 1}</span>
             <div className="h-[40px] w-[40px] shrink-0 rounded-[6px] skeleton-shimmer" />
             <div className="flex-1 space-y-[6px]">
               <div className="h-[12px] w-3/4 rounded-[4px] skeleton-shimmer" />
@@ -262,7 +262,7 @@ function LastFmSkeleton() {
         <SectionHeading>Ouvidas recentemente</SectionHeading>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={`r${i}`} className="flex items-center gap-[12px] px-[10px] py-[8px]">
-            <div className="h-[12px] w-[18px] shrink-0 rounded-[3px] skeleton-shimmer" />
+            <span className="w-[18px] shrink-0 text-center text-[12px] font-bold text-[#bdbdbd]">{i + 1}</span>
             <div className="h-[40px] w-[40px] shrink-0 rounded-[6px] skeleton-shimmer" />
             <div className="flex-1 space-y-[6px]">
               <div className="h-[12px] w-3/4 rounded-[4px] skeleton-shimmer" />
