@@ -208,7 +208,7 @@ export function PollComposer({
                   type="button"
                   onClick={addOption}
                   aria-label="Adicionar opção"
-                  className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full text-[#ff4100] transition-colors hover:bg-[#fff4f0]"
+                  className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full text-[#0f0f0f] transition-colors hover:bg-[#ededed]"
                 >
                   <Plus className="h-[18px] w-[18px]" strokeWidth={2.4} />
                 </button>
@@ -281,13 +281,13 @@ export function PollComposer({
             role="checkbox"
             aria-checked={value.multiple}
             onClick={() => patch({ multiple: !value.multiple })}
-            className={`relative h-[20px] w-[36px] shrink-0 cursor-pointer rounded-[6px] transition-colors duration-[300ms] ${
+            className={`relative h-[20px] w-[36px] shrink-0 cursor-pointer rounded-[6px] transition-colors duration-[400ms] ${
               value.multiple ? "bg-[#ff4100]" : "bg-[#ededed]"
             }`}
           >
             <span
-              className="absolute bottom-[2px] left-[2px] h-[16px] w-[16px] rounded-[4px] bg-white shadow transition-transform duration-[300ms]"
-              style={{ transform: value.multiple ? "translateX(16px)" : "translateX(0)" }}
+              className="absolute bottom-[2px] left-[2px] h-[16px] w-[16px] rounded-[4px] bg-white shadow transition-all duration-[400ms]"
+              style={{ transform: value.multiple ? "translateX(16px)" : "rotate(270deg)" }}
             />
           </div>
           <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
