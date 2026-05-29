@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Swords } from "lucide-react";
@@ -42,15 +43,55 @@ const TIER_COLOR: Record<string, string> = {
   CHALLENGER: "#f0c674",
 };
 
-// Cor do número por posição no ranking Baderna (mesma lógica do card de perfil).
-// Flex não usa cor — números ficam no cinza padrão.
-function getBadernaPositionColor(position: number): string {
-  if (position === 1) return "#a0d8ff"; // azul
-  if (position === 2) return "#ff4040"; // vermelho
-  if (position === 3) return "#9b59b6"; // roxo
-  if (position <= 8)  return "#ffcc00"; // dourado
-  if (position <= 13) return "#b0b0b0"; // prata
-  return "#cd7f32";                      // bronze
+// Moldura (gradiente + glow) por posição — idêntica ao card da página Membros.
+type RankEffect = { gradient: string; glow: string };
+function getRankEffect(rank: number): RankEffect {
+  if (rank === 1) return {
+    gradient: "linear-gradient(135deg, #f0f8ff 0%, #88b8ff 14%, #c090ff 28%, #f8a8f8 42%, #90e8ff 56%, #d8eeff 70%, #a8c8ff 85%, #f0f8ff 100%)",
+    glow: "0 0 16px 5px rgba(65,150,255,0.70), 0 0 30px 3px rgba(150,90,255,0.28)",
+  };
+  if (rank === 2) return {
+    gradient: "linear-gradient(135deg, #ffe8e0 0%, #cc2020 14%, #ff4040 28%, #ff5820 42%, #ff1840 56%, #cc0020 70%, #ff8060 84%, #ffe0e0 100%)",
+    glow: "0 0 16px 4px rgba(255,55,55,0.60), 0 0 30px 2px rgba(220,30,30,0.25)",
+  };
+  if (rank === 3) return {
+    gradient: "linear-gradient(135deg, #f0e8ff 0%, #5010a0 14%, #9040ff 28%, #4030c0 42%, #c030e0 56%, #400090 70%, #a050ff 84%, #ead0ff 100%)",
+    glow: "0 0 16px 4px rgba(155,75,255,0.55), 0 0 30px 2px rgba(120,45,210,0.25)",
+  };
+  if (rank <= 8) return {
+    gradient: "linear-gradient(135deg, #ffe066, #ffb300)",
+    glow: "0 0 14px 3px rgba(255, 185, 0, 0.28)",
+  };
+  if (rank <= 13) return {
+    gradient: "linear-gradient(135deg, #f2f2f2, #b0b0b0)",
+    glow: "0 0 14px 3px rgba(140, 140, 140, 0.22)",
+  };
+  return {
+    gradient: "linear-gradient(135deg, #e8b07a, #cd7f32)",
+    glow: "0 0 14px 3px rgba(205, 127, 50, 0.22)",
+  };
+}
+
+// Avatar 124px com skeleton — igual ao da página Membros.
+function MemberAvatar({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative h-[124px] w-[124px] overflow-hidden rounded-full">
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse rounded-full bg-[#ededed]" />
+      )}
+      <Image
+        src={src}
+        alt={alt}
+        width={124}
+        height={124}
+        className={`h-full w-full object-cover transition-opacity duration-200 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
 }
 
 function eloScore(rank: MemberRank | undefined): number {
@@ -145,11 +186,52 @@ export default function RankingPage() {
               ser registrados.
             </p>
           </div>
+        ) : mode === "baderna" ? (
+          // Baderna: layout idêntico à página Membros (grid de 5 com molduras).
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+            {badernaList.map(({ member }, index) => {
+              const badernaRank = index + 1;
+              const rankEffect = getRankEffect(badernaRank);
+              const avatar = member.avatarSrc || getChampionAvatarSrc(member.id);
+              return (
+                <Link
+                  key={member.id}
+                  href={`/membro/${member.id}`}
+                  className="relative flex flex-col items-center rounded-[25px] bg-white px-6 py-10 shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:scale-[1.02]"
+                >
+                  {/* Avatar com moldura */}
+                  <div
+                    className="rounded-full p-[3px]"
+                    style={{ background: rankEffect.gradient, boxShadow: rankEffect.glow }}
+                  >
+                    <MemberAvatar
+                      src={avatar}
+                      alt={member.nickname}
+                    />
+                  </div>
+
+                  {/* Nome + posição */}
+                  <div className="mt-4 text-center">
+                    <h2 className="text-[17px] font-bold leading-none tracking-[-0.03em] text-[#0f0f0f]">
+                      <StyledName styleId={member.activeNameId}>
+                        {member.nickname}
+                      </StyledName>
+                      <span className="ml-[5px] text-[12px] font-semibold tracking-normal text-[#aaaaaa]">
+                        #{String(badernaRank).padStart(2, "0")}
+                      </span>
+                    </h2>
+                    <p className="mt-[6px] text-[13px] font-medium tracking-[-0.01em] text-[#989898]">
+                      {member.name}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         ) : (
         <div className="overflow-hidden rounded-[25px] bg-white shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
-          {(mode === "baderna" ? badernaList : sorted).map(({ member, rank, score }, index) => {
+          {sorted.map(({ member, rank, score }, index) => {
             const position = index + 1;
-            const posColor = mode === "baderna" ? getBadernaPositionColor(position) : undefined;
             const tier = rank?.tier?.toUpperCase();
             const tierColor = (tier && TIER_COLOR[tier]) || "#b0a8a4";
             const hasRank = score >= 0;
@@ -161,26 +243,11 @@ export default function RankingPage() {
                 href={`/membro/${member.id}`}
                 className="flex items-center gap-4 border-b border-[#f3ebe8] px-5 py-4 transition-colors last:border-0 hover:bg-[#fdfcfa]"
               >
-                {mode === "baderna" && position === 1 ? (
-                  <span
-                    className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em]"
-                    style={{
-                      background: "linear-gradient(135deg, #f0f8ff 0%, #a8ccff 22%, #d8a8ff 44%, #ffa8f4 66%, #a8eeff 88%, #f0f8ff 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    {position}
-                  </span>
-                ) : (
-                  <span
-                    className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em]"
-                    style={{ color: posColor ?? "#b0a8a4" }}
-                  >
-                    {position}
-                  </span>
-                )}
+                <span
+                  className="w-[28px] shrink-0 text-center text-[15px] font-bold tracking-[-0.02em] text-[#b0a8a4]"
+                >
+                  {position}
+                </span>
 
                 <div className="relative h-[44px] w-[44px] shrink-0 overflow-hidden rounded-full bg-[#ededed]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -188,53 +255,38 @@ export default function RankingPage() {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  {mode === "baderna" ? (
-                    // Baderna: só o nome (estilizado), sem o nickname embaixo.
-                    <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                      <StyledName styleId={member.activeNameId}>
-                        {member.name}
-                      </StyledName>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
-                        <StyledName styleId={member.activeNameId}>
-                          {member.nickname}
-                        </StyledName>
-                      </div>
-                      <div className="mt-0.5 truncate text-[12px] font-medium text-[#989898]">
-                        {member.name}
-                      </div>
-                    </>
-                  )}
+                  <div className="truncate-glow text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+                    <StyledName styleId={member.activeNameId}>
+                      {member.nickname}
+                    </StyledName>
+                  </div>
+                  <div className="mt-0.5 truncate text-[12px] font-medium text-[#989898]">
+                    {member.name}
+                  </div>
                 </div>
 
-                {/* Rank (Ouro/Platina/PDL) só na aba Flex — o ranking Baderna
-                    tem lógica própria, então não mostra o elo da Riot aqui. */}
-                {mode !== "baderna" && (
-                  <div className="shrink-0 text-right">
-                    {hasRank ? (
-                      <>
-                        <div
-                          className="flex items-center justify-end gap-1.5 text-[13px] font-bold tracking-[-0.01em]"
-                          style={{ color: tierColor }}
-                        >
-                          <span className="h-[8px] w-[8px] rounded-full" style={{ backgroundColor: tierColor }} />
-                          {formatRankLabel(rank)}
+                <div className="shrink-0 text-right">
+                  {hasRank ? (
+                    <>
+                      <div
+                        className="flex items-center justify-end gap-1.5 text-[13px] font-bold tracking-[-0.01em]"
+                        style={{ color: tierColor }}
+                      >
+                        <span className="h-[8px] w-[8px] rounded-full" style={{ backgroundColor: tierColor }} />
+                        {formatRankLabel(rank)}
+                      </div>
+                      {rank?.lp != null && (
+                        <div className="mt-0.5 text-[11px] font-semibold text-[#b0a8a4]">
+                          {rank.lp} PDL
                         </div>
-                        {rank?.lp != null && (
-                          <div className="mt-0.5 text-[11px] font-semibold text-[#b0a8a4]">
-                            {rank.lp} PDL
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-[12px] font-semibold text-[#cdc6c1]">
-                        Sem rank
-                      </span>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-[12px] font-semibold text-[#cdc6c1]">
+                      Sem rank
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           })}
