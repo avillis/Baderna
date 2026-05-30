@@ -124,7 +124,7 @@ export function PanelStatCard({
           className="absolute inset-0"
           style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}
         />
-        <div className="relative z-10 flex h-full items-center justify-between gap-[6px] pl-[10px] pr-[12px]">
+        <div className="relative z-10 flex h-full items-center justify-between gap-[6px] pl-[18px] pr-[14px]">
           <div className="min-w-0">
             <p className="whitespace-nowrap text-[10px] font-bold tracking-[-0.03em] text-white/80">
               {eyebrow}

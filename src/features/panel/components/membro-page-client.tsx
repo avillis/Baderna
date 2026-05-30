@@ -575,7 +575,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
         <div className="hidden 2xl:block">
           <div>
-            <div className="grid grid-cols-[1.67fr_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
+            <div className="grid grid-cols-[1.42fr_minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="pl-0">
                 <PanelProfileSummary
                   avatarSrc={profile.avatarSrc}
@@ -601,7 +601,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
               {topSlots}
             </div>
-            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
+            <div className="mt-[54px] mb-6 grid grid-cols-[1.42fr_minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
               <ProfileActions
                 className="col-start-1 col-span-3 flex flex-wrap items-center gap-[10px]"
                 editButton={editCardsButton}
