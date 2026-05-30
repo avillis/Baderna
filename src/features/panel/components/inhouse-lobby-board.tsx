@@ -812,7 +812,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
       <div className="pointer-events-none absolute inset-0 z-0 hidden overflow-hidden rounded-[36px] xl:block">
         <div className="absolute inset-x-0 top-[30px] h-[120px] bg-[radial-gradient(circle_at_center,rgba(52,125,255,0.06),transparent_58%)] blur-[44px]" />
 
-        <div className="absolute top-[200px] left-1/2 h-[540px] w-[820px] -translate-x-[calc(50%+16px)]">
+        <div className="absolute top-[200px] left-1/2 h-[540px] w-[820px] -translate-x-[calc(50%+16px)] [mask-image:linear-gradient(to_right,transparent_0%,#000_12%,#000_88%,transparent_100%)] [mask-repeat:no-repeat] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,#000_12%,#000_88%,transparent_100%)] [-webkit-mask-repeat:no-repeat]">
           <div className="inhouse-rift-float absolute inset-0">
             <Image
               src="/images/inhouse/summoners-rift.png"
