@@ -551,11 +551,13 @@ export function MembroPageClient({ slug }: { slug: string }) {
             <div className="mt-[96px] mb-4 flex justify-center xl:hidden">
               <PanelGameModeToggle />
             </div>
-            <div className="grid gap-8 2xl:hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,400px)] xl:items-start xl:gap-[32px]">
-              <div className="min-w-0 max-w-full">
-                {hasRiotId ? <LiveHistoryCard riotId={riotId} /> : <NoLolCard />}
-              </div>
+            <div className="grid gap-8 2xl:hidden xl:grid-cols-2 xl:items-start xl:gap-[32px]">
               <div className="flex min-w-0 max-w-full flex-col gap-8">
+                {hasRiotId ? <LiveHistoryCard riotId={riotId} /> : <NoLolCard />}
+                <LastFmProfileModule slug={slug} />
+                {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
+              </div>
+              <div className="flex min-w-0 max-w-full flex-col gap-8 pb-[32px] xl:pb-0">
                 {pinnedPost && (
                   <PinnedPostCard
                     post={pinnedPost}
@@ -565,10 +567,6 @@ export function MembroPageClient({ slug }: { slug: string }) {
                     } : undefined}
                   />
                 )}
-                <LastFmProfileModule slug={slug} />
-                {hasRiotId ? <PanelMemberWinratesCard targetUserId={targetUserId} /> : <NoLolCard />}
-              </div>
-              <div className="flex min-w-0 max-w-full flex-col gap-8 pb-[32px] xl:pb-0">
                 {hasRiotId ? <LiveFavoriteChampionsCard riotId={riotId} /> : <NoLolCard />}
                 <PanelCommentsCard memberId={member.id} targetUserId={targetUserId} />
               </div>
