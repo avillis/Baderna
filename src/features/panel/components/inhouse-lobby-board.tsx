@@ -834,7 +834,7 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
         </div>
       </div>
 
-      <div className="relative z-10 flex w-full flex-col gap-4 justify-center pt-[24px] xl:min-h-[860px] xl:pt-[62px]">
+      <div className="relative z-10 flex w-full flex-col gap-4 justify-center pt-[24px] xl:min-h-[860px] xl:pt-[62px] xl:w-[113.6%] xl:-mx-[6.8%] xl:scale-[0.88] xl:[transform-origin:top_center] 2xl:mx-0 2xl:w-full 2xl:scale-100">
         <div className="hidden xl:block">
           <InhouseMatchHeader
             blueLeader={blueLeader}
@@ -1222,7 +1222,7 @@ export function InhouseLobbyBoard() {
 
   return (
     <section className="relative w-full pt-[1.5vh] sm:pt-[6vh]">
-      <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2 2xl:grid-cols-3">
         {inhouses.map((inhouse) => (
           <InhouseListCard
             key={inhouse.id}
