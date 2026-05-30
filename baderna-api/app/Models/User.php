@@ -34,6 +34,7 @@ class User extends Authenticatable
         'banner_filename',
         'banner_focus_y',
         'active_name_id',
+        'active_frame_id',
         'active_title_slugs',
         'cached_rank_tier',
         'cached_rank_division',

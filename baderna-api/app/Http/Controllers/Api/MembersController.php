@@ -132,6 +132,7 @@ class MembersController extends Controller
                 'pinnedPostId'    => $u->pinned_post_id,
                 'memberSince'     => optional($u->created_at)->toIso8601String(),
                 'activeNameId'    => $u->active_name_id,
+                'activeFrameId'   => $u->active_frame_id,
                 'activeTitleSlugs' => $u->active_title_slugs ?? ['aprendiz'],
                 'favoriteSongId'      => $u->favorite_song_spotify_id,
                 'favoriteSongName'    => $u->favorite_song_name,
