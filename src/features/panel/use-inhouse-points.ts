@@ -114,7 +114,9 @@ export function useInhousePoints() {
 
   const update = useCallback(
     async (mode: Mode, outcome: Outcome, value: number) => {
-      const sanitized = Math.max(0, Math.round(value));
+      // BP pode ser NEGATIVO (derrota tira pontos). NÃO usar Math.max(0,...)
+      // aqui — isso zerava qualquer valor negativo antes de salvar.
+      const sanitized = Math.round(value);
       const next: InhousePoints = {
         ...points,
         [mode]: { ...points[mode], [outcome]: sanitized },
