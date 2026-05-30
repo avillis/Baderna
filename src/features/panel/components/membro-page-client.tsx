@@ -537,7 +537,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
             </div>
           </div>
 
-          <div className="mt-[20px] xl:mt-[24px]">
+          <div className="mt-[20px] xl:mt-[54px]">
             <div className="mb-6 hidden flex-wrap items-center gap-[10px] xl:flex">
               <ProfileActions
                 className="flex flex-wrap items-center gap-[10px]"
