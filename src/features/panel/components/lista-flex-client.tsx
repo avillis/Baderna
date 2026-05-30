@@ -146,7 +146,7 @@ function RoleCard({ role, stats }: { role: Role; stats: RoleStats }) {
         />
       </div>
 
-      <div className="flex items-center gap-3 pr-[44px]">
+      <div className="flex items-center gap-3 pr-[44px] xl:flex-col xl:items-start xl:gap-[2px] 2xl:flex-row 2xl:items-center 2xl:gap-3">
         <span className="text-[11px] font-semibold text-[#0f0f0f]">
           {stats.wins}v {stats.losses}d
         </span>
