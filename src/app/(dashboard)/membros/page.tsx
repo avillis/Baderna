@@ -50,10 +50,15 @@ function getRankEffect(rank: number): RankEffect {
     gradient: "linear-gradient(135deg, #f0e8ff 0%, #5010a0 14%, #9040ff 28%, #4030c0 42%, #c030e0 56%, #400090 70%, #a050ff 84%, #ead0ff 100%)",
     glow: "0 0 16px 4px rgba(155,75,255,0.55), 0 0 30px 2px rgba(120,45,210,0.25)",
   };
-  // #04–#05 — (cor a definir) — placeholder dourado por ora
-  if (rank <= 5) return {
-    gradient: "linear-gradient(135deg, #ffe066, #ffb300)",
-    glow: "0 0 14px 3px rgba(255, 185, 0, 0.28)",
+  // #04 — esmeralda
+  if (rank === 4) return {
+    gradient: "linear-gradient(135deg, #34d399, #059669)",
+    glow: "0 0 14px 3px rgba(16, 185, 129, 0.30)",
+  };
+  // #05 — platina
+  if (rank === 5) return {
+    gradient: "linear-gradient(135deg, #e0f2fe, #7dd3fc)",
+    glow: "0 0 14px 3px rgba(125, 211, 252, 0.30)",
   };
   // #06–#10 — dourado
   if (rank <= 10) return {
