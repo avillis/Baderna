@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AppSettingsController;
 use App\Http\Controllers\Api\AvatarUploadController;
+use App\Http\Controllers\Api\BadernaPointsLogController;
 use App\Http\Controllers\Api\EmailTemplatesController;
 use App\Http\Controllers\Api\ErrorLogsController;
 use App\Http\Controllers\Api\InhousesController;
@@ -181,6 +182,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sync-birthdays-discord', [AppSettingsController::class, 'syncBirthdaysDiscord']);
         Route::post('/titles', [TitlesController::class, 'store']);
         Route::delete('/titles/{slug}', [TitlesController::class, 'destroy']);
+        Route::get('/bp-log', [BadernaPointsLogController::class, 'index']);
         Route::get('/member-coins', [MemberCoinsController::class, 'index']);
         Route::put('/member-coins/{user}', [MemberCoinsController::class, 'update']);
         Route::post('/flex-credit', [MemberCoinsController::class, 'flexCreditBatch']);
