@@ -232,7 +232,7 @@ export function PanelProfileSummary({
           )}
 
           {titles.length > 0 ? (
-            <div className="flex min-w-0 flex-1 items-center gap-[8px] overflow-x-auto touch-pan-x pl-[4px] -ml-[4px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:ml-0 sm:overflow-visible sm:pl-0">
+            <div className="flex min-w-0 flex-1 items-center gap-[8px] overflow-x-auto touch-pan-x pl-[4px] -ml-[4px] -mr-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:ml-0 sm:mr-0 sm:overflow-visible sm:pl-0">
               {titles.map((title) => (
                 <button
                   key={title.id}
@@ -251,6 +251,9 @@ export function PanelProfileSummary({
                   <span className="relative z-10">{title.label}</span>
                 </button>
               ))}
+              {/* Espaçador final: garante respiro à direita no scroll do mobile
+                  (iOS Safari "engole" o padding-right de containers com overflow). */}
+              <span aria-hidden className="shrink-0 w-[16px] sm:hidden" />
             </div>
           ) : isOwnProfile ? (
             <button
