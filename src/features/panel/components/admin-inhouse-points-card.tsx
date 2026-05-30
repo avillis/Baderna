@@ -56,31 +56,39 @@ function NumberInput({
   onChange: (next: number) => void;
 }) {
   const [text, setText] = useState(String(value));
+  const [focused, setFocused] = useState(false);
 
-  // Sincroniza com o valor externo quando ele muda por fora (ex: load da API),
-  // mas não atropela o que o usuário está digitando se já bate numericamente.
+  // Sincroniza com o valor externo (ex: load da API) — mas SÓ quando o input
+  // não está focado. Enquanto o usuário digita, estados intermediários como
+  // "-" não podem ser atropelados pelo save otimista.
   useEffect(() => {
-    if (Number(text) !== value) setText(String(value));
+    if (!focused && Number(text) !== value) setText(String(value));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, focused]);
 
   return (
     <input
       type="text"
       inputMode="numeric"
       value={text}
+      onFocus={() => setFocused(true)}
       onChange={(e) => {
         const raw = e.target.value;
         // Aceita vazio, "-" e dígitos com sinal opcional.
         if (raw === "" || raw === "-" || /^-?\d+$/.test(raw)) {
           setText(raw);
-          const parsed = raw === "" || raw === "-" ? 0 : Number(raw);
-          onChange(parsed);
+          // Só propaga quando há número completo — evita que o save otimista
+          // mude o `value` e dispare o sync no meio da digitação.
+          if (raw !== "" && raw !== "-") onChange(Number(raw));
         }
       }}
       onBlur={() => {
+        setFocused(false);
         // Normaliza ao sair: "-" / "" viram "0".
-        if (text === "" || text === "-") setText("0");
+        if (text === "" || text === "-") {
+          setText("0");
+          onChange(0);
+        }
       }}
       className="w-full rounded-full border-none bg-[#ededed] px-4 py-[8px] text-[13px] font-semibold text-[#0f0f0f] outline-none focus:ring-2 focus:ring-[#ff4100]/20"
     />
