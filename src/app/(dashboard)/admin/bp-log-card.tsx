@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -22,11 +23,13 @@ function MemberAvatar({ src, alt }: { src: string; alt: string }) {
       }`}
     >
       {!errored && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={src}
           alt={alt}
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover"
+          sizes="38px"
+          unoptimized
           onLoad={() => setLoaded(true)}
           onError={() => setErrored(true)}
         />
@@ -120,7 +123,7 @@ function MemberLogRow({ row }: { row: BpLogRow }) {
             <div className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f] tabular-nums">
               {row.totalBp}
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#b0a8a4]">
+            <div className="text-[10px] font-bold text-[#b0a8a4]">
               total
             </div>
           </div>
