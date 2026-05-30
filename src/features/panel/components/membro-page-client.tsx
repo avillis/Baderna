@@ -15,6 +15,7 @@ import {
   MemberCompareModal,
   type CompareSide,
 } from "@/features/panel/components/member-compare-modal";
+import { BpLogModal } from "@/features/panel/components/bp-log-modal";
 import { ProfileActions } from "@/features/panel/components/profile-actions";
 import type { BadernaMember } from "@/features/panel/members-data";
 import { LiveFavoriteChampionsCard } from "@/features/panel/components/live-favorite-champions-card";
@@ -153,6 +154,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
   const [showChampionPicker, setShowChampionPicker] = useState(false);
   const [showDuoPicker, setShowDuoPicker] = useState(false);
   const [showSongPicker, setShowSongPicker] = useState(false);
+  const [showBpLog, setShowBpLog] = useState(false);
   const { titles: allTitles } = useTitles();
   const [pinnedPost, setPinnedPost] = useState<FeedPost | null>(null);
 
@@ -291,6 +293,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
     secondaryLane: apiMember?.secondaryLane ?? null,
     badernaRank,
     badernaPoints,
+    onOpenBpLog: targetUserId != null ? () => setShowBpLog(true) : undefined,
     fallbackRankEyebrow: stats[2].eyebrow,
     fallbackRankValue: stats[2].value,
     fallbackRankFrameSrc: profile.rankFrameSrc,
@@ -642,6 +645,17 @@ export function MembroPageClient({ slug }: { slug: string }) {
           left={viewedSide}
           right={mySide}
           onClose={() => setShowCompare(false)}
+        />
+      )}
+
+      {showBpLog && targetUserId != null && (
+        <BpLogModal
+          userId={targetUserId}
+          fallbackNick={profile.displayName}
+          fallbackAvatarSrc={profile.avatarSrc}
+          fallbackStyleId={viewedBaderna?.activeNameId}
+          badernaRank={badernaRank}
+          onClose={() => setShowBpLog(false)}
         />
       )}
     </PanelShell>

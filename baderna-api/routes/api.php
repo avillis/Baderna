@@ -153,6 +153,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/account/coins', [MemberCoinsController::class, 'me']);
     Route::get('/account/winrates-with-members', [MemberWinratesController::class, 'index']);
     Route::post('/account/winrates-with-members/refresh', [MemberWinratesController::class, 'refresh']);
+    // Log de BP (Rank da Baderna) de um membro específico — modal no perfil.
+    Route::get('/members/{user}/bp-log', [BadernaPointsLogController::class, 'forUser'])
+        ->whereNumber('user');
     // Mesma feature, mas pra um member específico (perfil de terceiros).
     Route::get('/members/{user}/winrates-with-members', [MemberWinratesController::class, 'showForMember'])
         ->whereNumber('user');

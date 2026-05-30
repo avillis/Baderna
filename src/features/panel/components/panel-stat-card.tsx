@@ -11,6 +11,8 @@ type PanelStatCardProps = {
   placeholder?: boolean;
   /** Só no tom rank-baderna: mostra a pill de BP ao lado do #NN. */
   badernaPoints?: number | null;
+  /** Só no tom rank-baderna: clique na pill de BP (abre o log do membro). */
+  onBadernaPointsClick?: () => void;
 };
 
 function StatSkeleton({
@@ -99,6 +101,7 @@ export function PanelStatCard({
   featuredSrc,
   placeholder = false,
   badernaPoints,
+  onBadernaPointsClick,
 }: PanelStatCardProps) {
   const isFeatured = tone === "featured";
   const isRank = tone === "rank";
@@ -137,19 +140,37 @@ export function PanelStatCard({
               </p>
             )}
           </div>
-          {typeof badernaPoints === "number" && (
-            <span className="inline-flex h-[30px] shrink-0 items-center gap-[4px] rounded-[10px] bg-[#ededed] px-[9px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] shadow-[0_4px_14px_rgba(0,0,0,0.18)]">
-              <Image
-                src="/images/bp.png"
-                alt=""
-                width={16}
-                height={16}
-                className="h-[16px] w-[16px] object-contain"
-                unoptimized
-              />
-              {badernaPoints.toLocaleString("pt-BR")} BP
-            </span>
-          )}
+          {typeof badernaPoints === "number" &&
+            (onBadernaPointsClick ? (
+              <button
+                type="button"
+                onClick={onBadernaPointsClick}
+                title="Ver histórico de BP"
+                className="inline-flex h-[30px] shrink-0 items-center gap-[4px] rounded-[10px] bg-[#ededed] px-[9px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition-transform hover:scale-[1.05] active:scale-95"
+              >
+                <Image
+                  src="/images/bp.png"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="h-[16px] w-[16px] object-contain"
+                  unoptimized
+                />
+                {badernaPoints.toLocaleString("pt-BR")} BP
+              </button>
+            ) : (
+              <span className="inline-flex h-[30px] shrink-0 items-center gap-[4px] rounded-[10px] bg-[#ededed] px-[9px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] shadow-[0_4px_14px_rgba(0,0,0,0.18)]">
+                <Image
+                  src="/images/bp.png"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="h-[16px] w-[16px] object-contain"
+                  unoptimized
+                />
+                {badernaPoints.toLocaleString("pt-BR")} BP
+              </span>
+            ))}
         </div>
       </article>
     );

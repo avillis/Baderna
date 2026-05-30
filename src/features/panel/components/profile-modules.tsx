@@ -723,6 +723,8 @@ export type ProfileModuleData = {
   secondaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   badernaRank: number;
   badernaPoints: number;
+  /** Abre o modal de histórico de BP do membro (clique na pill de pontos). */
+  onOpenBpLog?: () => void;
   fallbackRankEyebrow: string;
   fallbackRankValue: string;
   fallbackRankFrameSrc: string;
@@ -795,6 +797,7 @@ export function ProfileModuleCard({
           value={value}
           tone="rank-baderna"
           badernaPoints={data.badernaPoints}
+          onBadernaPointsClick={data.onOpenBpLog}
         />
       );
     }

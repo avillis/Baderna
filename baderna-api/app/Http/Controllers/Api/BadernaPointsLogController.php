@@ -10,13 +10,16 @@ use App\Models\User;
 use Illuminate\Http\Request;
 
 /**
- * Log do Rank da Baderna (BP) — só admin.
+ * Log do Rank da Baderna (BP).
  *
  * NÃO altera nada: é uma LEITURA que reusa a mesma fórmula de
  * MembersController::index() (Flex via flex_match_credits + Inhouse via
  * payload dos inhouses com vencedor) pra os números baterem com o #NN do
  * site. Além do somatório por membro, devolve a timeline de eventos
  * (cada vitória/derrota, quanto deu de BP e quando).
+ *
+ *   - index()        — admin: log de TODOS os membros.
+ *   - forUser($id)   — qualquer logado: log de UM membro (modal do perfil).
  */
 class BadernaPointsLogController extends Controller
 {
@@ -38,7 +41,11 @@ class BadernaPointsLogController extends Controller
         return $slug !== '' ? $slug : (string)$userId;
     }
 
-    public function index(Request $request)
+    /**
+     * Calcula config + linhas (resumo + timeline) de todos os membros.
+     * Retorna ['config' => [...], 'rows' => Collection].
+     */
+    private function computeRows(): array
     {
         $users = User::where('is_deleted', false)
             ->where('approval_status', 'approved')
@@ -57,12 +64,19 @@ class BadernaPointsLogController extends Controller
 
         // slug -> userId (pra casar players do inhouse com membros).
         $slugToUserId = [];
-        $nickByUserId = [];
+        $teamNameByUserId = [];
         foreach ($users as $u) {
             $nick = $u->summoner_name ?: $u->name;
             $slug = $u->slug ?: $this->slugify($nick, $u->id);
             $slugToUserId[$slug] = $u->id;
-            $nickByUserId[$u->id] = $nick;
+            // Nome do time custom (definido em Minha Conta). Mesma regra do
+            // inhouse-lobby: usa o team_name se existir e não for o default
+            // "Time {nick}", senão cai pro "Time {nick}".
+            $custom = trim((string)($u->team_name ?? ''));
+            $teamNameByUserId[$u->id] =
+                ($custom !== '' && $custom !== "Time {$nick}")
+                    ? $custom
+                    : "Time {$nick}";
         }
 
         // Eventos Flex por user (1 por partida creditada), mais recente 1o.
@@ -92,13 +106,15 @@ class BadernaPointsLogController extends Controller
             if (!in_array($winner, ['blue', 'red'], true)) continue;
 
             $when = optional($ih->updated_at ?? $ih->created_at)->toIso8601String();
-            // Rótulo do time = "Time {nick do líder do lado}".
+            // Rótulo do time = nome custom do líder (team_name de Minha Conta),
+            // com fallback "Time {nick}".
             $blueLeaderSlug = $payload['blueLeaderId'] ?? null;
             $redLeaderSlug  = $payload['redLeaderId'] ?? null;
-            $teamLabelFor = function (string $side) use ($payload, $blueLeaderSlug, $redLeaderSlug, $slugToUserId, $nickByUserId) {
+            $teamLabelFor = function (string $side) use ($blueLeaderSlug, $redLeaderSlug, $slugToUserId, $teamNameByUserId) {
                 $leaderSlug = $side === 'blue' ? $blueLeaderSlug : $redLeaderSlug;
                 if ($leaderSlug && isset($slugToUserId[$leaderSlug])) {
-                    return 'Time ' . ($nickByUserId[$slugToUserId[$leaderSlug]] ?? $leaderSlug);
+                    $leaderUid = $slugToUserId[$leaderSlug];
+                    return $teamNameByUserId[$leaderUid] ?? ($side === 'blue' ? 'Time Azul' : 'Time Vermelho');
                 }
                 return $side === 'blue' ? 'Time Azul' : 'Time Vermelho';
             };
@@ -162,14 +178,34 @@ class BadernaPointsLogController extends Controller
                 ?: ($a['userId'] <=> $b['userId']);
         })->values();
 
-        return response()->json([
+        return [
             'config' => [
-                'flexWin'    => $fW,
-                'flexLoss'   => $fL,
-                'inhouseWin' => $iW,
+                'flexWin'     => $fW,
+                'flexLoss'    => $fL,
+                'inhouseWin'  => $iW,
                 'inhouseLoss' => $iL,
             ],
             'rows' => $rows,
+        ];
+    }
+
+    /** Admin: log de todos os membros (ordenado por BP). */
+    public function index(Request $request)
+    {
+        return response()->json($this->computeRows());
+    }
+
+    /** Qualquer logado: log de UM membro (modal do perfil). */
+    public function forUser(Request $request, int $user)
+    {
+        $computed = $this->computeRows();
+        $row = $computed['rows']->firstWhere('userId', $user);
+        if (!$row) {
+            return response()->json(['error' => 'Membro não encontrado.'], 404);
+        }
+        return response()->json([
+            'config' => $computed['config'],
+            'row'    => $row,
         ]);
     }
 }
