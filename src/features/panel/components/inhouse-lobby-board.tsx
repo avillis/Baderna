@@ -18,6 +18,11 @@ import { panelProfile } from "@/features/panel/panel-data";
 import { useTeamNames } from "@/features/panel/use-account";
 import { useAuth } from "@/features/panel/use-auth";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
+import {
+  MOBILE_DRAWER_WIDTH,
+  useMobileNav,
+} from "@/features/panel/components/mobile-nav";
+import { StyledName } from "@/features/panel/components/styled-name";
 import type { RankType } from "@/features/panel/rank-utils";
 
 const RANK_POINTS: Record<RankType, number> = {
@@ -70,6 +75,17 @@ const laneIconByKey = {
 } as const;
 
 const SPECIALIST_ICON = "/images/lanes/Specialist_icon.png";
+
+// Resolve o estilo de nome (activeNameId) comprado pelo membro, com o mesmo
+// fallback por nickname usado no avatar (slug do inhouse pode divergir do
+// banco quando há caracteres não-ASCII no summoner_name).
+function usePlayerStyleId(player: InhousePlayer): string | undefined {
+  const allMembers = useBadernaMembers();
+  const member =
+    allMembers.find((m) => m.id === player.id) ??
+    allMembers.find((m) => m.nickname === player.nickname);
+  return member?.activeNameId ?? undefined;
+}
 
 function PlayerAvatar({ player }: { player: InhousePlayer }) {
   const allMembers = useBadernaMembers();
@@ -131,6 +147,7 @@ function PlayerRow({
   dimmed?: boolean;
 }) {
   const href = getPlayerHref(player);
+  const styleId = usePlayerStyleId(player);
   // Time perdedor depois que o vencedor foi definido: opacidade + grayscale
   // pra deixar visualmente "apagado" sem esconder informação.
   const dimClass = dimmed ? "opacity-50 grayscale" : "";
@@ -156,8 +173,8 @@ function PlayerRow({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111]">
-                {player.nickname}
+              <p className="truncate-glow text-[17px] font-bold tracking-[-0.03em] text-[#111111]">
+                <StyledName styleId={styleId}>{player.nickname}</StyledName>
               </p>
               {badernaRank ? (
                 <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
@@ -199,8 +216,8 @@ function PlayerRow({
                 #{String(badernaRank).padStart(2, "0")}
               </span>
             ) : null}
-            <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
-              {player.nickname}
+            <p className="order-1 truncate-glow text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
+              <StyledName styleId={styleId}>{player.nickname}</StyledName>
             </p>
           </div>
           <p className="mt-[1px] truncate text-[10px] font-medium tracking-[0em] text-[#9a9a9a]">
@@ -1235,6 +1252,7 @@ function DraggablePlayerRow({
   badernaRank?: number;
 }) {
   const isBlue = side === "blue";
+  const styleId = usePlayerStyleId(player);
   return (
     <div
       onPointerDown={isLeader ? undefined : onPointerDown}
@@ -1252,8 +1270,8 @@ function DraggablePlayerRow({
             <PlayerAvatar player={player} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111]">
-                  {player.nickname}
+                <p className="truncate-glow text-[17px] font-bold tracking-[-0.03em] text-[#111111]">
+                  <StyledName styleId={styleId}>{player.nickname}</StyledName>
                 </p>
                 {badernaRank ? (
                   <span className="shrink-0 text-[11px] font-bold tracking-[0em] text-[#b0a8a4]">
@@ -1285,8 +1303,8 @@ function DraggablePlayerRow({
                     #{String(badernaRank).padStart(2, "0")}
                   </span>
                 ) : null}
-                <p className="order-1 truncate text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
-                  {player.nickname}
+                <p className="order-1 truncate-glow text-[17px] font-bold tracking-[-0.03em] text-[#111111] xl:order-3">
+                  <StyledName styleId={styleId}>{player.nickname}</StyledName>
                 </p>
               </div>
               <p className="mt-[1px] truncate text-[10px] font-medium tracking-[0em] text-[#9a9a9a]">
@@ -1362,6 +1380,10 @@ function MobilePoolBottomSheet({
   redLabel: string;
 }) {
   const [open, setOpen] = useState(false);
+  // Quando o drawer mobile abre, a página inteira é empurrada 280px pra direita
+  // via `left`. Mas este sheet é position:fixed (ancorado na viewport), então
+  // não acompanha sozinho — espelhamos o push com um translateX próprio.
+  const { open: drawerOpen } = useMobileNav();
 
   useEffect(() => {
     if (!open) return;
@@ -1373,6 +1395,7 @@ function MobilePoolBottomSheet({
   }, [open]);
 
   const handleLabel = "Controles";
+  const pushX = drawerOpen ? `${MOBILE_DRAWER_WIDTH}px` : "0px";
 
   return (
     <>
@@ -1386,7 +1409,9 @@ function MobilePoolBottomSheet({
         className="fixed inset-x-0 bottom-0 z-40 rounded-t-[24px] bg-[#ededed] shadow-[0_-12px_50px_rgba(0,0,0,0.18)] transition-transform duration-300 ease-out"
         style={{
           maxHeight: "85vh",
-          transform: open ? "translateY(0)" : "translateY(calc(100% - 64px))",
+          transform: `translateX(${pushX}) ${
+            open ? "translateY(0)" : "translateY(calc(100% - 64px))"
+          }`,
         }}
       >
         {/* Handle — clica pra alternar abrir/fechar */}

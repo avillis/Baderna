@@ -15,10 +15,7 @@ export const panelMenuItems = [
   { label: "Feed", tone: "default" as const, href: "/" },
   { label: "Meu Perfil", tone: "active" as const, href: "/membro" },
   { label: "Membros", tone: "default" as const, href: "/membros" },
-  { label: "Aniversários", tone: "default" as const, href: "/aniversarios" },
-  { label: "Ranking", tone: "default" as const, href: "/ranking" },
   { label: "Inhouse", tone: "default" as const, href: "/inhouse" },
-  { label: "Flex", tone: "default" as const, href: "/flex" },
   { label: "RPG", tone: "default" as const, href: "/rpg" },
   { label: "Loja", tone: "default" as const, href: "/loja" },
 ];

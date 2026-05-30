@@ -20,7 +20,6 @@ const TEXT_SECTIONS = [
       { label: "Membros", href: "/membros" },
       { label: "Loja", href: "/loja" },
       { label: "Inhouse", href: "/inhouse" },
-      { label: "Flex", href: "/flex" },
     ],
   },
   {

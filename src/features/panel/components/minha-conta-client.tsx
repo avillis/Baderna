@@ -441,7 +441,7 @@ function BirthdayField({
       <span className="text-[12px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
         Aniversário
       </span>
-      <div className="flex flex-wrap gap-[8px]">
+      <div className="flex gap-[8px]">
         <input
           type="number"
           min={1}
@@ -450,16 +450,16 @@ function BirthdayField({
           value={day}
           onChange={(e) => setDay(e.target.value)}
           onBlur={() => commitDate()}
-          className={`${inputBase} w-[90px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
+          className={`${inputBase} w-[64px] shrink-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
         />
         {/* Select com seta customizada animada */}
-        <div className="relative flex-1 min-w-[130px]">
+        <div className="relative min-w-0 flex-1">
           <select
             value={month}
             onChange={(e) => { setMonth(e.target.value); commitDate(day, e.target.value, year); }}
             onFocus={() => setMonthOpen(true)}
             onBlur={() => setMonthOpen(false)}
-            className={`${inputBase} w-full appearance-none pr-10`}
+            className={`${inputBase} w-full appearance-none truncate pr-10`}
           >
             <option value="">Mês</option>
             {MONTHS_PT.map((name, i) => (
@@ -481,7 +481,7 @@ function BirthdayField({
           value={year}
           onChange={(e) => setYear(e.target.value)}
           onBlur={() => commitDate()}
-          className={`${inputBase} w-[110px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
+          className={`${inputBase} w-[84px] shrink-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
         />
       </div>
       <label className="mt-[10px] flex cursor-pointer items-center gap-[10px]">
@@ -564,7 +564,7 @@ function SlugField({
   };
 
   const inputClasses =
-    "flex-1 border-none bg-transparent text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400";
+    "min-w-0 flex-1 border-none bg-transparent text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f] outline-none placeholder:text-gray-400";
   const wrapperClasses = `flex items-center gap-[2px] rounded-full bg-[#ededed] pl-6 pr-4 py-4 focus-within:ring-2 ${
     error ? "focus-within:ring-red-300 ring-1 ring-red-300" : "focus-within:ring-[#ff4100]/20"
   }`;
@@ -575,7 +575,7 @@ function SlugField({
         Endereço do perfil
       </span>
       <div className={wrapperClasses}>
-        <span className="text-[14px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
+        <span className="shrink-0 whitespace-nowrap text-[14px] font-semibold tracking-[-0.02em] text-[#8d8d8d]">
           bdrn.com.br/membro/
         </span>
         <input

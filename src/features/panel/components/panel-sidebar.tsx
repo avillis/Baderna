@@ -367,6 +367,10 @@ function SidebarInner({
   const { user } = useAuth();
   const { account } = useAccount();
   const profileSlugSource = account.gameNick.split("#")[0] || user?.name || "";
+  // Reaproveita o href já resolvido do "Meu Perfil" (slug do membro). Fallback
+  // pra /minha-conta se ainda não houver slug (ex.: dados não carregados).
+  const meuPerfilHref =
+    menuItems.find((i) => i.label === "Meu Perfil")?.href ?? "/minha-conta";
 
   const [acctOpen, setAcctOpen] = useState(false);
   const [acctRect, setAcctRect] = useState<DOMRect | null>(null);
@@ -462,7 +466,7 @@ function SidebarInner({
       <div className="mt-auto border-t border-[#f3ebe8] px-[6px] pb-[12px] pt-[18px]">
         <div className="flex items-center justify-between gap-3">
           <Link
-            href="/minha-conta"
+            href={meuPerfilHref}
             onClick={onNavigate}
             className="flex min-w-0 flex-1 items-center gap-3 px-[2px] py-[2px] text-left transition-opacity duration-200 hover:opacity-80"
           >
@@ -590,7 +594,7 @@ export function PanelSidebar() {
       </aside>
 
       {/* Mobile: header (hamburguer à esquerda, logo à direita) */}
-      <header className="fixed inset-x-0 top-[12px] z-[80] flex h-[64px] items-center justify-between bg-transparent px-[16px] sm:px-[24px] xl:hidden">
+      <header className="fixed inset-x-0 top-[12px] z-[45] flex h-[64px] items-center justify-between bg-transparent px-[16px] sm:px-[24px] xl:hidden">
         <button
           type="button"
           aria-label={drawerOpen ? "Fechar menu" : "Abrir menu"}

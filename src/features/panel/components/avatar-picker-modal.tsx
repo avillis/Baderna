@@ -264,13 +264,45 @@ export function AvatarPickerModal({
         ) : tab === "champions" ? (
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="border-b border-[#ededed] px-[28px] py-[12px]">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar campeão..."
-                className="w-full rounded-full border-none bg-[#ededed] px-[16px] py-[8px] text-[13px] outline-none placeholder:text-[#a89e99] focus:ring-2 focus:ring-[#ff4100]/20"
-              />
+              <div className="relative w-full">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="pointer-events-none absolute left-[18px] top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-[#b0a8a4]"
+                  stroke="currentColor"
+                  strokeWidth={2.2}
+                  strokeLinecap="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar campeão..."
+                  className="w-full rounded-full border-none bg-white py-3.5 pl-[46px] pr-[40px] text-[13px] font-medium text-[#0f0f0f] shadow-[0_2px_16px_rgba(0,0,0,0.10)] outline-none placeholder:text-[#b0a8a4] focus:ring-2 focus:ring-[#ff4100]/30"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#0f0f0f] transition-colors hover:text-[#ff4100]"
+                  >
+                    <svg
+                      viewBox="0 0 10 10"
+                      fill="none"
+                      className="h-[12px] w-[12px]"
+                      stroke="currentColor"
+                      strokeWidth={1.4}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
             <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-5 items-start gap-[16px] overflow-y-auto no-scrollbar p-[24px] sm:grid-cols-6">
               {filtered.map((file) => {

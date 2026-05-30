@@ -25,9 +25,9 @@ export function useUnlockedBanners(_memberId: string) {
     : [...DEFAULT_UNLOCKED_BANNERS, ...stored];
 
   const unlock = useCallback(
-    (fileName: string, free?: boolean): Promise<unknown> | undefined => {
+    (fileName: string, free?: boolean, jester?: boolean): Promise<unknown> | undefined => {
       if (!isValidFileName(fileName)) return;
-      return rawUnlock("capa", fileName, free);
+      return rawUnlock("capa", fileName, free, jester);
     },
     [rawUnlock],
   );

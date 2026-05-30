@@ -71,6 +71,7 @@ async function postUnlockToApi(
   kind: UnlockKind,
   slug: string,
   free?: boolean,
+  jester?: boolean,
 ): Promise<UnlockResponse | null> {
   const token = authToken();
   if (!token) return null;
@@ -81,7 +82,12 @@ async function postUnlockToApi(
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ kind, slug, ...(free ? { free: true } : {}) }),
+    body: JSON.stringify({
+      kind,
+      slug,
+      ...(free ? { free: true } : {}),
+      ...(jester ? { jester: true } : {}),
+    }),
   });
   if (!res.ok) return null;
   return (await res.json()) as UnlockResponse;
@@ -120,7 +126,7 @@ export function useMemberUnlocks() {
   }, []);
 
   const unlock = useCallback(
-    async (kind: UnlockKind, slug: string, free?: boolean): Promise<UnlockResponse | null> => {
+    async (kind: UnlockKind, slug: string, free?: boolean, jester?: boolean): Promise<UnlockResponse | null> => {
       const list = unlocks[kind];
       const wasAlreadyOwned = list.includes(slug);
       if (!wasAlreadyOwned) {
@@ -133,7 +139,7 @@ export function useMemberUnlocks() {
       }
       let result: UnlockResponse | null = null;
       try {
-        result = await postUnlockToApi(kind, slug, free);
+        result = await postUnlockToApi(kind, slug, free, jester);
       } catch {
         // erro de rede ou JSON inválido — trata como falha
         result = null;

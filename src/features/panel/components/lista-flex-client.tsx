@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { StyledName } from "@/features/panel/components/styled-name";
 import { useBadernaMembers } from "@/features/panel/use-baderna-members";
 import { useRiotProfile, type RiotMatch, type RiotProfile } from "@/features/panel/use-riot-profile";
 import type { RankType } from "@/features/panel/rank-utils";
@@ -116,7 +117,7 @@ function wrClass(rate: number) {
 function RoleCard({ role, stats }: { role: Role; stats: RoleStats }) {
   if (!stats.played) {
     return (
-      <div className="relative flex flex-col items-center justify-center rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[14px] min-h-[130px] gap-2">
+      <div className="relative flex flex-col items-center justify-center rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[12px] min-h-[104px] gap-2">
         <div className="h-[36px] w-[36px] rounded-full bg-white flex items-center justify-center">
           <Image
             src={laneIcon[role]}
@@ -134,7 +135,7 @@ function RoleCard({ role, stats }: { role: Role; stats: RoleStats }) {
   }
 
   return (
-    <div className="relative flex flex-col justify-between rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[14px] min-h-[130px]">
+    <div className="relative flex flex-col justify-between rounded-[var(--panel-radius-card-sm)] bg-[#ededed] p-[12px] min-h-[104px]">
       <div className="absolute right-[12px] top-[12px] h-[32px] w-[32px] rounded-full bg-white flex items-center justify-center">
         <Image
           src={laneIcon[role]}
@@ -154,8 +155,8 @@ function RoleCard({ role, stats }: { role: Role; stats: RoleStats }) {
         </span>
       </div>
 
-      <div className="mt-auto pt-3 flex items-baseline gap-[4px]">
-        <span className="text-[20px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+      <div className="mt-auto pt-2 flex items-baseline gap-[4px]">
+        <span className="text-[18px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
           {stats.kda.toFixed(2)}
         </span>
         <span className="text-[10px] font-semibold text-[#c0c0c0] tracking-wide">kda</span>
@@ -210,14 +211,16 @@ function hasCachedProfile(riotId: string): boolean {
   }
 }
 
-function MemberFlexCard({
+export function MemberFlexCard({
   displayName,
   nickname,
+  styleId,
   riotId,
   index,
 }: {
   displayName: string;
   nickname: string;
+  styleId?: string;
   riotId: string;
   index: number;
 }) {
@@ -269,18 +272,18 @@ function MemberFlexCard({
       <div
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="flex w-full shrink-0 cursor-pointer flex-col items-center gap-0 text-center sm:cursor-default lg:w-[220px] lg:flex-row lg:items-center lg:gap-4 lg:text-left"
+        className="flex w-full shrink-0 cursor-pointer flex-col items-center gap-0 text-center sm:cursor-default lg:w-1/4 lg:flex-row lg:items-center lg:gap-4 lg:text-left"
       >
         <RankMedal
           rankType={rank.type}
           unranked={!profile || rank.label === "Sem classificação"}
         />
         <div className="min-w-0 flex-1">
-          <h2 className="max-w-full truncate text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f] lg:max-w-[140px]">
-            {displayName}
+          <h2 className="break-words text-[17px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
+            <StyledName styleId={styleId}>{nickname}</StyledName>
           </h2>
-          <p className="mt-0.5 max-w-full truncate text-[12px] font-semibold text-[#8d8d8d] lg:max-w-[140px]">
-            {nickname}
+          <p className="mt-0.5 break-words text-[12px] font-semibold text-[#8d8d8d]">
+            {displayName}
           </p>
           <p className="mt-1 mb-[8px] max-w-full truncate text-[11px] font-bold text-[#313131] lg:mb-0 lg:max-w-[140px]">
             {rank.label}
@@ -337,6 +340,7 @@ export function ListaFlexClient() {
             index={index}
             displayName={m.name}
             nickname={m.nickname}
+            styleId={m.activeNameId}
             riotId={riotId}
           />
         );

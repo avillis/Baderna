@@ -56,11 +56,62 @@ class MembersController extends Controller
         // Pra anônimos e membros normais, o campo nem aparece na resposta.
         $viewerIsAdmin = $request->user() && $request->user()->is_admin;
 
-        return response()->json($users->map(function ($u) use ($viewerIsAdmin) {
+        // ── Baderna Points (BP) — ranking interno, derivado AO VIVO ──────────
+        // Flex: vitórias/derrotas vêm do ledger flex_match_credits (mesma fonte
+        // que credita moedas, já com dedup por partida). Inhouse: contadas dos
+        // próprios inhouses com vencedor definido. Como é derivado, mudar a
+        // config de pontos no admin recalcula o ranking inteiro na hora.
+        $bp = \App\Models\AppSetting::get('inhouse_points', [
+            'flex'    => ['win' => 10, 'loss' => 5],
+            'inhouse' => ['win' => 25, 'loss' => 15],
+        ]);
+        $fW = (int)($bp['flex']['win'] ?? 0);
+        $fL = (int)($bp['flex']['loss'] ?? 0);
+        $iW = (int)($bp['inhouse']['win'] ?? 0);
+        $iL = (int)($bp['inhouse']['loss'] ?? 0);
+
+        // Flex agregado por user_id. CASE WHEN em vez de SUM(boolean), que o
+        // Postgres rejeita.
+        $flexAgg = \App\Models\FlexMatchCredit::selectRaw(
+            'user_id,
+             SUM(CASE WHEN is_win THEN 1 ELSE 0 END) AS wins,
+             SUM(CASE WHEN is_win THEN 0 ELSE 1 END) AS losses'
+        )->groupBy('user_id')->get()->keyBy('user_id');
+
+        // Inhouse contado por slug do player (payload.players[].id == users.slug),
+        // só nos que já têm vencedor.
+        $inhouseTally = [];
+        foreach (\App\Models\Inhouse::all() as $ih) {
+            $payload = is_array($ih->payload) ? $ih->payload : [];
+            $winner = $payload['winner'] ?? null;
+            if (!in_array($winner, ['blue', 'red'], true)) continue;
+            foreach (($payload['players'] ?? []) as $p) {
+                $side = is_array($p) ? ($p['side'] ?? null) : null;
+                $pslug = is_array($p) ? ($p['id'] ?? null) : null;
+                if (!$pslug || !in_array($side, ['blue', 'red'], true)) continue;
+                if (!isset($inhouseTally[$pslug])) {
+                    $inhouseTally[$pslug] = ['wins' => 0, 'losses' => 0];
+                }
+                if ($side === $winner) $inhouseTally[$pslug]['wins']++;
+                else $inhouseTally[$pslug]['losses']++;
+            }
+        }
+
+        $rows = $users->map(function ($u) use ($viewerIsAdmin, $fW, $fL, $iW, $iL, $flexAgg, $inhouseTally) {
             $nick = $u->summoner_name ?: $u->name;
+            $slug = $u->slug ?: $this->slugify($nick, $u->id);
+
+            $flex = $flexAgg->get($u->id);
+            $flexW = (int)($flex->wins ?? 0);
+            $flexL = (int)($flex->losses ?? 0);
+            $ih = $inhouseTally[$slug] ?? ['wins' => 0, 'losses' => 0];
+            $badernaPoints = $flexW * $fW + $flexL * $fL
+                + $ih['wins'] * $iW + $ih['losses'] * $iL;
+
             $row = [
-                'id'              => $u->slug ?: $this->slugify($nick, $u->id),
+                'id'              => $slug,
                 'userId'          => $u->id,
+                'badernaPoints'   => $badernaPoints,
                 'name'            => $u->display_name ?: $u->name,
                 'nickname'        => $nick,
                 'summonerName'    => $u->summoner_name,
@@ -103,7 +154,17 @@ class MembersController extends Controller
                 $row['isOwner'] = (bool)$u->is_owner;
             }
             return $row;
-        }));
+        });
+
+        // Ranking da Baderna = ordem por BP (desc). Desempate por ordem de
+        // criação (userId asc) pra ficar estável. Esse índice vira o #NN
+        // mostrado no site todo (card do membro, perfil, cards de inhouse).
+        $sorted = $rows->sort(function ($a, $b) {
+            return ($b['badernaPoints'] <=> $a['badernaPoints'])
+                ?: ($a['userId'] <=> $b['userId']);
+        })->values();
+
+        return response()->json($sorted);
     }
 
     /**

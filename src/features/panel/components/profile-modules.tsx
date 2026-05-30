@@ -722,6 +722,7 @@ export type ProfileModuleData = {
   primaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   secondaryLane: "TOP" | "JG" | "MID" | "ADC" | "SUP" | null;
   badernaRank: number;
+  badernaPoints: number;
   fallbackRankEyebrow: string;
   fallbackRankValue: string;
   fallbackRankFrameSrc: string;
@@ -793,6 +794,7 @@ export function ProfileModuleCard({
           eyebrow="Rank da Baderna"
           value={value}
           tone="rank-baderna"
+          badernaPoints={data.badernaPoints}
         />
       );
     }

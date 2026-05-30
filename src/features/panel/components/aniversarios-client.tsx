@@ -104,7 +104,7 @@ function DaysChip({ daysUntil, isToday }: { daysUntil: number; isToday: boolean 
 
 function BirthdayCard({ member }: { member: BirthdayMember }) {
   const href = member.slug ? `/membro/${member.slug}` : "#";
-  const dateShort = `${member.birthdayDay} de ${MONTHS_FULL[member.birthdayMonth - 1]}`;
+  const dateShort = `${member.birthdayDay} de ${MONTHS_FULL[member.birthdayMonth - 1].toLowerCase()}`;
 
   const ageText = member.isToday
     ? member.age !== null ? `faz ${member.age} anos hoje 🥳` : "aniversário hoje 🥳"
@@ -144,16 +144,7 @@ export function AniversariosClient() {
   const { members, loading } = useBirthdays();
 
   return (
-    <div className="pt-[1.5vh] sm:pt-[6vh]">
-      <div className="mb-[24px]">
-        <h1 className="text-[26px] font-bold tracking-[-0.04em] text-[#0f0f0f]">
-          Aniversários
-        </h1>
-        <p className="mt-[4px] text-[14px] font-medium text-[#8d8d8d]">
-          Celebre com quem faz parte da Baderna.
-        </p>
-      </div>
-
+    <div>
       {loading ? (
         <div className="flex items-center justify-center py-[80px]">
           <svg
@@ -178,7 +169,7 @@ export function AniversariosClient() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-[16px] sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-[16px] sm:grid-cols-4 xl:grid-cols-5">
           {members.map((m) => (
             <BirthdayCard key={m.id} member={m} />
           ))}

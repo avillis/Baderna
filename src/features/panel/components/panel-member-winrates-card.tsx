@@ -63,7 +63,7 @@ export function PanelMemberWinratesCard({
     : rows;
 
   return (
-    <section className="flex h-full flex-col rounded-[var(--panel-radius-card)] bg-white px-[28px] py-[34px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
+    <section className="flex flex-col rounded-[var(--panel-radius-card)] bg-white px-[28px] py-[34px] shadow-[0px_14px_50px_12px_rgba(0,0,0,0.05)]">
       <div className="flex items-start justify-between gap-[12px]">
         <div>
           <h2 className="text-[16px] font-bold tracking-[-0.03em] text-[#0f0f0f]">
@@ -88,7 +88,7 @@ export function PanelMemberWinratesCard({
         </button>
       </div>
 
-      <div className="mt-[28px] flex min-h-[330px] flex-1 flex-col border-t border-[#efebe8] pt-[10px]">
+      <div className="mt-[28px] flex min-h-[330px] flex-col border-t border-[#efebe8] pt-[10px]">
         {loading && (
           <div className="my-auto flex flex-col items-center gap-[10px]">
             <svg

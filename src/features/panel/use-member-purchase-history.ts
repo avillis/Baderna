@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-// Log of every spin a member has made — what they won, how much it cost,
-// whether it was a refunded duplicate, and the balance right after.
+import { authToken } from "@/features/panel/use-auth";
 
-const STORAGE_KEY = "baderna:member-purchase-history";
-const UPDATE_EVENT = "baderna:member-purchase-history-updated";
-const MAX_ENTRIES = 500;
+// Histórico de compras (spins) do membro logado — persistido no backend.
+// O label e a raridade são resolvidos no frontend (pelo slug) e enviados
+// junto, então o histórico sobrevive a deploy/cache/troca de dispositivo.
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
 export type PurchaseKind = "capa" | "titulo" | "nome";
 
@@ -24,28 +26,43 @@ export type PurchaseEntry = {
   balanceAfter: number;
 };
 
-type HistoryMap = Record<string, PurchaseEntry[]>;
-
-function readAll(): HistoryMap {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as HistoryMap;
-    if (!parsed || typeof parsed !== "object") return {};
-    return parsed;
-  } catch {
-    return {};
-  }
+function authHeaders(): Record<string, string> {
+  const token = authToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-function writeAll(map: HistoryMap) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  window.dispatchEvent(new Event(UPDATE_EVENT));
+async function fetchHistory(): Promise<PurchaseEntry[]> {
+  if (!authToken()) return [];
+  const res = await fetch(`${API_BASE}/account/purchase-history`, {
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+  if (!res.ok) return [];
+  return (await res.json()) as PurchaseEntry[];
 }
 
-export function useMemberPurchaseHistory(memberId: string): {
+async function postEntry(entry: Omit<PurchaseEntry, "id" | "timestamp">): Promise<void> {
+  if (!authToken()) return;
+  await fetch(`${API_BASE}/account/purchase-history`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({
+      kind: entry.kind,
+      itemId: entry.itemId,
+      itemLabel: entry.itemLabel,
+      rarity: entry.rarity,
+      cost: entry.cost,
+      refunded: entry.refunded,
+      free: entry.free ?? false,
+      balanceAfter: entry.balanceAfter,
+    }),
+  }).catch(() => {});
+}
+
+export function useMemberPurchaseHistory(_memberId: string): {
   entries: PurchaseEntry[];
   log: (entry: Omit<PurchaseEntry, "id" | "timestamp">) => void;
   clear: () => void;
@@ -53,46 +70,31 @@ export function useMemberPurchaseHistory(memberId: string): {
   const [entries, setEntries] = useState<PurchaseEntry[]>([]);
 
   useEffect(() => {
-    const all = readAll();
-    setEntries(all[memberId] ?? []);
-
-    function refresh() {
-      const next = readAll();
-      setEntries(next[memberId] ?? []);
-    }
-
-    window.addEventListener(UPDATE_EVENT, refresh);
-    window.addEventListener("storage", refresh);
+    let cancelled = false;
+    fetchHistory()
+      .then((list) => {
+        if (!cancelled) setEntries(list);
+      })
+      .catch(() => {});
     return () => {
-      window.removeEventListener(UPDATE_EVENT, refresh);
-      window.removeEventListener("storage", refresh);
+      cancelled = true;
     };
-  }, [memberId]);
+  }, []);
 
-  const log = useCallback(
-    (entry: Omit<PurchaseEntry, "id" | "timestamp">) => {
-      const full: PurchaseEntry = {
-        ...entry,
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        timestamp: Date.now(),
-      };
-      const all = readAll();
-      const list = all[memberId] ?? [];
-      // Newest first, capped to MAX_ENTRIES so localStorage stays tiny.
-      all[memberId] = [full, ...list].slice(0, MAX_ENTRIES);
-      writeAll(all);
-      // Optimistic local update so the modal updates immediately.
-      setEntries(all[memberId]);
-    },
-    [memberId],
-  );
+  const log = useCallback((entry: Omit<PurchaseEntry, "id" | "timestamp">) => {
+    // Update otimista (modal atualiza na hora) + persiste no backend.
+    const optimistic: PurchaseEntry = {
+      ...entry,
+      id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      timestamp: Date.now(),
+    };
+    setEntries((prev) => [optimistic, ...prev].slice(0, 500));
+    void postEntry(entry);
+  }, []);
 
-  const clear = useCallback(() => {
-    const all = readAll();
-    delete all[memberId];
-    writeAll(all);
-    setEntries([]);
-  }, [memberId]);
+  // Limpa apenas a visão local (não há endpoint de delete — histórico é
+  // permanente por design).
+  const clear = useCallback(() => setEntries([]), []);
 
   return { entries, log, clear };
 }

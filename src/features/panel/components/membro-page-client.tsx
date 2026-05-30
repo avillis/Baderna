@@ -51,6 +51,7 @@ const DEFAULT_BIO = "";
 type ApiMember = {
   id: string;
   userId: number;
+  badernaPoints?: number;
   name: string;
   nickname: string | null;
   activeNameId: string | null;
@@ -246,6 +247,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
   };
 
   const badernaRank = badernaRankIndex > 0 ? badernaRankIndex : 1;
+  const badernaPoints = apiMember?.badernaPoints ?? 0;
 
   const stats = [
     panelStats[0],
@@ -288,6 +290,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
     primaryLane: apiMember?.primaryLane ?? null,
     secondaryLane: apiMember?.secondaryLane ?? null,
     badernaRank,
+    badernaPoints,
     fallbackRankEyebrow: stats[2].eyebrow,
     fallbackRankValue: stats[2].value,
     fallbackRankFrameSrc: profile.rankFrameSrc,
@@ -526,7 +529,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
               />
             </div>
 
-            <div className="xl:pr-[26px]">
+            <div className="md:pl-[48px] xl:pr-[26px]">
               <div className="grid gap-6 md:grid-cols-2">{topSlots}</div>
             </div>
           </div>
@@ -572,7 +575,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
         <div className="hidden 2xl:block">
           <div>
-            <div className="grid grid-cols-[1.67fr_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
+            <div className="grid grid-cols-[1.42fr_minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-x-[clamp(16px,2vw,39px)] items-start">
               <div className="pl-0">
                 <PanelProfileSummary
                   avatarSrc={profile.avatarSrc}
@@ -598,7 +601,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
 
               {topSlots}
             </div>
-            <div className="mt-[54px] mb-6 grid grid-cols-[1.67fr_minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
+            <div className="mt-[54px] mb-6 grid grid-cols-[1.42fr_minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)] items-center gap-x-[clamp(16px,2vw,39px)]">
               <ProfileActions
                 className="col-start-1 col-span-3 flex flex-wrap items-center gap-[10px]"
                 editButton={editCardsButton}
