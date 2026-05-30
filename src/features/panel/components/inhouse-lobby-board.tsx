@@ -812,8 +812,8 @@ export function InhouseDetail({ inhouse }: { inhouse: Inhouse }) {
       <div className="pointer-events-none absolute inset-0 z-0 hidden overflow-hidden rounded-[36px] xl:block">
         <div className="absolute inset-x-0 top-[30px] h-[120px] bg-[radial-gradient(circle_at_center,rgba(52,125,255,0.06),transparent_58%)] blur-[44px]" />
 
-        <div className="absolute top-[200px] left-1/2 h-[540px] w-[820px] -translate-x-[calc(50%+16px)]">
-          <div className="inhouse-rift-float absolute inset-0 [mask-image:linear-gradient(to_right,transparent,#000_11%,#000_89%,transparent),linear-gradient(to_bottom,transparent,#000_11%,#000_89%,transparent)] [mask-composite:intersect] [mask-repeat:no-repeat] [-webkit-mask-image:linear-gradient(to_right,transparent,#000_11%,#000_89%,transparent),linear-gradient(to_bottom,transparent,#000_11%,#000_89%,transparent)] [-webkit-mask-composite:source-in] [-webkit-mask-repeat:no-repeat]">
+        <div className="absolute top-[200px] left-1/2 h-[540px] w-[820px] -translate-x-[calc(50%+16px)] xl:[mask-image:linear-gradient(to_right,transparent,#000_13%,#000_87%,transparent)] xl:[mask-repeat:no-repeat] xl:[mask-size:100%_220%] xl:[mask-position:center] xl:[-webkit-mask-image:linear-gradient(to_right,transparent,#000_13%,#000_87%,transparent)] xl:[-webkit-mask-repeat:no-repeat] xl:[-webkit-mask-size:100%_220%] xl:[-webkit-mask-position:center] 2xl:[mask-image:none] 2xl:[-webkit-mask-image:none]">
+          <div className="inhouse-rift-float absolute inset-0 xl:[mask-image:linear-gradient(to_bottom,transparent,#000_11%,#000_89%,transparent)] xl:[mask-repeat:no-repeat] xl:[-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_11%,#000_89%,transparent)] xl:[-webkit-mask-repeat:no-repeat] 2xl:[mask-image:none] 2xl:[-webkit-mask-image:none]">
             <Image
               src="/images/inhouse/summoners-rift.png"
               alt="Summoner's Rift"
