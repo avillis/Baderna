@@ -124,9 +124,9 @@ export function PanelStatCard({
           className="absolute inset-0"
           style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}
         />
-        <div className="relative z-10 flex h-full items-center justify-between gap-2 px-[16px]">
-          <div>
-            <p className="text-[10px] font-bold tracking-[-0.03em] text-white/80">
+        <div className="relative z-10 flex h-full items-center justify-between gap-[6px] pl-[14px] pr-[12px]">
+          <div className="min-w-0">
+            <p className="whitespace-nowrap text-[10px] font-bold tracking-[-0.03em] text-white/80">
               {eyebrow}
             </p>
             {placeholder ? (
@@ -138,13 +138,13 @@ export function PanelStatCard({
             )}
           </div>
           {typeof badernaPoints === "number" && (
-            <span className="inline-flex h-[36px] shrink-0 items-center gap-[6px] rounded-[12px] bg-[#ededed] px-[14px] text-[13px] font-bold tracking-[-0.02em] text-[#0f0f0f] shadow-[0_4px_14px_rgba(0,0,0,0.18)]">
+            <span className="inline-flex h-[30px] shrink-0 items-center gap-[4px] rounded-[10px] bg-[#ededed] px-[9px] text-[12px] font-bold tracking-[-0.02em] text-[#0f0f0f] shadow-[0_4px_14px_rgba(0,0,0,0.18)]">
               <Image
                 src="/images/bp.png"
                 alt=""
-                width={20}
-                height={20}
-                className="h-[20px] w-[20px] object-contain"
+                width={16}
+                height={16}
+                className="h-[16px] w-[16px] object-contain"
                 unoptimized
               />
               {badernaPoints.toLocaleString("pt-BR")} BP
