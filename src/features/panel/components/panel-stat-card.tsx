@@ -74,16 +74,16 @@ function getRankBadernaEffect(value: string) {
   // #04 — esmeralda
   if (num === 4)
     return {
-      gradient: "linear-gradient(135deg, rgba(16,185,129,0.33) 0%, #059669 100%)",
-      glow: "0 0 22px rgba(16,185,129,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
-      smoke: "rgba(52, 211, 153, 0.85)",
+      gradient: "linear-gradient(135deg, rgba(110,231,183,0.40) 0%, #10b981 55%, #047857 100%)",
+      glow: "0 0 22px rgba(16,185,129,0.60), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+      smoke: "rgba(52, 211, 153, 0.9)",
     };
-  // #05 — platina
+  // #05 — platina (azulado)
   if (num === 5)
     return {
-      gradient: "linear-gradient(135deg, rgba(186,230,253,0.40) 0%, #7dd3fc 100%)",
-      glow: "0 0 22px rgba(125,211,252,0.55), inset 1px 1px 4px rgba(255,255,255,0.25), inset -1px -1px 6px rgba(0,0,0,0.28)",
-      smoke: "rgba(186, 230, 253, 0.85)",
+      gradient: "linear-gradient(135deg, rgba(147,197,253,0.40) 0%, #3b82f6 55%, #1d4ed8 100%)",
+      glow: "0 0 22px rgba(59,130,246,0.60), inset 1px 1px 4px rgba(255,255,255,0.22), inset -1px -1px 6px rgba(0,0,0,0.3)",
+      smoke: "rgba(147, 197, 253, 0.9)",
     };
   // #06–#10 — dourado
   if (num <= 10)

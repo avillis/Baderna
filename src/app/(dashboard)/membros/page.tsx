@@ -52,13 +52,13 @@ function getRankEffect(rank: number): RankEffect {
   };
   // #04 — esmeralda
   if (rank === 4) return {
-    gradient: "linear-gradient(135deg, #34d399, #059669)",
-    glow: "0 0 14px 3px rgba(16, 185, 129, 0.30)",
+    gradient: "linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%)",
+    glow: "0 0 16px 5px rgba(16,185,129,0.60), 0 0 30px 3px rgba(5,150,105,0.26)",
   };
-  // #05 — platina
+  // #05 — platina (azulado)
   if (rank === 5) return {
-    gradient: "linear-gradient(135deg, #e0f2fe, #7dd3fc)",
-    glow: "0 0 14px 3px rgba(125, 211, 252, 0.30)",
+    gradient: "linear-gradient(135deg, #93c5fd 0%, #3b82f6 50%, #1d4ed8 100%)",
+    glow: "0 0 16px 5px rgba(59,130,246,0.60), 0 0 30px 3px rgba(29,78,216,0.26)",
   };
   // #06–#10 — dourado
   if (rank <= 10) return {
