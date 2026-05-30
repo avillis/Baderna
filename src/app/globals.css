@@ -224,6 +224,26 @@
   }
 }
 
+/* Fade nas 4 bordas da imagem do mapa — SÓ no notebook (1280–1535px).
+   No desktop (>=1536px) o mapa fica intacto (já estava certo) e abaixo de
+   1280px a imagem nem é renderizada. A imagem (1000x636) com object-contain
+   preenche os 820px de largura e ~521px de altura, então praticamente ocupa
+   a caixa toda: um fade nos 4 lados cai certinho nas bordas do mapa. */
+@media (min-width: 1280px) and (max-width: 1535.98px) {
+  .inhouse-rift-fade {
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, #000 11%, #000 89%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 11%, #000 89%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    -webkit-mask-repeat: no-repeat;
+    mask-image:
+      linear-gradient(to right, transparent 0%, #000 11%, #000 89%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 11%, #000 89%, transparent 100%);
+    mask-composite: intersect;
+    mask-repeat: no-repeat;
+  }
+}
+
 .inhouse-smoke {
   position: absolute;
   pointer-events: none;
