@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { useInhousePoints } from "@/features/panel/use-inhouse-points";
 import type { InhousePoints } from "@/features/panel/inhouse-points";
 
@@ -36,14 +38,52 @@ function PointsField({
       >
         {label}
       </span>
-      <input
-        type="number"
-        step={1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value) || 0)}
-        className="w-full rounded-full border-none bg-[#ededed] px-4 py-[8px] text-[13px] font-semibold text-[#0f0f0f] outline-none focus:ring-2 focus:ring-[#ff4100]/20"
-      />
+      <NumberInput value={value} onChange={onChange} />
     </label>
+  );
+}
+
+/**
+ * Input numérico que aceita negativos. Usa estado de texto local pra permitir
+ * estados intermediários ("-", "") enquanto digita, sem o controlled input
+ * resetar pra 0. Propaga o número pro pai quando há valor válido.
+ */
+function NumberInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+}) {
+  const [text, setText] = useState(String(value));
+
+  // Sincroniza com o valor externo quando ele muda por fora (ex: load da API),
+  // mas não atropela o que o usuário está digitando se já bate numericamente.
+  useEffect(() => {
+    if (Number(text) !== value) setText(String(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={text}
+      onChange={(e) => {
+        const raw = e.target.value;
+        // Aceita vazio, "-" e dígitos com sinal opcional.
+        if (raw === "" || raw === "-" || /^-?\d+$/.test(raw)) {
+          setText(raw);
+          const parsed = raw === "" || raw === "-" ? 0 : Number(raw);
+          onChange(parsed);
+        }
+      }}
+      onBlur={() => {
+        // Normaliza ao sair: "-" / "" viram "0".
+        if (text === "" || text === "-") setText("0");
+      }}
+      className="w-full rounded-full border-none bg-[#ededed] px-4 py-[8px] text-[13px] font-semibold text-[#0f0f0f] outline-none focus:ring-2 focus:ring-[#ff4100]/20"
+    />
   );
 }
 
