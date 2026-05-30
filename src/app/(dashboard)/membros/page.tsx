@@ -50,14 +50,22 @@ function getRankEffect(rank: number): RankEffect {
     gradient: "linear-gradient(135deg, #f0e8ff 0%, #5010a0 14%, #9040ff 28%, #4030c0 42%, #c030e0 56%, #400090 70%, #a050ff 84%, #ead0ff 100%)",
     glow: "0 0 16px 4px rgba(155,75,255,0.55), 0 0 30px 2px rgba(120,45,210,0.25)",
   };
-  if (rank <= 8) return {
+  // #04–#05 — (cor a definir) — placeholder dourado por ora
+  if (rank <= 5) return {
     gradient: "linear-gradient(135deg, #ffe066, #ffb300)",
     glow: "0 0 14px 3px rgba(255, 185, 0, 0.28)",
   };
-  if (rank <= 13) return {
+  // #06–#10 — dourado
+  if (rank <= 10) return {
+    gradient: "linear-gradient(135deg, #ffe066, #ffb300)",
+    glow: "0 0 14px 3px rgba(255, 185, 0, 0.28)",
+  };
+  // #11–#16 — prata
+  if (rank <= 16) return {
     gradient: "linear-gradient(135deg, #f2f2f2, #b0b0b0)",
     glow: "0 0 14px 3px rgba(140, 140, 140, 0.22)",
   };
+  // #17+ — bronze
   return {
     gradient: "linear-gradient(135deg, #e8b07a, #cd7f32)",
     glow: "0 0 14px 3px rgba(205, 127, 50, 0.22)",

@@ -71,21 +71,28 @@ function getRankBadernaEffect(value: string) {
       glow: "0 0 26px rgba(155,75,255,0.78), 0 0 52px rgba(120,45,220,0.28), inset 1px 1px 6px rgba(220,180,255,0.40), inset -1px -1px 8px rgba(30,0,60,0.50)",
       smoke: "rgba(165, 85, 255, 1)",
     };
-  // #04–#08 — dourado
-  if (num <= 8)
+  // #04–#05 — (cor a definir) — placeholder dourado por ora
+  if (num <= 5)
     return {
       gradient: "linear-gradient(135deg, rgba(255,215,0,0.33) 0%, #ffcc00 100%)",
       glow: "0 0 22px rgba(255,215,0,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
       smoke: "rgba(255, 215, 0, 0.85)",
     };
-  // #09–#13 — prata
-  if (num <= 13)
+  // #06–#10 — dourado
+  if (num <= 10)
+    return {
+      gradient: "linear-gradient(135deg, rgba(255,215,0,0.33) 0%, #ffcc00 100%)",
+      glow: "0 0 22px rgba(255,215,0,0.55), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
+      smoke: "rgba(255, 215, 0, 0.85)",
+    };
+  // #11–#16 — prata
+  if (num <= 16)
     return {
       gradient: "linear-gradient(135deg, rgba(192,192,192,0.33) 0%, #e0e0e0 100%)",
       glow: "0 0 22px rgba(192,192,192,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
       smoke: "rgba(220, 220, 220, 0.85)",
     };
-  // #14+ — bronze
+  // #17+ — bronze
   return {
     gradient: "linear-gradient(135deg, rgba(205,127,50,0.33) 0%, #cd7f32 100%)",
     glow: "0 0 22px rgba(205,127,50,0.5), inset 1px 1px 4px rgba(255,255,255,0.2), inset -1px -1px 6px rgba(0,0,0,0.3)",
