@@ -282,7 +282,7 @@ export default function MembrosPage() {
           <AniversariosClient />
         ) : mode === "baderna" ? (
           // Baderna: grid de 5 com molduras + busca/comparação.
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
             {filteredBaderna.map(({ member, badernaRank }) => {
               const rankEffect = getRankEffect(badernaRank);
               const avatar = member.avatarSrc || getChampionAvatarSrc(member.id);

@@ -533,7 +533,7 @@ export function MembroPageClient({ slug }: { slug: string }) {
             </div>
 
             <div className="min-w-0 md:pl-[48px] xl:pl-0 xl:pr-0">
-              <div className="grid min-w-0 gap-6 md:grid-cols-2">{topSlots}</div>
+              <div className="grid min-w-0 gap-6 md:grid-cols-2 xl:ml-auto xl:max-w-[560px] xl:gap-5">{topSlots}</div>
             </div>
           </div>
 
