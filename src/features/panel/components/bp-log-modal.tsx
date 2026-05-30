@@ -126,7 +126,7 @@ export function BpLogModal({
                 {row.totalBp}
               </div>
               <div className="mt-[2px] text-[10px] font-bold text-[#e0a48f]">
-                total BP
+                Total BP
               </div>
             </div>
           </div>

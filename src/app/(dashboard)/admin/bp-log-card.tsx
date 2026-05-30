@@ -78,7 +78,7 @@ function MemberLogRow({ row }: { row: BpLogRow }) {
               {row.totalBp}
             </div>
             <div className="text-[10px] font-bold text-[#b0a8a4]">
-              total
+              Total
             </div>
           </div>
           <ChevronDown
